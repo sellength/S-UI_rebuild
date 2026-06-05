@@ -235,6 +235,9 @@ export default {
       interval: "間隔",
       tolerance: "容忍度",
       urlTestOptions: "URL 測試選項"
+    },
+    anytls: {
+      paddingScheme: "混淆填充方案",
     }
   },
   in: {

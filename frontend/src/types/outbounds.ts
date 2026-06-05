@@ -210,6 +210,7 @@ export interface AnyTLS extends OutboundBasics, Dial {
   server_port: number
   password: string
   tls: oTls
+  padding_scheme?: string[]
 }
 
 export interface Tor extends OutboundBasics, Dial {
@@ -277,7 +278,19 @@ const defaultValues: Record<OutType, Outbound> = {
   vless: { type: OutTypes.VLESS, tls: {}, multiplex: {}, transport: {} },
   tuic: { type: OutTypes.TUIC, congestion_control: 'cubic', tls: { enabled: true } },
   hysteria2: { type: OutTypes.Hysteria2, tls: { enabled: true } },
-  anytls: { type: OutTypes.AnyTLS, tls: { enabled: true } },
+  anytls: {
+    type: OutTypes.AnyTLS,
+    tls: { enabled: true },
+    padding_scheme: [
+      "stop=8",
+      "0=30-30",
+      "1=100-400",
+      "2=400-500,c,500-1000,c,500-1000,c,500-1000,c,500-1000",
+      "3=9-9,500-1000",
+      "4=500-1000",
+      "5=500-1000"
+    ]
+  },
   tor: { type: OutTypes.Tor, executable_path: './tor', data_directory: '$HOME/.cache/tor', torrc: { ClientOnly: 1 } },
   ssh: { type: OutTypes.SSH },
   dns: { type: OutTypes.DNS },

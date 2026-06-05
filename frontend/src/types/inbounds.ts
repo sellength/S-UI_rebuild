@@ -168,6 +168,7 @@ export interface Hysteria2 extends InboundBasics {
 export interface AnyTLS extends InboundBasics {
   users: NamePass[]
   tls: iTls
+  padding_scheme?: string[]
 }
 export interface Tun extends InboundBasics {
   [otherProperties: string]: any
@@ -235,7 +236,20 @@ const defaultValues: Record<InType, Inbound> = {
   tuic: <TUIC>{ type: InTypes.TUIC, users: <TuicUser[]>[], congestion_control: "cubic", tls: { enabled: true } },
   hysteria2: <Hysteria2>{ type: InTypes.Hysteria2, users: <NamePass[]>[], tls: { enabled: true } },
   vless: <VLESS>{ type: InTypes.VLESS, users: <VlessUser[]>[], tls: {}, multiplex: {}, transport: {} },
-  anytls: <AnyTLS>{ type: InTypes.AnyTLS, users: <NamePass[]>[], tls: { enabled: true } },
+  anytls: <AnyTLS>{
+    type: InTypes.AnyTLS,
+    users: <NamePass[]>[],
+    tls: { enabled: true },
+    padding_scheme: [
+      "stop=8",
+      "0=30-30",
+      "1=100-400",
+      "2=400-500,c,500-1000,c,500-1000,c,500-1000,c,500-1000",
+      "3=9-9,500-1000",
+      "4=500-1000",
+      "5=500-1000"
+    ]
+  },
   // tun: <Tun>{ type: InTypes.Tun },
   redirect: <Redirect>{ type: InTypes.Redirect },
   tproxy: <TProxy>{ type: InTypes.TProxy },

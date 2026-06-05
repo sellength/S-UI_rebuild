@@ -233,6 +233,9 @@ export default {
       interval: "فاصله زمانی",
       tolerance: "تحمل",
       urlTestOptions: "گزینه‌های URLTest"
+    },
+    anytls: {
+      paddingScheme: "Padding Scheme",
     }
   },
   in: {

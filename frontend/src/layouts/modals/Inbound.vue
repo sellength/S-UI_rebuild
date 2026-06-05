@@ -51,6 +51,7 @@
                 <ShadowTls v-if="inbound.type == inTypes.ShadowTLS" direction="in" :data="inbound" :outTags="outTags" />
                 <Tuic v-if="inbound.type == inTypes.TUIC" direction="in" :data="inbound" />
                 <TProxy v-if="inbound.type == inTypes.TProxy" :inbound="inbound" />
+                <AnyTls v-if="inbound.type == inTypes.AnyTLS" :data="inbound" />
                 <Transport v-if="Object.hasOwn(inbound,'transport')" :data="inbound" />
                 <Users v-if="HasOptionalUser.includes(inbound.type)" :inbound="inbound" />
                 <InTls v-if="Object.hasOwn(inbound,'tls')"  :inbound="inbound" :tlsConfigs="tlsConfigs" :tls_id="tls_id" />
@@ -137,6 +138,7 @@ import Multiplex from '@/components/Multiplex.vue'
 import Transport from '@/components/Transport.vue'
 import AddrVue from '@/components/Addr.vue'
 import OutJsonVue from '@/components/OutJson.vue'
+import AnyTls from '@/components/protocols/AnyTls.vue'
 export default {
   props: ['visible', 'data', 'cData', 'index', 'stats', 'inTags', 'outTags', 'tlsConfigs'],
   emits: ['close', 'save'],
@@ -230,7 +232,7 @@ export default {
   components: {
     Listen, InTls, Hysteria2, Naive, Direct, Shadowsocks,
     Users, Hysteria, ShadowTls, TProxy, Multiplex, Tuic, Transport,
-    AddrVue, OutJsonVue
+    AddrVue, OutJsonVue, AnyTls
   }
 }
 </script>

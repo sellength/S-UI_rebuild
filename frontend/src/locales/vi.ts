@@ -234,6 +234,9 @@ export default {
       interval: "Khoảng thời gian",
       tolerance: "Sự dung hòa",
       urlTestOptions: "Tùy chọn Kiểm tra URL",
+    },
+    anytls: {
+      paddingScheme: "Padding Scheme",
     }
   },
   in: {

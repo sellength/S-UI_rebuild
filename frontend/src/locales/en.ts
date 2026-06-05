@@ -235,6 +235,9 @@ export default {
       interval: "Interval",
       tolerance: "Tolerance",
       urlTestOptions: "URLTest Options"
+    },
+    anytls: {
+      paddingScheme: "Padding Scheme",
     }
   },
   in: {

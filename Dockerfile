@@ -23,8 +23,13 @@ WORKDIR /usr/local/s-ui
 COPY backend/sui /usr/local/s-ui/sui
 
 # Ensure database, cert and bin directory structures exist with proper permissions
-RUN mkdir -p /usr/local/s-ui/db /usr/local/s-ui/bin /usr/local/s-ui/cert && \
-    chmod +x /usr/local/s-ui/sui
+RUN mkdir -p /usr/local/s-ui/db /usr/local/s-ui/bin /usr/local/s-ui/cert
+
+# Copy runSingbox.sh and sing-box binary into bin directory
+COPY core/runSingbox.sh /usr/local/s-ui/bin/runSingbox.sh
+COPY core/sing-box /usr/local/s-ui/bin/sing-box
+
+RUN chmod +x /usr/local/s-ui/sui /usr/local/s-ui/bin/runSingbox.sh /usr/local/s-ui/bin/sing-box
 
 # Expose s-ui standard dashboard administration port
 EXPOSE 2095

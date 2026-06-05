@@ -47,12 +47,16 @@ jobs:
         # CGO_ENABLED=0 ensuring pure Go execution on Alpine Linux container
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o sui main.go
 
-    - name: Download Sing-box Binary
+    - name: Build Sing-box Binary
       run: |
-        # Download official sing-box amd64 binary (v1.11.0+ supporting route.rules action field)
-        curl -L -o sing-box.tar.gz https://github.com/SagerNet/sing-box/releases/download/v1.11.0/sing-box-1.11.0-linux-amd64.tar.gz
-        tar -zxvf sing-box.tar.gz
-        cp sing-box-1.11.0-linux-amd64/sing-box core/sing-box
+        # Clone official sing-box source codes at version v1.11.0
+        git clone -b v1.11.0 https://github.com/SagerNet/sing-box sing-box-src
+        cd sing-box-src
+        # Build sing-box from source with all essential feature tags
+        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags with_quic,with_grpc,with_wireguard,with_ech,with_utls,with_reality_server,with_acme,with_v2ray_api,with_clash_api,with_gvisor \
+          -v -trimpath -ldflags "-s -w -buildid=" \
+          -o ../core/sing-box ./cmd/sing-box
+        cd ..
         chmod +x core/sing-box
 
     - name: Docker meta

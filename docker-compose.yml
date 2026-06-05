@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   s-ui:
-    image: docker.io/sellength/s-ui_rebuild:latest
+    image: ghcr.io/sellength/s-ui_rebuild:latest
     container_name: s-ui
     hostname: "s-ui-docker"
     restart: unless-stopped

@@ -46,7 +46,7 @@
             <v-text-field 
               v-model="confirmPass" 
               :label="$t('admin.confirmPass')" 
-              :rules="confirmRules" 
+              :rules="[validateConfirmPass]" 
               type="password" 
               variant="outlined"
               class="dark-input"
@@ -102,17 +102,15 @@ export default {
           if (value?.length > 0) return true
           return i18n.global.t('login.pwRules')
         },
-      ],
-      confirmRules: [
-        (value: string) => {
-          if (!value) return "请再次输入新密码"
-          if (value !== this.newData.newPass) return "两次输入的密码不一致"
-          return true
-        }
       ]
     }
   },
   methods: {
+    validateConfirmPass(value: string) {
+      if (!value) return "请再次输入新密码"
+      if (value !== this.newData.newPass) return "两次输入的密码不一致"
+      return true
+    },
     resetData() {
       this.newData.id = this.$props.user.id
       this.newData.oldPass = ""

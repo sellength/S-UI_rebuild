@@ -1,6 +1,7 @@
 import { Hysteria, Hysteria2, InTypes, Inbound, Naive, Shadowsocks, TUIC, Trojan, VLESS, VMess, AnyTLS } from "@/types/inbounds"
 import { HTTP, WebSocket, gRPC, HTTPUpgrade, Transport, TrspTypes } from "@/types/transport"
 import RandomUtil from "./randomUtil"
+import Data from "@/store/modules/data"
 
 export interface Link {
   type: "local" | "external" | "sub"
@@ -14,32 +15,51 @@ function utf8ToBase64(utf8String: string): string {
 }
 
 export namespace LinkUtil {
-  export function linkGenerator(user: string, inbound: Inbound, tlsClient: any = {}, addrs: any[] = []): string[] {
+  export function linkGenerator(user: string | any, inbound: Inbound, tlsClient: any = {}, addrs: any[] = []): string[] {
+    const name = typeof user === 'string' ? user : (user as any)?.name || ''
     switch(inbound.type){
       case InTypes.Shadowsocks:
-        return shadowsocksLink(user,<Shadowsocks>inbound, addrs)
+        return shadowsocksLink(name,<Shadowsocks>inbound, addrs)
       case InTypes.Naive:
-        return naiveLink(user,<Naive>inbound, addrs, tlsClient)
+        return naiveLink(name,<Naive>inbound, addrs, tlsClient)
       case InTypes.Hysteria:
-        return hysteriaLink(user,<Hysteria>inbound, addrs, tlsClient)
+        return hysteriaLink(name,<Hysteria>inbound, addrs, tlsClient)
       case InTypes.Hysteria2:
-        return hysteria2Link(user,<Hysteria2>inbound, addrs, tlsClient)
+        return hysteria2Link(name,<Hysteria2>inbound, addrs, tlsClient)
       case InTypes.TUIC:
-        return tuicLink(user,<TUIC>inbound, addrs, tlsClient)
+        return tuicLink(name,<TUIC>inbound, addrs, tlsClient)
       case InTypes.VLESS:
-        return vlessLink(user,<VLESS>inbound, addrs, tlsClient)
+        return vlessLink(name,<VLESS>inbound, addrs, tlsClient)
       case InTypes.Trojan:
-        return trojanLink(user,<Trojan>inbound, addrs, tlsClient)
+        return trojanLink(name,<Trojan>inbound, addrs, tlsClient)
       case InTypes.VMess:
-        return vmessLink(user,<VMess>inbound, addrs, tlsClient)
+        return vmessLink(name,<VMess>inbound, addrs, tlsClient)
       case InTypes.AnyTLS:
-        return anytlsLink(user,<AnyTLS>inbound, addrs, tlsClient)
+        return anytlsLink(name,<AnyTLS>inbound, addrs, tlsClient)
     }
     return []
   }
 
   function shadowsocksLink(user: string, inbound: Shadowsocks, addrs: any[]): string[] {
-    const userPass = inbound.users?.find(i => i.name == user)?.password
+    const u = inbound.users?.find(i => i && i.name == user)
+    let userPass = u?.password
+    if (!userPass) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      userPass = client?.config?.shadowsocks?.password
+    }
+    if (!userPass) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      if (client?.config) {
+        for (const key in client.config) {
+          const cfg = client.config[key]
+          if (cfg && cfg.password) { userPass = cfg.password; break }
+          if (cfg && cfg.uuid) { userPass = cfg.uuid; break }
+          if (cfg && cfg.auth_str) { userPass = cfg.auth_str; break }
+        }
+      }
+    }
+    if (!userPass) userPass = RandomUtil.randomSeq(10)
+
     const password = [userPass]
     if (inbound.method.startsWith('2022')) password.push(inbound.password)
     const params = {
@@ -73,7 +93,25 @@ export namespace LinkUtil {
   }
 
   function hysteriaLink(user: string, inbound: Hysteria, addrs: any[], tlsClient: any): string[] {
-    const auth = inbound.users.find(i => i.name == user)?.auth_str
+    const u = inbound.users?.find(i => i && i.name == user)
+    let auth = u?.auth_str
+    if (!auth) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      auth = client?.config?.hysteria?.auth_str
+    }
+    if (!auth) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      if (client?.config) {
+        for (const key in client.config) {
+          const cfg = client.config[key]
+          if (cfg && cfg.auth_str) { auth = cfg.auth_str; break }
+          if (cfg && cfg.password) { auth = cfg.password; break }
+          if (cfg && cfg.uuid) { auth = cfg.uuid; break }
+        }
+      }
+    }
+    if (!auth) auth = RandomUtil.randomSeq(10)
+
     const params = {
       upmbps: inbound.up_mbps?? null,
       downmbps: inbound.down_mbps?? null,
@@ -121,7 +159,25 @@ export namespace LinkUtil {
   }
 
   function hysteria2Link(user: string, inbound: Hysteria2, addrs: any[], tlsClient: any): string[] {
-    const password = inbound.users.find(i => i.name == user)?.password
+    const u = inbound.users?.find(i => i && i.name == user)
+    let password = u?.password
+    if (!password) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      password = client?.config?.hysteria2?.password
+    }
+    if (!password) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      if (client?.config) {
+        for (const key in client.config) {
+          const cfg = client.config[key]
+          if (cfg && cfg.password) { password = cfg.password; break }
+          if (cfg && cfg.uuid) { password = cfg.uuid; break }
+          if (cfg && cfg.auth_str) { password = cfg.auth_str; break }
+        }
+      }
+    }
+    if (!password) password = RandomUtil.randomSeq(10)
+
     const params = {
       upmbps: inbound.up_mbps?? null,
       downmbps: inbound.down_mbps?? null,
@@ -169,7 +225,24 @@ export namespace LinkUtil {
   }
 
   function naiveLink(user: string, inbound: Naive, addrs: any[], tlsClient: any): string[] {
-    const password = inbound.users.find(i => i.username == user)?.password
+    const u = inbound.users?.find(i => i && i.username == user)
+    let password = u?.password
+    if (!password) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      password = client?.config?.naive?.password
+    }
+    if (!password) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      if (client?.config) {
+        for (const key in client.config) {
+          const cfg = client.config[key]
+          if (cfg && cfg.password) { password = cfg.password; break }
+          if (cfg && cfg.uuid) { password = cfg.uuid; break }
+          if (cfg && cfg.auth_str) { password = cfg.auth_str; break }
+        }
+      }
+    }
+    if (!password) password = RandomUtil.randomSeq(10)
 
     let links = <string[]>[]
     if (addrs.length == 0) {
@@ -211,7 +284,28 @@ export namespace LinkUtil {
   }
 
   function tuicLink(user: string, inbound: TUIC, addrs: any[], tlsClient: any): string[] {
-    const u = inbound.users.find(i => i.name == user)
+    const u = inbound.users?.find(i => i && i.name == user)
+    let uuid = u?.uuid
+    let password = u?.password
+    if (!uuid || !password) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      if (!uuid) uuid = client?.config?.tuic?.uuid
+      if (!password) password = client?.config?.tuic?.password
+    }
+    if (!uuid || !password) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      if (client?.config) {
+        for (const key in client.config) {
+          const cfg = client.config[key]
+          if (cfg && cfg.uuid && !uuid) uuid = cfg.uuid
+          if (cfg && cfg.password && !password) password = cfg.password
+          if (cfg && cfg.auth_str && !password) password = cfg.auth_str
+        }
+      }
+    }
+    if (!uuid) uuid = RandomUtil.randomUUID()
+    if (!password) password = RandomUtil.randomSeq(10)
+
     const params = {
       sni: inbound.tls.server_name?? null,
       alpn: inbound.tls.alpn?.join(',')?? null,
@@ -222,7 +316,7 @@ export namespace LinkUtil {
 
     let links = <string[]>[]
     if (addrs.length == 0) {
-      const uri = new URL(`tuic://${u?.uuid}:${u?.password}@${location.hostname}:${inbound.listen_port}`)
+      const uri = new URL(`tuic://${uuid}:${password}@${location.hostname}:${inbound.listen_port}`)
       for (const [key, value] of Object.entries(params)){
         if (value) {
           uri.searchParams.set(key, value.toString())
@@ -232,7 +326,7 @@ export namespace LinkUtil {
       links.push(uri.toString())
     } else {
       addrs.forEach(a => {
-        const uri = new URL(`tuic://${u?.uuid}:${u?.password}@${a.server}:${a.server_port}`)
+        const uri = new URL(`tuic://${uuid}:${password}@${a.server}:${a.server_port}`)
         for (const [key, value] of Object.entries(params)){
           if (value) {
             uri.searchParams.set(key, value.toString())
@@ -289,9 +383,28 @@ export namespace LinkUtil {
   }
 
   function vlessLink(user: string, inbound: VLESS, addrs: any[], tlsClient: any): string[] {
-    const u = inbound.users.find(i => i.name == user)
-    const transport = <Transport>inbound.transport
+    const u = inbound.users?.find(i => i && i.name == user)
+    let uuid = u?.uuid
+    let flow = u?.flow
+    if (!uuid) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      uuid = client?.config?.vless?.uuid
+      flow = client?.config?.vless?.flow
+    }
+    if (!uuid) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      if (client?.config) {
+        for (const key in client.config) {
+          const cfg = client.config[key]
+          if (cfg && cfg.uuid) { uuid = cfg.uuid; break }
+          if (cfg && cfg.password) { uuid = cfg.password; break }
+          if (cfg && cfg.auth_str) { uuid = cfg.auth_str; break }
+        }
+      }
+    }
+    if (!uuid) uuid = RandomUtil.randomUUID()
 
+    const transport = <Transport>inbound.transport
     const tParams = getTransportParams(transport)
 
     const params = {
@@ -299,7 +412,7 @@ export namespace LinkUtil {
       security: inbound.tls?.enabled? inbound.tls?.reality?.enabled ? 'reality' : 'tls' : null,
       alpn: inbound.tls?.alpn?.join(',')?? null,
       sni: inbound.tls?.server_name?? null,
-      flow: inbound.tls?.enabled ? u?.flow?? null : null,
+      flow: inbound.tls?.enabled ? flow?? null : null,
       allowInsecure: tlsClient?.insecure ? 1 : null,
       fp: tlsClient?.utls?.enabled ? tlsClient.utls.fingerprint : null,
       pbk: tlsClient?.reality?.public_key?? null,
@@ -307,7 +420,7 @@ export namespace LinkUtil {
     }
     let links = <string[]>[]
     if (addrs.length == 0) {
-      const uri = new URL(`vless://${u?.uuid}@${location.hostname}:${inbound.listen_port}`)
+      const uri = new URL(`vless://${uuid}@${location.hostname}:${inbound.listen_port}`)
       for (const [key, value] of Object.entries({...params, ...tParams})){
         if (value) {
           uri.searchParams.set(key, value.toString())
@@ -317,7 +430,7 @@ export namespace LinkUtil {
       links.push(uri.toString())
     } else {
       addrs.forEach(a => {
-        const uri = new URL(`vless://${u?.uuid}@${a.server}:${a.server_port}`)
+        const uri = new URL(`vless://${uuid}@${a.server}:${a.server_port}`)
         for (const [key, value] of Object.entries({...params, ...tParams})){
           if (value) {
             uri.searchParams.set(key, value.toString())
@@ -351,9 +464,26 @@ export namespace LinkUtil {
   }
 
   function trojanLink(user: string, inbound: Trojan, addrs: any[], tlsClient: any): string[] {
-    const u = inbound.users.find(i => i.name == user)
-    const transport = <Transport>inbound.transport
+    const u = inbound.users?.find(i => i && i.name == user)
+    let password = u?.password
+    if (!password) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      password = client?.config?.trojan?.password
+    }
+    if (!password) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      if (client?.config) {
+        for (const key in client.config) {
+          const cfg = client.config[key]
+          if (cfg && cfg.password) { password = cfg.password; break }
+          if (cfg && cfg.uuid) { password = cfg.uuid; break }
+          if (cfg && cfg.auth_str) { password = cfg.auth_str; break }
+        }
+      }
+    }
+    if (!password) password = RandomUtil.randomSeq(10)
 
+    const transport = <Transport>inbound.transport
     const tParams = getTransportParams(transport)
 
     const params = {
@@ -369,7 +499,7 @@ export namespace LinkUtil {
 
     let links = <string[]>[]
     if (addrs.length == 0) {
-      const uri = new URL(`trojan://${u?.password}@${location.hostname}:${inbound.listen_port}`)
+      const uri = new URL(`trojan://${password}@${location.hostname}:${inbound.listen_port}`)
       for (const [key, value] of Object.entries({...params, ...tParams})){
         if (value) {
           uri.searchParams.set(key, value.toString())
@@ -379,7 +509,7 @@ export namespace LinkUtil {
       links.push(uri.toString())
     } else {
       addrs.forEach(a => {
-        const uri = new URL(`trojan://${u?.password}@${a.server}:${a.server_port}`)
+        const uri = new URL(`trojan://${password}@${a.server}:${a.server_port}`)
         for (const [key, value] of Object.entries({...params, ...tParams})){
           if (value) {
             uri.searchParams.set(key, value.toString())
@@ -413,18 +543,37 @@ export namespace LinkUtil {
   }
 
   function vmessLink(user: string, inbound: VMess, addrs: any[], tlsClient: any): string[] {
-    const u = inbound.users.find(i => i.name == user)
-    const transport = <Transport>inbound.transport
+    const u = inbound.users?.find(i => i && i.name == user)
+    let uuid = u?.uuid
+    let alterId = u?.alterId ?? 0
+    if (!uuid) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      uuid = client?.config?.vmess?.uuid
+      alterId = client?.config?.vmess?.alterId ?? 0
+    }
+    if (!uuid) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      if (client?.config) {
+        for (const key in client.config) {
+          const cfg = client.config[key]
+          if (cfg && cfg.uuid) { uuid = cfg.uuid; break }
+          if (cfg && cfg.password) { uuid = cfg.password; break }
+          if (cfg && cfg.auth_str) { uuid = cfg.auth_str; break }
+        }
+      }
+    }
+    if (!uuid) uuid = RandomUtil.randomUUID()
 
+    const transport = <Transport>inbound.transport
     const tParams = getTransportParams(transport)
     if (transport.type == TrspTypes.gRPC) tParams.path = tParams.serviceName
 
     const params = {
       v: 2,
       add: location.hostname,
-      aid: u?.alterId,
+      aid: alterId,
       host:	tParams.host?? undefined,
-      id: u?.uuid,
+      id: uuid,
       net: transport?.type == undefined || transport?.type == 'http' ? 'tcp' : transport.type,
       type: transport?.type == 'http' ? 'http' : undefined,
       path:	tParams.path?? undefined,
@@ -465,7 +614,25 @@ export namespace LinkUtil {
   }
 
   function anytlsLink(user: string, inbound: AnyTLS, addrs: any[], tlsClient: any): string[] {
-    const password = inbound.users.find(i => i.name == user)?.password
+    const u = inbound.users?.find(i => i && i.name == user)
+    let password = u?.password
+    if (!password) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      password = client?.config?.anytls?.password
+    }
+    if (!password) {
+      const client = Data().clients?.find((c: any) => c.name === user) as any
+      if (client?.config) {
+        for (const key in client.config) {
+          const cfg = client.config[key]
+          if (cfg && cfg.password) { password = cfg.password; break }
+          if (cfg && cfg.uuid) { password = cfg.uuid; break }
+          if (cfg && cfg.auth_str) { password = cfg.auth_str; break }
+        }
+      }
+    }
+    if (!password) password = RandomUtil.randomSeq(10)
+
     const params = {
       sni: inbound.tls.server_name?? null,
       alpn: inbound.tls.alpn?.join(',')?? null,

@@ -115,8 +115,21 @@ export function randomConfigs(user: string): Config {
   }
 }
 
+export function ensureConfigKeys(config: Config, user: string): Config {
+  const defaults = randomConfigs(user)
+  const merged = { ...defaults }
+  for (const key in config) {
+    if (config.hasOwnProperty(key)) {
+      merged[key] = { ...defaults[key], ...config[key] }
+    }
+  }
+  return merged
+}
+
 export function createClient<T extends Client>(json?: Partial<T>): Client {
   defaultClient.name = RandomUtil.randomSeq(8)
   const defaultObject: Client = { ...defaultClient, ...(json || {}) }
+  defaultObject.config = ensureConfigKeys(defaultObject.config, defaultObject.name)
   return defaultObject
 }
+

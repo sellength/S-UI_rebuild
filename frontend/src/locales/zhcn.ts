@@ -121,6 +121,7 @@ export default {
     oldPass: "当前密码",
     newUname: "新用户名",
     newPass: "新密码",
+    confirmPass: "确认新密码",
     lastLogin: "上次登录",
     date: "日期",
     time: "时间",

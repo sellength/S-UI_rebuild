@@ -121,6 +121,7 @@ export default {
     oldPass: "Current Password",
     newUname: "New Username",
     newPass: "New Password",
+    confirmPass: "Confirm New Password",
     lastLogin: "Last login",
     date: "Date",
     time: "Time",

@@ -22,7 +22,7 @@
           <v-col cols="12" class="py-1">
             <v-text-field 
               v-model="newData.newUsername" 
-              :label="$t('admin.newUname')" 
+              :label="$t('login.username')" 
               :rules="usernameRules" 
               variant="outlined"
               class="dark-input"
@@ -35,6 +35,18 @@
               v-model="newData.newPass" 
               :label="$t('admin.newPass')" 
               :rules="passwordRules" 
+              type="password" 
+              variant="outlined"
+              class="dark-input"
+              hide-details="auto"
+              required
+            ></v-text-field>
+          </v-col>
+          <v-col cols="12" class="py-1">
+            <v-text-field 
+              v-model="confirmPass" 
+              :label="$t('admin.confirmPass')" 
+              :rules="confirmRules" 
               type="password" 
               variant="outlined"
               class="dark-input"
@@ -78,6 +90,7 @@ export default {
         newUsername: "",
         newPass: ""
       },
+      confirmPass: "",
       usernameRules: [
         (value: string) => {
           if (value?.length > 0) return true
@@ -89,6 +102,13 @@ export default {
           if (value?.length > 0) return true
           return i18n.global.t('login.pwRules')
         },
+      ],
+      confirmRules: [
+        (value: string) => {
+          if (!value) return "请再次输入新密码"
+          if (value !== this.newData.newPass) return "两次输入的密码不一致"
+          return true
+        }
       ]
     }
   },
@@ -96,8 +116,9 @@ export default {
     resetData() {
       this.newData.id = this.$props.user.id
       this.newData.oldPass = ""
-      this.newData.newUsername = ""
+      this.newData.newUsername = this.$props.user.username
       this.newData.newPass = ""
+      this.confirmPass = ""
     },
     closeModal() {
       this.resetData() // reset
@@ -105,6 +126,7 @@ export default {
     },
     saveChanges() {
       if (this.newData.oldPass == '' || this.newData.newUsername == '' || this.newData.newPass == '') return
+      if (this.confirmPass !== this.newData.newPass) return
       this.$emit('save', this.newData)
     },
   },

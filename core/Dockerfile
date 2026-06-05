@@ -1,12 +1,11 @@
-FROM debian:bookworm-slim
-LABEL maintainer="Alireza <alireza7@gmail.com>"
+FROM alpine:latest
+LABEL maintainer="sellength"
 ENV TZ=Asia/Tehran
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apk add --no-cache \
     ca-certificates \
     tzdata \
-    bash \
-    && rm -rf /var/lib/apt/lists/*
+    bash
 COPY sing-box .
 COPY runSingbox.sh .
 ENTRYPOINT [ "./runSingbox.sh" ]

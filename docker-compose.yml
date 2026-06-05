@@ -37,7 +37,6 @@ services:
     restart: unless-stopped
     volumes:
       - "singbox:/app"
-      - "./core/runSingbox.sh:/app/runSingbox.sh"
       - "./cert:/cert"
     ports:
       # Expose common proxy ports on both IPv4 and IPv6

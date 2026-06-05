@@ -7,8 +7,9 @@ services:
     hostname: "s-ui-docker"
     restart: unless-stopped
     tty: true
+    network_mode: host
     environment:
-      - SINGBOX_API=sing-box:1080
+      - SINGBOX_API=127.0.0.1:1080
       - SUI_DB_FOLDER=/usr/local/s-ui/db
       - SUI_BIN_FOLDER=/usr/local/s-ui/bin
       - TZ=Asia/Shanghai
@@ -17,13 +18,6 @@ services:
       - "singbox:/usr/local/s-ui/bin"
       - "./db:/usr/local/s-ui/db"
       - "./cert:/usr/local/s-ui/cert"
-    ports:
-      - "0.0.0.0:2095:2095"
-      - "[::]:2095:2095"
-      - "0.0.0.0:2096:2096"
-      - "[::]:2096:2096"
-    networks:
-      - s-ui-net
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:2095/app/login"]
       interval: 10s
@@ -35,38 +29,13 @@ services:
     image: sellength/s-ui_rebuild-singbox:latest
     container_name: sing-box
     restart: unless-stopped
+    network_mode: host
     volumes:
       - "singbox:/app"
       - "./cert:/cert"
-    ports:
-      # Expose common proxy ports on both IPv4 and IPv6
-      - "0.0.0.0:443:443"
-      - "[::]:443:443"
-      - "0.0.0.0:1443:1443"
-      - "[::]:1443:1443"
-      - "0.0.0.0:2443:2443"
-      - "[::]:2443:2443"
-      - "0.0.0.0:3443:3443"
-      - "[::]:3443:3443"
-      - "0.0.0.0:52023:52023/tcp"
-      - "[::]:52023:52023/tcp"
-      - "0.0.0.0:52023:52023/udp"
-      - "[::]:52023:52023/udp"
-    networks:
-      - s-ui-net
     depends_on:
       s-ui:
         condition: service_healthy
-
-networks:
-  s-ui-net:
-    driver: bridge
-    enable_ipv6: true
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.20.0.0/16
-        - subnet: fd00:cafe::/64
 
 volumes:
   singbox:

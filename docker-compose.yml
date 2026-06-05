@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: coolnnek/s-ui:latest
+    image: sellength/s-ui_rebuild:latest
     container_name: s-ui
     hostname: "s-ui-docker"
     restart: unless-stopped
@@ -38,7 +38,7 @@ services:
     build:
       context: ./core
       dockerfile: Dockerfile
-    image: coolnnek/s-ui-singbox:latest
+    image: sellength/s-ui_rebuild-singbox:latest
     container_name: sing-box
     restart: unless-stopped
     volumes:

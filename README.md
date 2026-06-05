@@ -56,16 +56,37 @@ bash <(curl -Ls https://raw.githubusercontent.com/sellength/S-UI_rebuild/main/in
 
 ## Docker 部署方式
 
-如果您更倾向于使用容器部署，可以使用以下方法。
+如果您更倾向于使用容器部署，可以使用以下方法。我们已提供由 **GitHub Actions** 自动编译的极速、免 CGO 闪退的最新成品容器镜像。
 
-### 方式一：Docker Compose (推荐)
+### 方式一：Docker / Podman Compose (推荐)
 
+#### 1. 使用 Docker Compose
 创建并进入部署目录：
 ```shell
 mkdir s-ui && cd s-ui
 wget -q https://raw.githubusercontent.com/sellength/S-UI_rebuild/main/docker-compose.yml
 docker compose up -d
 ```
+
+#### 2. 使用 Podman Compose (适用于 CentOS / AlmaLinux 等)
+```shell
+mkdir s-ui && cd s-ui
+wget -q https://raw.githubusercontent.com/sellength/S-UI_rebuild/main/docker-compose.yml
+podman-compose up -d
+```
+
+> [!TIP]
+> **如何快速更新或升级镜像：**
+> 以后当代码更新时，您只需要在服务器部署目录下执行以下命令即可一键平滑升级：
+> ```shell
+> # Docker 环境：
+> docker compose pull && docker compose up -d
+> 
+> # Podman 环境（若提示数据卷残留，可配合 prune 一并清理）：
+> podman-compose down
+> podman volume prune -f
+> podman-compose pull && podman-compose up -d
+> ```
 
 ### 方式二：手动运行 Docker 容器
 
@@ -75,9 +96,9 @@ docker compose up -d
 docker run -itd \
     --network host \
     -v $PWD/db/:/usr/local/s-ui/db/ \
-    -v $PWD/cert/:/root/cert/ \
+    -v $PWD/cert/:/usr/local/s-ui/cert/ \
     --name s-ui --restart=unless-stopped \
-    sellength/s-ui:latest
+    ghcr.io/sellength/s-ui_rebuild:latest
 ```
 
 ---

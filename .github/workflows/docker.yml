@@ -53,7 +53,7 @@ jobs:
         git clone -b v1.13.13 https://github.com/SagerNet/sing-box sing-box-src
         cd sing-box-src
         # Build sing-box from source with all essential feature tags
-        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags with_quic,with_grpc,with_wireguard,with_ech,with_utls,with_reality_server,with_acme,with_v2ray_api,with_clash_api,with_gvisor \
+        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags with_quic,with_grpc,with_wireguard,with_utls,with_acme,with_v2ray_api,with_clash_api,with_gvisor \
           -v -trimpath -ldflags "-s -w -buildid=" \
           -o ../core/sing-box ./cmd/sing-box
         cd ..

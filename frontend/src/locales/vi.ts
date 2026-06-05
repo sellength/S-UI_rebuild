@@ -23,6 +23,7 @@ export default {
   noData: "Không có dữ liệu!",
   invalidLogin: "Đăng nhập không hợp lệ!",
   online: "Trực tuyến",
+  status: "Trạng thái",
   version: "Phiên bản",
   email: "Email",
   commaSeparated: "(được phân tách bằng dấu phẩy)",
@@ -103,6 +104,7 @@ export default {
     disable: "Vô hiệu hóa",
     close: "Đóng",
     restartApp: "Khởi động lại ứng dụng",
+    search: "Tìm kiếm",
   },
   login: {
     title: "Đăng nhập",
@@ -153,6 +155,8 @@ export default {
     directDns: "DNS Trực tiếp",
     toDirectDns: "Chuyển hướng tới DNS Trực tiếp",
     jsonSubOptions: "Tùy chọn Khác",
+    langTip: "* Cấu hình ngôn ngữ được lưu tự động vào trình duyệt. Không cần nhấn Lưu.",
+    langSaved: "Đã lưu cài đặt ngôn ngữ cục bộ",
   },
   client: {
     name: "Tên",

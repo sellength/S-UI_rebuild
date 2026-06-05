@@ -21,3 +21,12 @@ tmp
 # Editor directories and files
 .idea
 .vscode
+
+# Development utilities and testing artifacts
+agent_instructions.md
+backend/s-ui
+frontend/run_fix.js
+frontend/run_replace_modals.js
+frontend/test.txt
+test_ip_info.py
+test_suite_all.py

@@ -37,3 +37,679 @@ body {
 .v-btn {
   letter-spacing: 0;
 }
+
+// 自适应 CSS 变量定义与主题适配
+:root {
+  --gauge-track-color: #e5e7eb;
+  --gauge-progress-color: #0052d9;
+}
+
+.v-theme--light {
+  --panel-card-bg: #ffffff;
+  --panel-card-border: #e2e8f0;
+  --panel-card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  --panel-card-hover-border: #0052d9;
+  --panel-card-hover-shadow: 0 4px 12px 0 rgba(0, 82, 217, 0.1);
+  --panel-modal-bg: #ffffff;
+  --panel-modal-border: #e2e8f0;
+  --panel-modal-title: #1f2937;
+  --panel-modal-text: #4b5563;
+  --panel-border-color: rgba(0, 0, 0, 0.08);
+  --gauge-track-color: #f3f4f6;
+  --gauge-progress-color: #0052d9;
+
+  // 全局强力纠偏 Vuetify 硬编码浅字色类，在明亮模式下自适应为高对比度深色，杜绝白字隐形！
+  .text-grey-lighten-4 {
+    color: #0f172a !important; /* Slate-900 (高强度深黑) */
+  }
+  .text-grey-lighten-3 {
+    color: #1e293b !important; /* Slate-800 (次强度大标题) */
+  }
+  .text-grey-lighten-2 {
+    color: #475569 !important; /* Slate-600 (中强度正文) */
+  }
+  .text-grey-lighten-1 {
+    color: #64748b !important; /* Slate-500 (低强度辅助) */
+  }
+  .text-grey {
+    color: #475569 !important; /* 统一普通浅灰为 Slate-600 */
+  }
+}
+
+.v-theme--dark {
+  --panel-card-bg: #111827;
+  --panel-card-border: #1f2937;
+  --panel-card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  --panel-card-hover-border: #3b82f6;
+  --panel-card-hover-shadow: 0 12px 40px 0 rgba(59, 130, 246, 0.15);
+  --panel-modal-bg: #1b1e26;
+  --panel-modal-border: rgba(255, 255, 255, 0.1);
+  --panel-modal-title: #f3f4f6;
+  --panel-modal-text: #f3f4f6;
+  --panel-border-color: rgba(255, 255, 255, 0.08);
+  --gauge-track-color: #1f2937;
+  --gauge-progress-color: #3b82f6;
+}
+
+// 玻璃拟态/扁平工业级微卡片 (Glassmorphism / Industrial Micro-card)
+.panel-card {
+  background: var(--panel-card-bg) !important;
+  border: 1px solid var(--panel-card-border) !important;
+  box-shadow: var(--panel-card-shadow) !important;
+  border-radius: 8px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  
+  &:hover {
+    transform: translateY(-2px);
+    border-color: var(--panel-card-hover-border) !important;
+    box-shadow: var(--panel-card-hover-shadow) !important;
+  }
+}
+
+// 扁平微卡片 (非悬浮的普通卡片)
+.flat-card {
+  background: var(--panel-card-bg) !important;
+  border: 1px solid var(--panel-card-border) !important;
+  border-radius: 8px !important;
+}
+
+// 聚焦时的青色光晕
+.glass-glow-cyan {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  &:focus-within {
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.4) !important;
+    border-color: rgba(6, 182, 212, 0.8) !important;
+  }
+}
+
+// 全局所有输入框与下拉选择框的大一统自适应定制与 notch 挖空高保真适配
+.v-text-field, .v-select, .dark-input {
+  overflow: visible !important; /* 彻底释放输入框最外层容器 */
+  
+  .v-input__control {
+    overflow: visible !important; /* 彻底释放控制包裹层，防削顶削底 */
+  }
+
+  .v-field {
+    border-radius: 6px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: none !important; /* 彻底卸载外层容器强制边框，以恢复 outline notch 拼接挖空 */
+    box-shadow: none !important;
+    overflow: visible !important; /* 解除字段域容器限制，防止削顶/削底 */
+  }
+  
+  .v-field__field {
+    position: relative !important;
+    z-index: 2 !important; /* 强行压在 outline 边框之上，解决 floating label 下半截被遮挡剪切 */
+    overflow: visible !important; /* 解除输入域容器限制，确保标签浮动时 100% 完整可见 */
+  }
+
+  .v-field__outline {
+    z-index: 1 !important; /* 低于 field 层级，让浮动 label 能够完美覆盖在其上方 */
+  }
+
+  /* 强力纠偏 Vuetify 3 Outlined Notch 的长短词两边空白不一致的世纪顽疾 */
+  /* 【物理遮罩无缝闭合边框方案】：将 active 状态下的 notch 宽度彻底归零，使边框在底层闭合为一条完美无缝的实线； */
+  /* 然后通过浮动 label 自身的自适应实色背景与恒定 padding，在视觉上极其自然地“盖出”一个尺寸完美对称、绝对恒定、跨浏览器一致的缺口！ */
+  .v-field--active {
+    .v-field__outline__notch {
+      flex: none !important;
+      width: 0 !important;
+      max-width: 0 !important;
+    }
+    .v-field__outline__legend {
+      width: 0 !important;
+      max-width: 0 !important;
+      padding: 0 !important;
+    }
+  }
+
+}
+
+.v-label.v-field-label--floating {
+  z-index: 5 !important;
+  overflow: visible !important;
+  transform: translateY(-50%) scale(0.75) !important; /* 回滚到最稳定、完美的原生比例 */
+  transform-origin: left center !important; /* 确保缩放原点在左侧，让缩放后的定位极度精准 */
+  padding-left: 6px !important; /* 浮动状态下注入精准对称的 6px Padding 遮罩，极佳的科技视觉间距 */
+  padding-right: 6px !important;
+  
+  /* 强行解禁任何宽度收缩和文字裁切，确保在父容器 notch 宽度归零时，全部字体依然 100% 完整显示 */
+  width: max-content !important;
+  max-width: none !important;
+  white-space: nowrap !important;
+}
+
+.v-theme--light {
+  .v-text-field, .v-select, .dark-input {
+    .v-field__input {
+      background-color: transparent !important; /* 改为透明，无缝融入底色 */
+      color: #1f2937 !important;
+    }
+    .v-field {
+      background-color: transparent !important; /* 消除异色背景，防止浮动标签色块冲突 */
+    }
+    /* 静置状态下的边框与焦点限定 */
+    .v-field__outline {
+      --v-field-border-color: #cbd5e1 !important; /* 优雅的浅灰静置边框 */
+      --v-field-border-opacity: 1 !important;
+      color: #cbd5e1 !important; /* 强行将静置时的 color 设为淡灰色，彻底杜绝静置高亮！ */
+      transition: color 0.2s ease !important;
+    }
+    /* 仅在聚焦状态下亮起科技蓝高亮色 */
+    .v-field--focused .v-field__outline {
+      color: #0052d9 !important;
+    }
+    /* 浮动标签的完美双重保险遮罩，彻底杜绝穿透，同时颜色自适应以消除斑块 */
+    .v-label.v-field-label {
+      color: #4b5563 !important;
+      padding-left: 6px !important;
+      padding-right: 6px !important;
+    }
+    .v-label.v-field-label--floating {
+      background-color: var(--panel-card-bg) !important; /* 自适应卡片白底 */
+      border-radius: 2px;
+    }
+  }
+  
+  /* 针对弹窗内部的浮动标签，自适应为弹窗背景色 */
+  .panel-modal {
+    .v-label.v-field-label--floating {
+      background-color: var(--panel-modal-bg) !important;
+    }
+  }
+}
+
+.v-theme--dark {
+  .v-text-field, .v-select, .dark-input {
+    .v-field__input {
+      background-color: transparent !important; /* 改为透明，无缝融入曜石黑/深灰背景 */
+      color: #f3f4f6 !important;
+    }
+    .v-field {
+      background-color: transparent !important; /* 消除异色背景，防止浮动标签色块冲突 */
+    }
+    /* 静置状态下的边框与焦点限定 */
+    .v-field__outline {
+      --v-field-border-color: rgba(255, 255, 255, 0.15) !important; /* 精致硬朗的微透明白边框 */
+      --v-field-border-opacity: 1 !important;
+      color: rgba(255, 255, 255, 0.15) !important; /* 强行将静置时的 color 设为微透明白，彻底杜绝静置高亮青色！ */
+      transition: color 0.2s ease !important;
+    }
+    /* 仅在聚焦状态下亮起亮青色高亮色 */
+    .v-field--focused .v-field__outline {
+      color: #06b6d4 !important;
+    }
+    /* 浮动标签的完美双重保险遮罩，彻底杜绝穿透，同时颜色自适应以消除斑块 */
+    .v-label.v-field-label {
+      color: #9ca3af !important;
+      padding-left: 6px !important;
+      padding-right: 6px !important;
+    }
+    .v-label.v-field-label--floating {
+      background-color: var(--panel-modal-bg) !important; /* 默认自适应为弹窗背景色 (#1b1e26) */
+      border-radius: 2px;
+    }
+  }
+  
+  /* 在页面卡片和扁平卡片内部，精准覆盖为卡片背景色 (#111827) 以消除色差与亮线横穿 */
+  .panel-card, .flat-card {
+    .v-label.v-field-label--floating {
+      background-color: var(--panel-card-bg) !important;
+    }
+  }
+  
+  /* 在弹窗内部也保证为弹窗背景色 */
+  .panel-modal {
+    .v-label.v-field-label--floating {
+      background-color: var(--panel-modal-bg) !important;
+    }
+  }
+}
+
+// 1Panel 模态弹窗样式
+.panel-modal {
+  background-color: var(--panel-modal-bg) !important;
+  border: 1px solid var(--panel-modal-border) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--panel-card-shadow) !important;
+  
+  .v-card-title {
+    font-size: 1.3rem !important;
+    font-weight: 600 !important;
+    color: var(--panel-modal-title) !important;
+    border-bottom: 1px solid var(--panel-border-color) !important;
+    padding: 16px 24px !important;
+  }
+  
+  .v-card-text {
+    padding: 24px !important;
+    color: var(--panel-modal-text) !important;
+  }
+  
+  .v-card-actions {
+    border-top: 1px solid var(--panel-border-color) !important;
+    padding: 16px 24px !important;
+  }
+
+  /* 终结弹窗内大面积嵌套卡片色块冲突，实现平整表单 */
+  .v-card {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    
+    /* 重塑靠左对齐的精美标题分割线，彻底干掉粗糙横贯死灰线 */
+    .v-card-subtitle {
+      border-bottom: 1px dashed var(--panel-border-color) !important;
+      text-align: left !important;
+      font-weight: 600 !important;
+      font-size: 0.95rem !important;
+      padding: 8px 0 !important;
+      opacity: 0.85;
+      color: inherit !important;
+      min-height: auto !important;
+    }
+  }
+}
+
+// 科技蓝按钮
+.tech-blue-btn {
+  background-color: #3c6efa !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  
+  &:hover {
+    background-color: #4f7eff !important;
+    box-shadow: 0 0 14px rgba(60, 110, 250, 0.5) !important;
+  }
+  
+  &:active {
+    transform: scale(0.96) !important;
+  }
+}
+
+// 科技灰/取消按钮
+.tech-grey-btn {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #9ca3af !important;
+  font-weight: 600 !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: #f3f4f6 !important;
+  }
+  
+  &:active {
+    transform: scale(0.96) !important;
+  }
+}
+
+// 全局所有表格与数据表格的大一统极简透明重塑
+.v-table, .v-data-table {
+  background: transparent !important;
+  background-color: transparent !important;
+
+  .v-table__wrapper {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  table {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  // 表头大一统极简定制
+  thead {
+    background: transparent !important;
+    background-color: transparent !important;
+    
+    tr {
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+    
+    th {
+      font-size: 0.825rem !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.5px !important;
+      border-bottom: 1px solid var(--panel-border-color) !important;
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+  }
+
+  // 表格主体行与单元格定制
+  tbody {
+    background: transparent !important;
+    background-color: transparent !important;
+
+    tr {
+      background: transparent !important;
+      background-color: transparent !important;
+      transition: background-color 0.2s ease !important;
+
+      &:hover {
+        // Hover 行高保真磨砂微亮高亮
+        background-color: rgba(255, 255, 255, 0.02) !important;
+      }
+    }
+
+    td {
+      font-size: 0.85rem !important;
+      border-bottom: 1px solid var(--panel-border-color) !important;
+      background: transparent !important;
+      background-color: transparent !important;
+    }
+  }
+
+  // 数据表格分页脚部大一统极简透明定制
+  .v-data-table-footer {
+    background: transparent !important;
+    background-color: transparent !important;
+    border-top: 1px solid var(--panel-border-color) !important;
+    font-size: 0.8rem !important;
+    color: inherit !important;
+    padding: 8px 16px !important;
+
+    .v-data-table-footer__info {
+      opacity: 0.8;
+    }
+
+    // 分页的 select 下拉框样式无缝融合
+    .v-field {
+      background-color: transparent !important;
+    }
+    
+    .v-btn {
+      color: inherit !important;
+      opacity: 0.85;
+      
+      &:hover {
+        opacity: 1;
+        background-color: rgba(255, 255, 255, 0.05) !important;
+      }
+    }
+  }
+}
+
+// 在浅色主题下的表格细节微调
+.v-theme--light {
+  .v-table, .v-data-table {
+    thead th {
+      color: #374151 !important; // 深色表头字
+    }
+    tbody tr:hover {
+      background-color: rgba(0, 0, 0, 0.015) !important;
+    }
+    .v-data-table-footer {
+      .v-btn:hover {
+        background-color: rgba(0, 0, 0, 0.03) !important;
+      }
+    }
+  }
+}
+
+// 在暗色主题下的表格细节微调
+.v-theme--dark {
+  .v-table, .v-data-table {
+    thead th {
+      color: #9ca3af !important; // 雅致浅灰表头字
+    }
+    tbody tr:hover {
+      background-color: rgba(255, 255, 255, 0.02) !important;
+    }
+    .v-data-table-footer {
+      .v-btn:hover {
+        background-color: rgba(255, 255, 255, 0.04) !important;
+      }
+    }
+  }
+}
+
+// 强力重塑 v-btn-toggle 以支持双主题自适应高对比度立体卡片滑块
+.v-btn-toggle {
+  border-radius: 9999px !important; /* 跑道圆胶囊底座 */
+  padding: 3px !important; /* 给浮起滑块留出呼吸边距 */
+  height: 38px !important; /* 精致的高度 */
+  display: inline-flex !important;
+  align-items: center !important;
+  
+  .v-btn {
+    border-radius: 9999px !important; /* 按钮自身也是跑道圆胶囊 */
+    border: none !important;
+    height: 100% !important;
+    opacity: 0.7;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    font-weight: 500 !important;
+    background-color: transparent !important;
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.v-theme--light {
+  .v-btn-toggle {
+    background-color: rgba(241, 245, 249, 0.8) !important; /* 半透明凹陷灰蓝轨道底色 */
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    border: 1px solid #cbd5e1 !important; /* 轨道外边框 */
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06) !important; /* 轨道凹进阴影 */
+    
+    .v-btn {
+      color: #64748b !important;
+      
+      &:hover:not(.v-btn--active):not(.v-btn--selected) {
+        background-color: rgba(255, 255, 255, 0.4) !important; /* 亮色下未选中的 hover 背景反馈 */
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+      }
+      
+      &.v-btn--active, &.v-btn--selected {
+        background-color: rgba(255, 255, 255, 0.7) !important; /* 毛玻璃亮色卡片 */
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        color: #3c6efa !important; /* 经典科技蓝高亮字 */
+        font-weight: 600 !important;
+        /* 毛玻璃发光与微投影 */
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        opacity: 1 !important;
+      }
+    }
+  }
+}
+
+.v-theme--dark {
+  .v-btn-toggle {
+    background-color: rgba(9, 13, 22, 0.6) !important; /* 半透明凹陷曜石黑轨道底色 */
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    
+    .v-btn {
+      color: #9ca3af !important;
+      
+      &:hover:not(.v-btn--active):not(.v-btn--selected) {
+        background-color: rgba(255, 255, 255, 0.04) !important; /* 暗色下未选中的 hover 背景反馈 */
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+      }
+      
+      &.v-btn--active, &.v-btn--selected {
+        background-color: rgba(27, 30, 38, 0.75) !important; /* 毛玻璃悬浮深灰卡片 */
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        color: #3b82f6 !important; /* 科技亮蓝字 */
+        font-weight: 600 !important;
+        /* 暗处立体悬浮与精细微光边框 */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        opacity: 1 !important;
+      }
+    }
+  }
+}
+
+// 强力重塑 v-tabs 成为与 v-btn-toggle 一致的磨砂毛玻璃胶囊滑块
+.v-tabs {
+  border-radius: 9999px !important; /* 跑道圆胶囊底座 */
+  padding: 3px !important; /* 给浮起滑块留出呼吸边距 */
+  height: 38px !important; /* 精致的高度 */
+  min-height: 38px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  border-bottom: none !important; /* 抹除默认下划边框 */
+  
+  // 隐藏底下的指示器滑块
+  .v-tab__slider {
+    display: none !important;
+  }
+  
+  // Vuetify 3 内部布局穿透
+  .v-slide-group {
+    height: 100% !important;
+    width: auto !important;
+  }
+  
+  .v-slide-group__container {
+    height: 100% !important;
+  }
+  
+  .v-slide-group__content {
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important; /* 选项间距 */
+  }
+
+  // 重构选项标签按钮
+  .v-tab {
+    border-radius: 9999px !important; /* 按钮自身也是跑道圆胶囊 */
+    border: none !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    min-width: unset !important;
+    padding: 0 16px !important;
+    opacity: 0.7;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    font-weight: 500 !important;
+    background-color: transparent !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+    
+    // 抹除默认下划线、边框和内边距影响
+    &::before, &::after {
+      display: none !important;
+    }
+    
+    .v-btn__content {
+      font-weight: 500 !important;
+    }
+
+    &:hover {
+      opacity: 1 !important;
+    }
+  }
+}
+
+// 亮色主题自适应
+.v-theme--light {
+  .v-tabs {
+    background-color: rgba(241, 245, 249, 0.8) !important; /* 半透明凹陷灰蓝轨道底色 */
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+    
+    .v-tab {
+      color: #64748b !important;
+      
+      &:hover:not(.v-tab--selected) {
+        background-color: rgba(255, 255, 255, 0.4) !important; /* 亮色下未选中的 hover 背景反馈 */
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+      }
+      
+      &.v-tab--selected {
+        background-color: rgba(255, 255, 255, 0.7) !important; /* 亮色毛玻璃卡片 */
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        color: #3c6efa !important; /* 经典科技蓝高亮字 */
+        font-weight: 600 !important;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+        border: 1px solid rgba(255, 255, 255, 0.5) !important;
+        opacity: 1 !important;
+      }
+    }
+  }
+}
+
+// 暗色主题自适应
+.v-theme--dark {
+  .v-tabs {
+    background-color: rgba(9, 13, 22, 0.6) !important; /* 半透明凹陷曜石黑轨道底色 */
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+    
+    .v-tab {
+      color: #9ca3af !important;
+      
+      &:hover:not(.v-tab--selected) {
+        background-color: rgba(255, 255, 255, 0.04) !important; /* 暗色下未选中的 hover 背景反馈 */
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+      }
+      
+      &.v-tab--selected {
+        background-color: rgba(27, 30, 38, 0.75) !important; /* 暗色毛玻璃卡片 */
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        color: #3b82f6 !important; /* 科技亮蓝字 */
+        font-weight: 600 !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        opacity: 1 !important;
+      }
+    }
+  }
+}
+
+// 解决 Option 弹出菜单中 v-switch/v-checkbox 开关左侧被截断/切断的问题
+.v-menu-custom-options {
+  .v-list-item,
+  .v-list-item__content {
+    overflow: visible !important;
+  }
+  
+  .v-list-item {
+    padding-inline-start: 16px !important;
+  }
+}
+
+// 全局支持：若任何 v-list-item 中包含 switch/checkbox，释放其 overflow 限制防止切边
+.v-list-item {
+  &:has(.v-switch), &:has(.v-checkbox) {
+    overflow: visible !important;
+    .v-list-item__content {
+      overflow: visible !important;
+    }
+  }
+}
+
+// 解决全局 v-switch 和 v-checkbox 边缘被截断（特别是滑块或勾选框边缘）的问题
+.v-switch, .v-checkbox {
+  overflow: visible !important;
+  .v-input__control,
+  .v-selection-control,
+  .v-selection-control__wrapper {
+    overflow: visible !important;
+  }
+}
+

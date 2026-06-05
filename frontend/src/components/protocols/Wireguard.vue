@@ -59,9 +59,9 @@
     </v-row>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-menu v-model="menu" :close-on-content-click="false" location="start">
+      <v-menu content-class="v-menu-custom-options" v-model="menu" :close-on-content-click="false" location="start">
         <template v-slot:activator="{ props }">
-          <v-btn v-bind="props" hide-details variant="tonal">{{ $t('types.wg.options') }}</v-btn>
+          <v-btn class="v-menu-custom-activator" v-bind="props" hide-details variant="tonal">{{ $t('types.wg.options') }}</v-btn>
         </template>
         <v-card>
           <v-list>
@@ -95,7 +95,7 @@
     <template v-for="(p, index) in data.peers">
       <v-card style="margin-top: 1rem;">
         <v-card-subtitle>
-          {{ $t('types.wg.peer') + ' ' + (index+1) }} <v-icon icon="mdi-delete" @click="data.peers.splice(index,1)" />
+          {{ $t('types.wg.peer') + ' ' + (Number(index)+1) }} <v-icon icon="mdi-delete" @click="data.peers.splice(Number(index),1)" />
         </v-card-subtitle>
         <Peer :data="p" />
       </v-card>

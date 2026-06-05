@@ -1,230 +1,147 @@
-# S-UI
-**An Advanced Web Panel • Built on SagerNet/Sing-Box**
+# S-UI 重构版 (S-UI Rebuild)
+**基于 SagerNet/Sing-Box 构建的高级 Web 面板 • 针对原版 Bug 深度修复与功能优化**
 
-![](https://img.shields.io/github/v/release/alireza0/s-ui.svg)
-![S-UI Docker pull](https://img.shields.io/docker/pulls/alireza7/s-ui.svg)
-![S-UI-Singbox Docker pull](https://img.shields.io/docker/pulls/alireza7/s-ui-singbox.svg)
-[![Downloads](https://img.shields.io/github/downloads/alireza0/s-ui/total.svg)](https://img.shields.io/github/downloads/alireza0/s-ui/total.svg)
-[![License](https://img.shields.io/badge/license-GPL%20V3-blue.svg?longCache=true)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+本项目是基于原始项目 [alireza0/s-ui](https://github.com/alireza0/s-ui) 的重构与优化版本。针对原项目在中文环境下存在的配置保存 Bug 进行了彻底修复，优化了前端 UI 界面细节，并增加了对部分新协议特性的支持，旨在提供一个更稳定、易用的 Sing-Box 面板管理工具。
 
-> **Disclaimer:** This project is only for personal learning and communication, please do not use it for illegal purposes, please do not use it in a production environment
+> **免责声明：** 本项目仅供个人学习与技术交流使用，请勿用于非法用途，请勿在生产环境或商业场景中使用。
 
-**If you think this project is helpful to you, you may wish to give a**:star2:
+**如果本项目对您有所帮助，欢迎点一个** :star2:
 
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/alireza7)
+---
 
-- USDT (TRC20): `TYTq73Gj6dJ67qe58JVPD9zpjW2cc9XgVz`
+## 快速概览
 
-## Quick Overview
-| Features                               |      Enable?       |
-| -------------------------------------- | :----------------: |
-| Multi-Protocol                         | :heavy_check_mark: |
-| Multi-Language                         | :heavy_check_mark: |
-| Multi-Client/Inbound                   | :heavy_check_mark: |
-| Advanced Traffic Routing Interface     | :heavy_check_mark: |
-| Client & Traffic & System Status       | :heavy_check_mark: |
-| Subscription Service (link/json + info)| :heavy_check_mark: |
-| Dark/Light Theme                       | :heavy_check_mark: |
+| 功能 | 是否支持 | 状态/优化项 |
+| -------------------------------------- | :----------------: | :--- |
+| 多协议支持 (VLESS, VMess, Trojan, TUIC, Hysteria2, Shadowsocks等) | :heavy_check_mark: | 基础协议全支持，新增 AnyTLS 交互细节优化 |
+| 多语言界面切换 (中文、英文、波斯文等) | :heavy_check_mark: | **[重磅修复]** 解决原版切换中文后配置无法保存的致命 Bug |
+| 多客户端 / 多入站 (Inbounds) 管理 | :heavy_check_mark: | 支持在单个入站端口下添加并管理多个客户端 |
+| 高级流量路由与分流规则管理 | :heavy_check_mark: | 可视化管理路由规则集与分流策略 |
+| 客户端与系统状态监控 (流量、CPU、内存等) | :heavy_check_mark: | 修复了部分资源指示器和 Toast 信息反馈异常 |
+| 订阅服务 (链接订阅 / JSON订阅 / 流量及有效期提示) | :heavy_check_mark: | 完善了订阅分发逻辑 |
+| 深色 / 浅色主题切换 | :heavy_check_mark: | 曜石黑/半透明磨砂玻璃微调，提升了视觉精致度 |
 
+---
 
-## Default Installation Informarion
-- Panel Port: 2095
-- Panel Path: /app/
-- Subscription Port: 2096
-- Subscription Path: /sub/
-- User/Passowrd: admin
+## 默认安装信息
 
-## Install & Upgrade to Latest Version
+- **面板监听端口**：`2095`
+- **面板访问路径**：`/app/`
+- **订阅监听端口**：`2096`
+- **订阅访问路径**：`/sub/`
+- **默认用户名/密码**：`admin` / `admin`
+  > **注意**：
+  > 1. 为了安全性，如果使用一键脚本全新安装（未检测到已有数据库文件），脚本会**随机生成登录账号和密码**，并在安装结束时在终端中输出。
+  > 2. 若您遗忘了登录密码，可在服务器终端输入 `s-ui` 命令，使用内置菜单功能进行密码查看或重置。
 
-```sh
-bash <(curl -Ls https://raw.githubusercontent.com/alireza0/s-ui/master/install.sh)
-```
+---
 
-## Install Custom Version
+## 安装与升级方法 (非 Docker 安装方式)
 
-**Step 1:** To install your desired version, add the version to the end of the installation command. e.g., ver `0.0.1`:
+在您的 Linux/macOS 服务器上执行以下一键安装脚本：
 
 ```sh
-bash <(curl -Ls https://raw.githubusercontent.com/alireza0/s-ui/master/install.sh) 0.0.1
+bash <(curl -Ls https://raw.githubusercontent.com/sellength/S-UI_rebuild/main/install.sh)
 ```
 
-## Uninstall S-UI
+### 安装指定版本
+
+如果您需要安装指定的旧版本，可以在命令后指定版本号（例如安装 `v1.0.0`）：
 
 ```sh
-systemctl disable sing-box --now
-systemctl disable s-ui  --now
-
-rm -f /etc/systemd/system/s-ui.service
-rm -f /etc/systemd/system/sing-box.service
-systemctl daemon-reload
-
-rm -fr /usr/local/s-ui
+bash <(curl -Ls https://raw.githubusercontent.com/sellength/S-UI_rebuild/main/install.sh) v1.0.0
 ```
 
-## Install using Docker
+---
 
-<details>
-   <summary>Click for details</summary>
+## Docker 部署方式
 
-### Usage
+如果您更倾向于使用容器部署，可以使用以下方法。
 
-**Step 1:** Install Docker
+### 方式一：Docker Compose (推荐)
 
-```shell
-curl -fsSL https://get.docker.com | sh
-```
-
-**Step 2:** Install S-UI
-
-> Docker compose method
-
+创建并进入部署目录：
 ```shell
 mkdir s-ui && cd s-ui
-wget -q https://raw.githubusercontent.com/alireza0/s-ui/main/docker-compose.yml
+wget -q https://raw.githubusercontent.com/sellength/S-UI_rebuild/main/docker-compose.yml
 docker compose up -d
 ```
 
-> Use docker for s-ui only
+### 方式二：手动运行 Docker 容器
+
+若要使容器与宿主机网络完全打通（免去繁琐的端口映射，直接在安全组/防火墙中开放对应节点端口即可），推荐使用 `host` 网络模式：
 
 ```shell
-mkdir s-ui && cd s-ui
 docker run -itd \
-    -p 2095:2095 -p 2096:2096 -p 443:443 -p 80:80 \
+    --network host \
     -v $PWD/db/:/usr/local/s-ui/db/ \
     -v $PWD/cert/:/root/cert/ \
     --name s-ui --restart=unless-stopped \
-    alireza7/s-ui:latest
+    sellength/s-ui:latest
 ```
 
-> Build your own image
+---
 
-```shell
-docker build -t s-ui .
+## 🛠️ 版本更新日志 (Changelog)
+
+### v1.4.2-rebuild (当前版本)
+- **[修复]** 修复了在系统设置中切换为“中文 (Simplified)”后，设置无法持久化保存到数据库的 Bug。
+- **[修复]** 修正了 UI 界面中多个操作触发后，Toast 提示状态未及时刷新或误提示的逻辑缺陷。
+- **[优化]** 对面板和订阅的资源路径处理（`webPath`, `subPath`）做出了更健壮的输入过滤，避免缺少 `/` 导致的 404 问题。
+- **[迁移]** 将一键安装脚本与系统控制命令的自动更新指向迁移到 `sellength/S-UI_rebuild` 新仓库，确保了脚本维护与更新的独立性。
+- **[特性]** 优化了前端对 AnyTLS 协议设置的支持与 UI 表单控制。
+- **[配置]** 默认 Docker Compose 配置增加了测试端口映射的注释模板，提供更好的自定义端口指导。
+
+---
+
+## 系统管理命令
+
+安装完成后，您可以在服务器终端直接运行 `s-ui` 命令来调出管理菜单。支持的子命令如下：
+
+```text
+s-ui              - 显示管理脚本菜单
+s-ui start        - 启动面板与 Sing-Box
+s-ui stop         - 停止面板与 Sing-Box
+s-ui restart      - 重启面板与 Sing-Box
+s-ui status       - 查看运行状态
+s-ui enable       - 设置面板开机自启
+s-ui disable      - 取消开机自启
+s-ui log          - 查看面板运行日志
+s-ui update       - 强制重新安装最新版本
+s-ui install      - 执行全新安装
+s-ui uninstall    - 卸载面板与 Sing-Box
 ```
 
-</details>
+## 贡献与本地开发
 
-## Manual run + contribution
+如果您想对本项目进行二次开发或贡献代码，请参考以下编译说明。
 
-<details>
-   <summary>Click for details</summary>
-
-### Build and run whole project
-```shell
-./runSUI.sh
-```
-
-### - Frontend
-
-Frontend codes are in `frontend` folder in the root of repository.
-
-To run it localy for instant developement you can use (apply automatic changes on file save):
+### 1. 前端开发 (Vuetify + Vite)
+前端源码位于 `frontend` 文件夹：
 ```shell
 cd frontend
+npm install
 npm run dev
 ```
-> By this command it will run a `vite` web server on separate port `3000`, with backend proxy to `http://localhost:2095`. You can change it in `frontend/vite.config.mts`.
+前端将在 `3000` 端口启动开发服务器，并通过代理将 API 请求转发至后端的 `2095` 端口。
 
-To build fronend:
-```shell
-cd frontend
-npm run build
-```
-
-### - Backend
-Backend codes are in `backend` folder in the root of repository.
-> Please build fronend once before!
-
-To build backend:
+### 2. 后端开发与编译 (Go)
+编译前请确保前端已完成打包（即拥有最新的 `frontend/dist` 资源）：
 ```shell
 cd backend
-
-# remove old frontend compiled files
 rm -fr web/html/*
-# apply new frontend compiled files
 cp -R ../frontend/dist/ web/html/
-# build
 go build -o ../sui main.go
 ```
+编译完成后，会在根目录下生成 `sui` 二进制程序，在根目录下直接执行 `./sui` 即可运行。
 
-To run backend (from root folder of repository):
-```shell
-./sui
-```
+---
 
-</details>
-
-## Languages
-
-- English
-- Farsi
-- Vietnamese
-- Chinese (Simplified)
-- Chinese (Traditional)
-
-## Features
-
-- Supported protocols:
-  - General:  Mixed, SOCKS, HTTP, HTTPS, Direct, Redirect, TProxy
-  - V2Ray based: VLESS, VMess, Trojan, Shadowsocks
-  - Other protocols: ShadowTLS, Hysteria, Hysteri2, Naive, TUIC
-- Supports XTLS protocols
-- An advanced interface for routing traffic, incorporating PROXY Protocol, External, and Transparent Proxy, SSL Certificate, and Port
-- An advanced interface for inbound and outbound configuration
-- Clients’ traffic cap and expiration date
-- Displays online clients, inbounds and outbounds with traffic statistics, and system status monitoring
-- Subscription service with ability to add external links and subscription
-- HTTPS for secure access to the web panel and subscription service (self-provided domain + SSL certificate)
-- Dark/Light theme
-
-## Recommended OS
+## 支持的操作系统
 
 - Ubuntu 20.04+
 - Debian 11+
 - CentOS 8+
 - Fedora 36+
-- Arch Linux
-- Parch Linux
-- Manjaro
-- Armbian
-- AlmaLinux 9+
-- Rocky Linux 9+
-- Oracle Linux 8+
-- OpenSUSE Tubleweed
-
-## Environment Variables
-
-<details>
-  <summary>Click for details</summary>
-
-### Usage
-
-| Variable       |                      Type                      | Default       |
-| -------------- | :--------------------------------------------: | :------------ |
-| SUI_LOG_LEVEL  | `"debug"` \| `"info"` \| `"warn"` \| `"error"` | `"info"`      |
-| SUI_DEBUG      |                   `boolean`                    | `false`       |
-| SUI_BIN_FOLDER |                    `string`                    | `"bin"`       |
-| SUI_DB_FOLDER  |                    `string`                    | `"db"`        |
-| SINGBOX_API    |                    `string`                    | -             |
-
-</details>
-
-## SSL Certificate
-
-<details>
-  <summary>Click for details</summary>
-
-### Certbot
-
-```bash
-snap install core; snap refresh core
-snap install --classic certbot
-ln -s /snap/bin/certbot /usr/bin/certbot
-
-certbot certonly --standalone --register-unsafely-without-email --non-interactive --agree-tos -d <Your Domain Name>
-```
-
-</details>
-
-## Stargazers over Time
-[![Stargazers over time](https://starchart.cc/alireza0/s-ui.svg)](https://starchart.cc/alireza0/s-ui)
+- Arch Linux / Manjaro
+- AlmaLinux 9+ / Rocky Linux 9+

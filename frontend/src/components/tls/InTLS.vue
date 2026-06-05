@@ -1,5 +1,5 @@
 <template>
-  <v-card :subtitle="$t('objects.tls')">
+  <v-card :subtitle="$t('objects.tls')" class="pb-4">
     <v-row>
       <v-col cols="12" sm="6" md="4" v-if="tlsOptional">
         <v-switch color="primary" :label="$t('tls.enable')" v-model="tlsEnable" hide-details></v-switch>
@@ -18,21 +18,24 @@
       <v-row>
         <v-col cols="auto">
           <v-btn-toggle v-model="usePath"
-          class="rounded-xl"
-          density="compact"
+          density="comfortable"
           variant="outlined"
-          shaped
-          mandatory>
+          mandatory
+          >
             <v-btn
+              value="0"
+              class="px-4 text-none"
               @click="tls.key=undefined; tls.certificate=undefined"
             >{{ $t('tls.usePath') }}</v-btn>
             <v-btn
+              value="1"
+              class="px-4 text-none"
               @click="tls.key_path=undefined; tls.certificate_path=undefined"
             >{{ $t('tls.useText') }}</v-btn>
           </v-btn-toggle>
         </v-col>
       </v-row>
-      <v-row v-if="usePath == 0">
+      <v-row v-if="usePath === '0'">
         <v-col cols="12" sm="6" md="4">
           <v-text-field
             :label="$t('tls.certPath')"
@@ -114,9 +117,9 @@
     </template>
     <v-card-actions v-if="tls.enabled && tlsId == 0">
       <v-spacer></v-spacer>
-      <v-menu v-model="menu" :close-on-content-click="false" location="start" v-if="tls.enabled">
+      <v-menu content-class="v-menu-custom-options" v-model="menu" :close-on-content-click="false" location="start" v-if="tls.enabled">
         <template v-slot:activator="{ props }">
-          <v-btn v-bind="props" hide-details variant="tonal">{{ $t('tls.options') }}</v-btn>
+          <v-btn class="v-menu-custom-activator" v-bind="props" hide-details variant="tonal">{{ $t('tls.options') }}</v-btn>
         </template>
         <v-card>
           <v-list>
@@ -150,7 +153,7 @@ export default {
   data() {
     return {
       menu: false,
-      usePath: this.$props.inbound.tls.key == undefined ? 0 : 1,
+      usePath: this.$props.inbound.tls.key == undefined ? "0" : "1",
       defaults: defaultInTls,
       alpn: [
         { title: "H3", value: 'h3' },

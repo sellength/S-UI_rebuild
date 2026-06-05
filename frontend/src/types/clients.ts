@@ -108,6 +108,10 @@ export function randomConfigs(user: string): Config {
       name: user,
       password: mixedPassword,
     },
+    anytls: {
+      name: user,
+      password: mixedPassword,
+    },
   }
 }
 

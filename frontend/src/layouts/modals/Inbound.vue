@@ -1,81 +1,112 @@
 <template>
   <v-dialog transition="dialog-bottom-transition" width="800">
-    <v-card class="rounded-lg">
-      <v-card-title>
-        {{ $t('actions.' + title) + " " + $t('objects.inbound') }}
+    <v-card class="panel-modal pa-4" style="border-radius: 12px; max-height: 90vh; display: flex; flex-direction: column;">
+      <v-card-title class="px-2 pb-2">
+        <span class="text-h6 font-weight-bold text-grey-lighten-3">
+          {{ $t('actions.' + title) + " " + $t('objects.inbound') }}
+        </span>
       </v-card-title>
-      <v-divider></v-divider>
-      <v-card-text style="padding: 0 16px; overflow-y: scroll;">
+      <v-divider class="mb-4" style="opacity: 0.1;"></v-divider>
+      
+      <v-card-text style="padding: 0 20px; overflow-y: auto;" class="flex-grow-1">
         <v-container style="padding: 0;">
-          <v-row>
-            <v-col cols="12" sm="6" md="4">
+          <v-row style="row-gap: 16px;" class="mb-4">
+            <v-col cols="12" sm="6" md="4" class="py-1">
               <v-select
-              hide-details
-              :label="$t('type')"
-              :items="Object.keys(inTypes).map((key,index) => ({title: key, value: Object.values(inTypes)[index]}))"
-              v-model="inbound.type"
-              @update:modelValue="changeType">
-              </v-select>
+                hide-details
+                :label="$t('type')"
+                :items="Object.keys(inTypes).map((key,index) => ({title: key, value: Object.values(inTypes)[index]}))"
+                v-model="inbound.type"
+                @update:modelValue="changeType"
+                variant="outlined"
+                class="dark-input"
+                density="comfortable"
+              ></v-select>
             </v-col>
-            <v-col cols="12" sm="6" md="4">
-              <v-text-field v-model="inbound.tag" :label="$t('objects.tag')" hide-details></v-text-field>
+            <v-col cols="12" sm="6" md="4" class="py-1">
+              <v-text-field v-model="inbound.tag" :label="$t('objects.tag')" hide-details variant="outlined" class="dark-input" density="comfortable"></v-text-field>
             </v-col>
           </v-row>
+
           <v-tabs
             v-if="HasInData.includes(inbound.type)"
             v-model="side"
-            density="compact"
-            fixed-tabs
-            align-tabs="center"
+            density="comfortable"
+            style="margin-bottom: 16px;"
           >
-            <v-tab value="s">{{ $t('in.sSide') }}</v-tab>
-            <v-tab value="c">{{ $t('in.cSide') }}</v-tab>
+            <v-tab value="s" class="text-none font-weight-bold">{{ $t('in.sSide') }}</v-tab>
+            <v-tab value="c" class="text-none font-weight-bold">{{ $t('in.cSide') }}</v-tab>
           </v-tabs>
-          <v-window v-model="side" style="margin-top: 10px;">
+
+          <v-window v-model="side" class="pt-2">
+            <!-- 服务端设置 -->
             <v-window-item value="s">
-              <Listen :inbound="inbound" :inTags="inTags" />
-              <Direct v-if="inbound.type == inTypes.Direct" direction="in" :data="inbound" />
-              <Shadowsocks v-if="inbound.type == inTypes.Shadowsocks" direction="in" :data="inbound" />
-              <Hysteria v-if="inbound.type == inTypes.Hysteria" direction="in" :data="inbound" />
-              <Hysteria2 v-if="inbound.type == inTypes.Hysteria2" direction="in" :data="inbound" />
-              <Naive v-if="inbound.type == inTypes.Naive" :inbound="inbound" />
-              <ShadowTls v-if="inbound.type == inTypes.ShadowTLS" direction="in" :data="inbound" :outTags="outTags" />
-              <Tuic v-if="inbound.type == inTypes.TUIC" direction="in" :data="inbound" />
-              <TProxy v-if="inbound.type == inTypes.TProxy" :inbound="inbound" />
-              <Transport v-if="Object.hasOwn(inbound,'transport')" :data="inbound" />
-              <Users v-if="HasOptionalUser.includes(inbound.type)" :inbound="inbound" />
-              <InTls v-if="Object.hasOwn(inbound,'tls')"  :inbound="inbound" :tlsConfigs="tlsConfigs" :tls_id="tls_id" />
-              <Multiplex v-if="Object.hasOwn(inbound,'multiplex')" direction="in" :data="inbound" />
-              <v-switch v-model="inboundStats" color="primary" :label="$t('stats.enable')" hide-details></v-switch>
+              <div class="d-flex flex-column" style="gap: 16px;">
+                <Listen :inbound="inbound" :inTags="inTags" />
+                <Direct v-if="inbound.type == inTypes.Direct" direction="in" :data="inbound" />
+                <Shadowsocks v-if="inbound.type == inTypes.Shadowsocks" direction="in" :data="inbound" />
+                <Hysteria v-if="inbound.type == inTypes.Hysteria" direction="in" :data="inbound" />
+                <Hysteria2 v-if="inbound.type == inTypes.Hysteria2" direction="in" :data="inbound" />
+                <Naive v-if="inbound.type == inTypes.Naive" :inbound="inbound" />
+                <ShadowTls v-if="inbound.type == inTypes.ShadowTLS" direction="in" :data="inbound" :outTags="outTags" />
+                <Tuic v-if="inbound.type == inTypes.TUIC" direction="in" :data="inbound" />
+                <TProxy v-if="inbound.type == inTypes.TProxy" :inbound="inbound" />
+                <Transport v-if="Object.hasOwn(inbound,'transport')" :data="inbound" />
+                <Users v-if="HasOptionalUser.includes(inbound.type)" :inbound="inbound" />
+                <InTls v-if="Object.hasOwn(inbound,'tls')"  :inbound="inbound" :tlsConfigs="tlsConfigs" :tls_id="tls_id" />
+                <Multiplex v-if="Object.hasOwn(inbound,'multiplex')" direction="in" :data="inbound" />
+                <v-card class="pb-4">
+                  <v-row>
+                    <v-col cols="12" sm="6" md="4">
+                      <v-switch v-model="inboundStats" color="cyan" :label="$t('stats.enable')" hide-details></v-switch>
+                    </v-col>
+                  </v-row>
+                </v-card>
+              </div>
             </v-window-item>
+
+            <!-- 客户端设置 -->
             <v-window-item value="c">
-              <OutJsonVue :inData="inData" :type="inbound.type" />
-              <v-card>
-                <v-card-subtitle>{{ $t('in.multiDomain') }}
-                  <v-icon @click="add_addr" icon="mdi-plus"></v-icon>
-                </v-card-subtitle>
-                <template v-for="addr,index in inData.addrs">
-                  {{ $t('in.addr') }} #{{ (index+1) }} <v-icon icon="mdi-delete" @click="inData.addrs.splice(index,1)" />
-                  <v-divider></v-divider>
-                  <AddrVue :addr="addr" :hasTls="Object.hasOwn(inbound,'tls')" />
-                </template>
-              </v-card>
+              <div class="d-flex flex-column" style="gap: 16px;">
+                <OutJsonVue :inData="inData" :type="inbound.type" />
+                
+                <div class="flat-card pa-4 mt-2" style="border-radius: 8px;">
+                  <div class="text-subtitle-2 text-grey-lighten-2 d-flex align-center justify-space-between mb-2">
+                    <span>{{ $t('in.multiDomain') }}</span>
+                    <v-btn icon="mdi-plus" variant="text" size="small" color="cyan" @click="add_addr"></v-btn>
+                  </div>
+                  <v-divider class="mb-4" style="opacity: 0.1;"></v-divider>
+                  <div 
+                    v-for="(addr, idx) in inData.addrs" 
+                    :key="idx" 
+                    class="mb-4 pa-4 rounded" 
+                    style="background: rgba(255,255,255,0.01); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px;"
+                  >
+                    <div class="d-flex align-center justify-space-between mb-2">
+                      <span class="text-caption text-grey font-weight-bold">{{ $t('in.addr') }} #{{ (idx+1) }}</span>
+                      <v-btn icon="mdi-delete-outline" color="error" variant="text" size="small" @click="inData.addrs.splice(idx,1)"></v-btn>
+                    </div>
+                    <AddrVue :addr="addr" :hasTls="Object.hasOwn(inbound,'tls')" />
+                  </div>
+                </div>
+              </div>
             </v-window-item>
           </v-window>
         </v-container>
       </v-card-text>
-      <v-card-actions>
+      
+      <v-card-actions class="px-2 pt-4">
         <v-spacer></v-spacer>
         <v-btn
-          color="blue-darken-1"
-          variant="text"
+          class="tech-grey-btn px-4"
+          size="comfortable"
           @click="closeModal"
         >
           {{ $t('actions.close') }}
         </v-btn>
         <v-btn
-          color="blue-darken-1"
-          variant="text"
+          class="tech-blue-btn px-4"
+          size="comfortable"
           :loading="loading"
           @click="saveChanges"
         >
@@ -132,6 +163,7 @@ export default {
         InTypes.TUIC,
         InTypes.Hysteria2,
         InTypes.Naive,
+        InTypes.AnyTLS,
       ]
     }
   },

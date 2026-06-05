@@ -19,7 +19,16 @@
                 v-model="$i18n.locale"
                 @update:modelValue="changeLocale">
                 <template v-slot:append>
-                  <v-icon icon="mdi-theme-light-dark" @click="toggleTheme()"></v-icon>
+                  <v-switch
+                    v-model="darkMode"
+                    @update:modelValue="toggleTheme"
+                    hide-details
+                    inset
+                    true-icon="mdi-moon-waning-crescent"
+                    false-icon="mdi-white-balance-sunny"
+                    color="primary"
+                    style="max-width: 50px; margin-top: -6px;"
+                  ></v-switch>
                 </template>
               </v-select>
             </v-card-text>
@@ -78,7 +87,6 @@ const changeLocale = (l: any) => {
   localStorage.setItem('locale', locale.current.value)
 }
 const toggleTheme = () => {
-  darkMode.value = !darkMode.value
   theme.global.name.value = darkMode.value ? "dark" : "light"
   localStorage.setItem('theme', theme.global.name.value)
 }

@@ -42,8 +42,11 @@
 <script lang="ts">
 import DatePicker from 'vue3-persian-datetime-picker'
 import { i18n } from '@/locales'
+// @ts-ignore
 import 'moment/locale/vi'
+// @ts-ignore
 import 'moment/locale/zh-cn'
+// @ts-ignore
 import 'moment/locale/zh-tw'
 
 export default {

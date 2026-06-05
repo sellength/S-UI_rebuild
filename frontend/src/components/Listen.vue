@@ -1,5 +1,5 @@
 <template>
-  <v-card :subtitle="$t('objects.listen')">
+  <v-card :subtitle="$t('objects.listen')" class="pb-4">
     <v-row>
       <v-col cols="12" sm="6" md="4">
         <v-text-field
@@ -80,9 +80,9 @@
     </v-row>
     <v-card-actions class="pt-0">
       <v-spacer></v-spacer>
-      <v-menu v-model="menu" :close-on-content-click="false" location="start">
+      <v-menu content-class="v-menu-custom-options" v-model="menu" :close-on-content-click="false" location="start">
         <template v-slot:activator="{ props }">
-          <v-btn v-bind="props" hide-details variant="tonal">{{ $t('listen.options') }}</v-btn>
+          <v-btn class="v-menu-custom-activator" v-bind="props" hide-details variant="tonal">{{ $t('listen.options') }}</v-btn>
         </template>
         <v-card>
           <v-list>

@@ -1,4 +1,3 @@
-
 <template>
   <ClientModal 
     v-model="modal.visible"
@@ -23,125 +22,212 @@
     :tag="stats.tag"
     @close="closeStats"
   />
-  <v-row justify="center" align="center">
-    <v-col cols="auto">
-      <v-btn color="primary" @click="showModal(-1)">{{ $t('actions.add') }}</v-btn>
-    </v-col>
-    <v-col cols="auto">
-      <v-select
-      hide-details
-      variant="underlined"
-      density="compact"
-      :label="$t('filter')"
-      :items="filterItems"
-      v-model="filter">
-      </v-select>
+
+  <!-- 精致顶部 Action Bar -->
+  <v-row class="mb-4">
+    <v-col cols="12">
+      <div class="d-flex flex-column flex-sm-row align-sm-center justify-space-between pa-4 flat-card" style="gap: 16px;">
+        <div class="text-h6 font-weight-bold d-flex align-center">
+          <v-icon color="primary" class="mr-2">mdi-account-group</v-icon>
+          {{ $t('pages.clients') || 'Users' }}
+        </div>
+        <div class="d-flex flex-wrap align-center flex-grow-1 flex-sm-grow-0" style="gap: 12px; max-width: 600px; width: 100%;">
+          <v-text-field
+            v-model="searchQuery"
+            prepend-inner-icon="mdi-magnify"
+            :placeholder="$t('actions.search') || 'Search...'"
+            hide-details
+            density="compact"
+            variant="outlined"
+            class="dark-input flex-grow-1"
+            style="min-width: 180px;"
+          ></v-text-field>
+          <v-select
+            v-model="filter"
+            :label="$t('filter')"
+            :items="filterItems"
+            hide-details
+            density="compact"
+            variant="outlined"
+            class="dark-input"
+            style="max-width: 160px; min-width: 140px;"
+          ></v-select>
+          <v-btn class="tech-blue-btn text-none" prepend-icon="mdi-plus" @click="showModal(-1)" style="height: 40px; border-radius: 6px;">
+            {{ $t('actions.add') }}
+          </v-btn>
+        </div>
+      </div>
     </v-col>
   </v-row>
+
+  <!-- 工业级高对比度 Data Table -->
   <v-row>
-    <template v-for="(item, index) in clients" :key="item.id">
-      <v-col cols="12" sm="4" md="3" lg="2" :style="checkFilter(item)? '' : 'opacity: .2'">
-        <v-card rounded="xl" elevation="5" min-width="200">
-          <v-card-title>
-            <v-row>
-              <v-col>{{ item.name }}</v-col>
-              <v-spacer></v-spacer>
-              <v-col cols="auto">
-                <v-switch color="primary"
-                v-model="clients[index].enable"
-                @update:model-value="buildInboundsUsers(item.inbounds)"
-                hideDetails density="compact" />
-              </v-col>
-            </v-row>
-          </v-card-title>
-          <v-card-subtitle style="margin-top: -20px;">
-            <v-row>
-              <v-col>{{ item.desc }}</v-col>
-            </v-row>
-          </v-card-subtitle>
-          <v-card-text>
-            <v-row>
-              <v-col>{{ $t('pages.inbounds') }}</v-col>
-              <v-col dir="ltr">
-                <v-tooltip activator="parent" dir="ltr" location="bottom" v-if="item.inbounds != ''">
-                  <span v-for="i in item.inbounds">{{ i }}<br /></span>
-                </v-tooltip>
-                {{ item.inbounds.length }}
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>{{ $t('stats.volume') }}</v-col>
-              <v-col dir="ltr">
-                {{ item.volume == 0 ? $t('unlimited') : HumanReadable.sizeFormat(item.volume) }}
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>{{ $t('date.expiry') }}</v-col>
-              <v-col dir="ltr">
-                {{ item.expiry == 0 ? $t('unlimited') : HumanReadable.remainedDays(item.expiry)?? $t('date.expired') }}
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>{{ $t('stats.usage') }}</v-col>
-              <v-col dir="ltr">
-                <v-tooltip activator="parent" location="bottom">
-                  {{ $t('stats.upload') }}:{{ HumanReadable.sizeFormat(item.up) }}<br />
-                  {{ $t('stats.download') }}:{{ HumanReadable.sizeFormat(item.down) }}<br />
-                  <template v-if="item.volume>0">
-                    {{ $t('remained') }}: {{ HumanReadable.sizeFormat(item.volume - (item.up + item.down)) }}
-                  </template>
-                </v-tooltip>
-                {{ HumanReadable.sizeFormat(item.up + item.down) }}
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col>{{ $t('online') }}</v-col>
-              <v-col dir="ltr">
-                <template v-if="onlines[index]">
-                  <v-chip density="comfortable" size="small" color="success" variant="flat">{{ $t('online') }}</v-chip>
-                </template>
-                <template v-else>-</template>
-              </v-col>
-            </v-row>
-          </v-card-text>
-          <v-divider></v-divider>
-          <v-card-actions style="padding: 0;">
-            <v-btn icon="mdi-account-edit" @click="showModal(index)">
-              <v-icon />
-              <v-tooltip activator="parent" location="top" :text="$t('actions.edit')"></v-tooltip>
-            </v-btn>
-            <v-btn style="margin-inline-start:0;" icon="mdi-account-minus" color="warning" @click="delOverlay[index] = true">
-              <v-icon />
-              <v-tooltip activator="parent" location="top" :text="$t('actions.del')"></v-tooltip>
-            </v-btn>
-            <v-overlay
-              v-model="delOverlay[index]"
-              contained
-              class="align-center justify-center"
+    <v-col cols="12">
+      <div class="flat-card pa-4 overflow-x-auto" style="border-radius: 8px;">
+        <v-table class="w-100" style="background: transparent;">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--panel-border-color);">
+              <th class="text-left text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent;">{{ $t('client.name') || 'Username' }}</th>
+              <th class="text-left text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent;">{{ $t('pages.inbounds') || 'Inbounds' }}</th>
+              <th class="text-left text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent;">{{ $t('stats.usage') || 'Usage' }}</th>
+              <th class="text-left text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent;">{{ $t('date.expiry') || 'Expiry' }}</th>
+              <th class="text-left text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent; width: 100px;">{{ $t('status') || 'Status' }}</th>
+              <th class="text-right text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent; width: 240px;">{{ $t('actions') || 'Actions' }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr 
+              v-for="item in filteredClients" 
+              :key="item.id" 
+              style="border-bottom: 1px solid var(--panel-border-color); transition: background-color 0.2s;"
             >
-              <v-card :title="$t('actions.del')" rounded="lg">
-                <v-divider></v-divider>
-                <v-card-text>{{ $t('confirm') }}</v-card-text>
-                <v-card-actions>
-                  <v-btn color="error" variant="outlined" @click="delClient(index)">{{ $t('yes') }}</v-btn>
-                  <v-btn color="success" variant="outlined" @click="delOverlay[index] = false">{{ $t('no') }}</v-btn>
-                </v-card-actions>
-              </v-card>
-            </v-overlay>
-            <v-btn icon="mdi-qrcode" @click="showQrCode(index)">
-              <v-icon />
-              <v-tooltip activator="parent" location="top" text="QR-Code"></v-tooltip>
-            </v-btn>
-            <v-btn icon="mdi-chart-line" @click="showStats(item.name)" v-if="v2rayStats.users.includes(item.name)">
-              <v-icon />
-              <v-tooltip activator="parent" location="top" :text="$t('stats.graphTitle')"></v-tooltip>
-            </v-btn>
-          </v-card-actions>
-        </v-card>      
-      </v-col>
-    </template>
+              <!-- 1. 用户名 -->
+              <td class="py-3" style="background: transparent;">
+                <div class="d-flex align-center">
+                  <span 
+                    v-if="onlines[getRealIndex(item)]"
+                    class="d-inline-block rounded-circle bg-success mr-2" 
+                    style="width: 8px; height: 8px; box-shadow: 0 0 8px #10b981; flex-shrink: 0; animation: pulse 2s infinite;"
+                  ></span>
+                  <span 
+                    v-else
+                    class="d-inline-block rounded-circle bg-grey mr-2" 
+                    style="width: 8px; height: 8px; flex-shrink: 0;"
+                  ></span>
+                  <div>
+                    <div class="text-body-1 font-weight-bold">{{ item.name }}</div>
+                    <div class="text-caption text-grey">{{ item.desc || '-' }}</div>
+                  </div>
+                </div>
+              </td>
+              <!-- 2. 绑定的入站节点 -->
+              <td class="py-3" style="background: transparent;">
+                <div class="d-flex flex-wrap" style="gap: 4px; max-width: 250px;">
+                  <v-tooltip activator="parent" location="bottom" v-if="item.inbounds && item.inbounds.length > 0">
+                    <span v-for="i in item.inbounds" :key="i">{{ i }}<br /></span>
+                  </v-tooltip>
+                  <span 
+                    v-for="inb in item.inbounds.slice(0, 3)" 
+                    :key="inb"
+                    class="text-caption px-2 py-0.5 rounded font-weight-medium"
+                    style="background-color: var(--panel-border-color); opacity: 0.9;"
+                  >
+                    {{ inb }}
+                  </span>
+                  <span v-if="item.inbounds.length > 3" class="text-caption text-grey">
+                    +{{ item.inbounds.length - 3 }}
+                  </span>
+                  <span v-if="item.inbounds.length === 0" class="text-grey">-</span>
+                </div>
+              </td>
+              <!-- 3. 流量已用/限额 -->
+              <td class="py-3" style="background: transparent;">
+                <div style="max-width: 180px;">
+                  <div class="d-flex justify-space-between text-caption mb-1">
+                    <span class="font-weight-medium" style="opacity: 0.9;">
+                      {{ HumanReadable.sizeFormat(item.up + item.down) }}
+                    </span>
+                    <span class="text-grey">
+                      / {{ item.volume == 0 ? $t('unlimited') : HumanReadable.sizeFormat(item.volume) }}
+                    </span>
+                  </div>
+                  <!-- 精致微型进度条 -->
+                  <v-progress-linear
+                    v-if="item.volume > 0"
+                    :model-value="((item.up + item.down) / item.volume) * 100"
+                    color="primary"
+                    height="4"
+                    rounded
+                    class="w-100"
+                  ></v-progress-linear>
+                  <v-progress-linear
+                    v-else
+                    :model-value="100"
+                    color="grey"
+                    height="4"
+                    rounded
+                    class="w-100"
+                    style="opacity: 0.2;"
+                  ></v-progress-linear>
+                </div>
+              </td>
+              <!-- 4. 到期时间 -->
+              <td class="py-3" style="background: transparent;">
+                  <span class="text-body-2 font-mono opacity-90">
+                  {{ item.expiry == 0 ? $t('unlimited') : HumanReadable.remainedDays(item.expiry) ?? $t('date.expired') }}
+                </span>
+              </td>
+              <!-- 5. 启用状态 -->
+              <td class="py-3" style="background: transparent;">
+                <v-switch 
+                  color="cyan"
+                  v-model="clients[getRealIndex(item)].enable"
+                  @update:model-value="buildInboundsUsers(item.inbounds)"
+                  hide-details 
+                  density="compact"
+                ></v-switch>
+              </td>
+              <!-- 6. 快捷操作 -->
+              <td class="py-3 text-right" style="background: transparent;">
+                <div class="d-flex justify-end" style="gap: 4px;">
+                  <!-- 复制 -->
+                  <v-btn icon="mdi-content-copy" variant="text" size="small" color="grey" @click="copySubLink(item)">
+                    <v-icon size="18" />
+                    <v-tooltip activator="parent" location="top" text="Copy Link"></v-tooltip>
+                  </v-btn>
+                  <!-- 二维码 -->
+                  <v-btn icon="mdi-qrcode" variant="text" size="small" color="cyan" @click="showQrCode(getRealIndex(item))">
+                    <v-icon size="18" />
+                    <v-tooltip activator="parent" location="top" text="QR-Code"></v-tooltip>
+                  </v-btn>
+                  <!-- 统计图表 -->
+                  <v-btn icon="mdi-chart-line" variant="text" size="small" color="success" @click="showStats(item.name)" v-if="v2rayStats.users.includes(item.name)">
+                    <v-icon size="18" />
+                    <v-tooltip activator="parent" location="top" :text="$t('stats.graphTitle')"></v-tooltip>
+                  </v-btn>
+                  <!-- 编辑 -->
+                  <v-btn icon="mdi-account-edit" variant="text" size="small" color="primary" @click="showModal(getRealIndex(item))">
+                    <v-icon size="18" />
+                    <v-tooltip activator="parent" location="top" :text="$t('actions.edit')"></v-tooltip>
+                  </v-btn>
+                  <!-- 删除 -->
+                  <v-btn icon="mdi-account-minus" variant="text" size="small" color="error" @click="delOverlay[getRealIndex(item)] = true">
+                    <v-icon size="18" />
+                    <v-tooltip activator="parent" location="top" :text="$t('actions.del')"></v-tooltip>
+                  </v-btn>
+                </div>
+
+                <!-- 删除二次确认的覆盖模态框 -->
+                <v-overlay
+                  v-model="delOverlay[getRealIndex(item)]"
+                  contained
+                  class="align-center justify-center"
+                >
+                  <v-card class="panel-modal pa-4" style="max-width: 320px; border-radius: 10px;">
+                    <div class="text-subtitle-1 font-weight-bold mb-2 d-flex align-center">
+                      <v-icon color="error" class="mr-2">mdi-alert-circle-outline</v-icon>
+                      {{ $t('actions.del') }}
+                    </div>
+                    <v-divider class="mb-4" style="opacity: 0.1;"></v-divider>
+                    <div class="text-body-2 mb-6" style="opacity: 0.8;">
+                      {{ $t('confirm') }}
+                    </div>
+                    <div class="d-flex justify-end" style="gap: 12px;">
+                      <v-btn class="tech-grey-btn px-4" size="small" @click="delOverlay[getRealIndex(item)] = false">{{ $t('no') }}</v-btn>
+                      <v-btn color="error" class="px-4 font-weight-bold" size="small" @click="delClient(getRealIndex(item))">{{ $t('yes') }}</v-btn>
+                    </div>
+                  </v-card>
+                </v-overlay>
+
+              </td>
+            </tr>
+          </tbody>
+        </v-table>
+      </div>
+    </v-col>
   </v-row>
 </template>
+
 <script lang="ts" setup>
 import Data from '@/store/modules/data'
 import ClientModal from '@/layouts/modals/Client.vue'
@@ -178,10 +264,11 @@ const inbounds = computed((): Inbound[] => {
 
 const inboundTags = computed((): string[] => {
   if (!inbounds.value) return []
-  return inbounds.value?.filter(i => i.tag != "" && Object.hasOwn(i,'users')).map(i => i.tag)
+  return inbounds.value?.filter(i => i.tag != '' && Object.hasOwn(i,'users')).map(i => i.tag)
 })
 
-const filter = ref("")
+const filter = ref('')
+const searchQuery = ref('')
 
 const filterItems = [
   { title: i18n.global.t('none'), value: '' },
@@ -192,25 +279,55 @@ const filterItems = [
 
 const checkFilter = (c:any) :boolean => {
   switch (filter.value) {
-    case "disable":
+    case 'disable':
       return !c.enable
-    case "expired":
+    case 'expired':
       return HumanReadable.remainedDays(c.expiry) == null
-    case "online":
+    case 'online':
       return Data().onlines?.user?.includes(c.name)
     default:
       return true
   }
 }
 
+const filteredClients = computed(() => {
+  let list = clients.value
+  list = list.filter(checkFilter)
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    list = list.filter(c => 
+      c.name.toLowerCase().includes(q) || 
+      c.desc.toLowerCase().includes(q)
+    )
+  }
+  return list
+})
+
+const getRealIndex = (item: any) => {
+  return clients.value.findIndex(c => c.name === item.name)
+}
+
 const modal = ref({
   visible: false,
   index: -1,
-  data: "",
+  data: '',
   stats: false,
 })
 
 const delOverlay = ref(new Array<boolean>(clients.value.length).fill(false))
+
+const copySubLink = (item: any) => {
+  if (item.links && item.links.length > 0) {
+    const link = item.links[0].uri
+    navigator.clipboard.writeText(link).then(() => {
+      push.success({ message: i18n.global.t('copy') || 'Copied!' })
+    }).catch(() => {
+      push.error({ message: 'Copy failed!' })
+    })
+  } else {
+    push.warning({ message: 'No links available' })
+  }
+}
 
 const showModal = (index: number) => {
   modal.value.index = index
@@ -226,7 +343,7 @@ const saveModal = (data:any, stats:boolean) => {
   const oldName = modal.value.index != -1 ? clients.value[modal.value.index].name : null
   if (data.name != oldName && clients.value.findIndex(c => c.name == data.name) != -1) {
     push.error({
-      message: i18n.global.t('error.dplData') + ": " + i18n.global.t('client.name')
+      message: i18n.global.t('error.dplData') + ': ' + i18n.global.t('client.name')
     })
     return
   }
@@ -343,8 +460,8 @@ const closeQrCode = () => {
 
 const stats = ref({
   visible: false,
-  resource: "user",
-  tag: "",
+  resource: 'user',
+  tag: '',
 })
 
 const showStats = (tag: string) => {

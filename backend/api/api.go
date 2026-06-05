@@ -6,6 +6,7 @@ import (
 	"s-ui/util"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,7 +37,48 @@ func (a *APIHandler) initRouter(g *gin.RouterGroup) {
 	})
 
 	g.POST("/:postAction", a.postHandler)
+	g.GET("/sse", a.sseHandler)
 	g.GET("/:getAction", a.getHandler)
+}
+
+func (a *APIHandler) sseHandler(c *gin.Context) {
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+	c.Header("Access-Control-Allow-Origin", "*")
+
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+
+	ctx := c.Request.Context()
+
+	// Initial immediate push
+	status := a.ServerService.GetStatus("cpu,mem,net,sys,sbd")
+	onlines, _ := a.StatsService.GetOnlines()
+	c.SSEvent("stats", gin.H{
+		"status":     status,
+		"onlines":    onlines,
+		"lastUpdate": service.LastUpdate,
+	})
+	c.Writer.Flush()
+
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Info("SSE client connection closed")
+			return
+		case <-ticker.C:
+			status := a.ServerService.GetStatus("cpu,mem,net,sys,sbd")
+			onlines, _ := a.StatsService.GetOnlines()
+
+			c.SSEvent("stats", gin.H{
+				"status":     status,
+				"onlines":    onlines,
+				"lastUpdate": service.LastUpdate,
+			})
+			c.Writer.Flush()
+		}
+	}
 }
 
 func (a *APIHandler) postHandler(c *gin.Context) {
@@ -96,6 +138,12 @@ func (a *APIHandler) postHandler(c *gin.Context) {
 	case "restartApp":
 		err = a.PanelService.RestartPanel(3)
 		jsonMsg(c, "restartApp", err)
+	case "restartSingbox":
+		err = a.ServerService.Restart()
+		jsonMsg(c, "restartSingbox", err)
+	case "stopSingbox":
+		err = a.ServerService.Stop()
+		jsonMsg(c, "stopSingbox", err)
 	case "linkConvert":
 		link := c.Request.FormValue("link")
 		result, _, err := util.GetOutbound(link, 0)
@@ -174,6 +222,8 @@ func (a *APIHandler) getHandler(c *gin.Context) {
 		options := c.Query("o")
 		keypair := a.ServerService.GenKeypair(kType, options)
 		jsonObj(c, keypair, nil)
+	case "sse":
+		a.sseHandler(c)
 	default:
 		jsonMsg(c, "API call", nil)
 	}

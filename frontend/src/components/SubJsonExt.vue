@@ -1,6 +1,6 @@
 <template>
   <v-card>
-    <v-row>
+    <v-row class="pt-4">
       <v-col cols="12" sm="6" md="3">
         <v-select
           v-model="ruleToDirect"
@@ -64,9 +64,9 @@
     </v-row>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-menu v-model="menu" :close-on-content-click="false" location="start">
+      <v-menu content-class="v-menu-custom-options" v-model="menu" :close-on-content-click="false" location="start">
         <template v-slot:activator="{ props }">
-          <v-btn v-bind="props" hide-details variant="tonal">{{ $t('setting.jsonSubOptions') }}</v-btn>
+          <v-btn class="v-menu-custom-activator" v-bind="props" hide-details variant="tonal">{{ $t('setting.jsonSubOptions') }}</v-btn>
         </template>
         <v-card>
           <v-list>
@@ -247,7 +247,7 @@ export default {
           this.subJsonExt.rules.unshift({ protocol: "dns", outbound: "dns-out" })
         } else {
           delete this.subJsonExt.dns
-          const ruleDnsIndex = this.subJsonExt?.rules?.findIndex((r:any) => r.protocol = "dns" && r.outbound == "dns-out")
+          const ruleDnsIndex = this.subJsonExt?.rules?.findIndex((r:any) => r.protocol === "dns" && r.outbound === "dns-out")
           if (ruleDnsIndex >= 0) this.subJsonExt.rules.splice(ruleDnsIndex,1)
           if (this.rules.length == 0) delete this.subJsonExt.rules
         }

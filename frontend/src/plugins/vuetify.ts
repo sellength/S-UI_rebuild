@@ -17,7 +17,9 @@ import { createVuetify } from 'vuetify'
 // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
 export default createVuetify({
   defaults: {
-    VRow: { dense: true } // Apply dense to v-row as default
+    VRow: { dense: true }, // Apply dense to v-row as default
+    VTextField: { variant: 'outlined', density: 'comfortable' },
+    VSelect: { variant: 'outlined', density: 'comfortable' }
   },
   theme: {
     defaultTheme: localStorage.getItem('theme') ?? 'light',
@@ -37,15 +39,15 @@ export default createVuetify({
       },
       dark: {
         colors: {
-          primary: colors.blue.darken4,
-          secondary: colors.grey.darken3,
-          accent: colors.pink.darken3,
-          error: colors.red.accent3,
-          warning: colors.amber.darken3,
-          info: colors.teal.lighten1,
-          success: colors.green.darken2,
-          surface: colors.grey.darken3,
-          background: colors.grey.darken4,
+          primary: '#06b6d4',
+          secondary: '#8b5cf6',
+          accent: '#8b5cf6',
+          error: '#ef4444',
+          warning: '#f59e0b',
+          info: '#3b82f6',
+          success: '#10b981',
+          surface: '#111827',
+          background: '#0b0f19',
         },
       },
     },

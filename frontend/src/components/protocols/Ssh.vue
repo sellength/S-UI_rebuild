@@ -4,21 +4,24 @@
         <v-row>
           <v-col cols="auto">
             <v-btn-toggle v-model="usePath"
-            class="rounded-xl"
-            density="compact"
+            density="comfortable"
             variant="outlined"
-            shaped
-            mandatory>
+            mandatory
+            >
               <v-btn
+                value="0"
+                class="px-4 text-none"
                 @click="data.private_key=undefined; data.private_key_path=''"
               >{{ $t('tls.usePath') }}</v-btn>
               <v-btn
+                value="1"
+                class="px-4 text-none"
                 @click="data.private_key_path=undefined; data.private_key=''"
               >{{ $t('tls.useText') }}</v-btn>
             </v-btn-toggle>
           </v-col>
         </v-row>
-        <v-row v-if="usePath == 0">
+        <v-row v-if="usePath === '0'">
           <v-col cols="12" sm="6">
             <v-text-field
               :label="$t('tls.keyPath')"
@@ -75,9 +78,9 @@
     </v-row>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-menu v-model="menu" :close-on-content-click="false" location="start">
+      <v-menu content-class="v-menu-custom-options" v-model="menu" :close-on-content-click="false" location="start">
           <template v-slot:activator="{ props }">
-            <v-btn v-bind="props" hide-details variant="tonal">{{ $t('types.ssh.options') }}</v-btn>
+            <v-btn class="v-menu-custom-activator" v-bind="props" hide-details variant="tonal">{{ $t('types.ssh.options') }}</v-btn>
           </template>
           <v-card>
             <v-list>
@@ -107,14 +110,14 @@ export default {
   data() {
     return {
       menu: false,
-      usePath: 0,
+      usePath: "0",
     }
   },
   computed: {
     optionKey: {
       get(): boolean { return this.data.private_key != undefined || this.data.private_key_path != undefined },
       set(v:boolean) {
-        this.usePath = 0
+        this.usePath = "0"
         if (v) {
           this.$props.data.private_key_path = ""
           delete this.$props.data.user

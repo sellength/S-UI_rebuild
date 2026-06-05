@@ -1,283 +1,361 @@
 <template>
   <v-dialog transition="dialog-bottom-transition" width="800">
-    <v-card class="rounded-lg">
-      <v-card-title>
-        {{ $t('actions.' + title) + " " + $t('objects.tls') }}
+    <v-card class="panel-modal pa-4" style="border-radius: 12px; max-height: 90vh; display: flex; flex-direction: column;">
+      <v-card-title class="px-2 pb-2">
+        <span class="text-h6 font-weight-bold text-grey-lighten-3">
+          {{ $t('actions.' + title) + " " + $t('objects.tls') }}
+        </span>
       </v-card-title>
-      <v-divider></v-divider>
-      <v-card-text style="padding: 0 16px; overflow-y: scroll;">
-        <v-card class="rounded-lg">
-          <v-row>
-            <v-col cols="12" sm="6" md="4">
-              <v-text-field
-                :label="$t('client.name')"
-                hide-details
-                v-model="tls.name">
-              </v-text-field>
-            </v-col>
-            <v-col align="end">
-              <v-btn-toggle v-model="tlsType"
-              class="rounded-xl"
-              density="compact"
-              variant="outlined"
-              @update:model-value="changeTlsType"
-              shaped
-              mandatory>
-                <v-btn>TLS</v-btn>
-                <v-btn>Reality</v-btn>
-              </v-btn-toggle>
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col cols="12" sm="6" md="4" v-if="inTls.server_name != undefined">
-              <v-text-field
-                label="SNI"
-                hide-details
-                v-model="inTls.server_name">
-              </v-text-field>
-            </v-col>
-            <template v-if="tlsType == 0">
-              <v-col cols="12" sm="6" md="4" v-if="inTls.min_version">
-                <v-select
+      <v-divider class="mb-4" style="opacity: 0.1;"></v-divider>
+      
+      <v-card-text style="padding: 0 20px; overflow-y: auto;" class="flex-grow-1">
+        <div class="d-flex flex-column" style="gap: 20px;">
+          <!-- 核心设置段 -->
+          <div>
+            <v-row align="center" style="row-gap: 16px;">
+              <v-col cols="12" sm="6" md="4" class="py-1">
+                <v-text-field
+                  :label="$t('client.name')"
                   hide-details
-                  :label="$t('tls.minVer')"
-                  :items="tlsVersions"
-                  v-model="inTls.min_version">
-                </v-select>
+                  v-model="tls.name"
+                  variant="outlined"
+                  class="dark-input"
+                  density="comfortable"
+                ></v-text-field>
               </v-col>
-              <v-col cols="12" sm="6" md="4" v-if="inTls.max_version">
-                <v-select
-                  hide-details
-                  :label="$t('tls.maxVer')"
-                  :items="tlsVersions"
-                  v-model="inTls.max_version">
-                </v-select>
-              </v-col>
-              <v-col cols="12" sm="6" md="4" v-if="inTls.alpn">
-                <v-select
-                  hide-details
-                  label="ALPN"
-                  multiple
-                  :items="alpn"
-                  v-model="inTls.alpn">
-                </v-select>
-              </v-col>
-              <v-col cols="12" md="8" v-if="inTls.cipher_suites != undefined">
-                <v-select
-                  hide-details
-                  :label="$t('tls.cs')"
-                  multiple
-                  :items="cipher_suites"
-                  v-model="inTls.cipher_suites">
-                </v-select>
-              </v-col>
-            </template>
-          </v-row>
-          <template v-if="tlsType == 0">
-            <v-row>
-              <v-col>
-                <v-btn-toggle v-model="usePath"
-                class="rounded-xl"
-                density="compact"
-                variant="outlined"
-                shaped
-                mandatory>
-                  <v-btn
-                    @click="inTls.key=undefined; inTls.certificate=undefined"
-                  >{{ $t('tls.usePath') }}</v-btn>
-                  <v-btn
-                    @click="inTls.key_path=undefined; inTls.certificate_path=undefined"
-                  >{{ $t('tls.useText') }}</v-btn>
+              <v-col class="d-flex justify-sm-end py-1">
+                <v-btn-toggle 
+                  v-model="tlsType"
+                  density="comfortable"
+                  variant="outlined"
+                  selected-class="font-weight-bold"
+                  mandatory
+                  @update:model-value="changeTlsType"
+                >
+                  <v-btn value="0" class="px-4 text-none">TLS</v-btn>
+                  <v-btn value="1" class="px-4 text-none">Reality</v-btn>
                 </v-btn-toggle>
               </v-col>
-              <v-spacer></v-spacer>
-              <v-col cols="auto">
+            </v-row>
+
+            <v-row style="row-gap: 16px; margin-top: 10px;">
+              <v-col cols="12" sm="6" md="4" v-if="inTls.server_name != undefined" class="py-1">
+                <v-text-field
+                  label="SNI"
+                  hide-details
+                  v-model="inTls.server_name"
+                  variant="outlined"
+                  class="dark-input"
+                  density="comfortable"
+                ></v-text-field>
+              </v-col>
+              <template v-if="tlsType === '0'">
+                <v-col cols="12" sm="6" md="4" v-if="inTls.min_version" class="py-1">
+                  <v-select
+                    hide-details
+                    :label="$t('tls.minVer')"
+                    :items="tlsVersions"
+                    v-model="inTls.min_version"
+                    variant="outlined"
+                    class="dark-input"
+                    density="comfortable"
+                  ></v-select>
+                </v-col>
+                <v-col cols="12" sm="6" md="4" v-if="inTls.max_version" class="py-1">
+                  <v-select
+                    hide-details
+                    :label="$t('tls.maxVer')"
+                    :items="tlsVersions"
+                    v-model="inTls.max_version"
+                    variant="outlined"
+                    class="dark-input"
+                    density="comfortable"
+                  ></v-select>
+                </v-col>
+                <v-col cols="12" sm="6" md="4" v-if="inTls.alpn" class="py-1">
+                  <v-select
+                    hide-details
+                    label="ALPN"
+                    multiple
+                    :items="alpn"
+                    v-model="inTls.alpn"
+                    variant="outlined"
+                    class="dark-input"
+                    density="comfortable"
+                  ></v-select>
+                </v-col>
+                <v-col cols="12" md="8" v-if="inTls.cipher_suites != undefined" class="py-1">
+                  <v-select
+                    hide-details
+                    :label="$t('tls.cs')"
+                    multiple
+                    :items="cipher_suites"
+                    v-model="inTls.cipher_suites"
+                    variant="outlined"
+                    class="dark-input"
+                    density="comfortable"
+                  ></v-select>
+                </v-col>
+              </template>
+            </v-row>
+          </div>
+
+          <!-- TLS 本地证书管理 -->
+          <template v-if="tlsType === '0'">
+            <v-divider style="opacity: 0.05;"></v-divider>
+            <div>
+              <div class="d-flex align-center justify-space-between mb-4">
+                <v-btn-toggle 
+                  v-model="usePath"
+                  density="comfortable"
+                  variant="outlined"
+                  selected-class="font-weight-bold"
+                  mandatory
+                >
+                  <v-btn value="0" class="px-4 text-none" @click="inTls.key=undefined; inTls.certificate=undefined">{{ $t('tls.usePath') }}</v-btn>
+                  <v-btn value="1" class="px-4 text-none" @click="inTls.key_path=undefined; inTls.certificate_path=undefined">{{ $t('tls.useText') }}</v-btn>
+                </v-btn-toggle>
+
                 <v-btn
-                  variant="tonal"
-                  density="compact"
-                  icon="mdi-key-star"
+                  class="tech-grey-btn"
+                  prepend-icon="mdi-key-star"
                   @click="genSelfSigned"
-                  :loading="loading">
-                  <v-icon />
+                  :loading="loading"
+                  size="small"
+                  style="height: 36px;"
+                >
+                  {{ $t('actions.generate') }}
                   <v-tooltip activator="parent" location="top">
                     {{ $t('actions.generate') }}
                   </v-tooltip>
                 </v-btn>
-              </v-col>
-            </v-row>
-            <v-row v-if="usePath == 0">
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  :label="$t('tls.certPath')"
-                  hide-details
-                  v-model="inTls.certificate_path">
-                </v-text-field>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  :label="$t('tls.keyPath')"
-                  hide-details
-                  v-model="inTls.key_path">
-                </v-text-field>
-              </v-col>
-            </v-row>
-            <v-row v-else>
-              <v-col cols="12">
-                <v-textarea
-                  :label="$t('tls.cert')"
-                  hide-details
-                  v-model="certText">
-                </v-textarea>
-              </v-col>
-              <v-col cols="12">
-                <v-textarea
-                  :label="$t('tls.key')"
-                  hide-details
-                  v-model="keyText">
-                </v-textarea>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="12" sm="6" md="4">
-                <v-switch color="primary" :label="$t('tls.disableSni')" v-model="disableSni" hide-details></v-switch>
-              </v-col>
-              <v-col cols="12" sm="6" md="4">
-                <v-switch color="primary" :label="$t('tls.insecure')" v-model="insecure" hide-details></v-switch>
-              </v-col>
-            </v-row>
+              </div>
+
+              <v-row v-if="usePath === '0'" style="row-gap: 16px;">
+                <v-col cols="12" sm="6" class="py-1">
+                  <v-text-field
+                    :label="$t('tls.certPath')"
+                    hide-details
+                    v-model="inTls.certificate_path"
+                    variant="outlined"
+                    class="dark-input"
+                    density="comfortable"
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="6" class="py-1">
+                  <v-text-field
+                    :label="$t('tls.keyPath')"
+                    hide-details
+                    v-model="inTls.key_path"
+                    variant="outlined"
+                    class="dark-input"
+                    density="comfortable"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row v-else style="row-gap: 16px;">
+                <v-col cols="12" class="py-1">
+                  <v-textarea
+                    :label="$t('tls.cert')"
+                    hide-details
+                    v-model="certText"
+                    variant="outlined"
+                    class="dark-input font-mono"
+                    rows="4"
+                  ></v-textarea>
+                </v-col>
+                <v-col cols="12" class="py-1">
+                  <v-textarea
+                    :label="$t('tls.key')"
+                    hide-details
+                    v-model="keyText"
+                    variant="outlined"
+                    class="dark-input font-mono"
+                    rows="4"
+                  ></v-textarea>
+                </v-col>
+              </v-row>
+
+              <v-row class="mt-2">
+                <v-col cols="12" sm="6" md="4" class="py-1">
+                  <v-switch color="cyan" :label="$t('tls.disableSni')" v-model="disableSni" hide-details></v-switch>
+                </v-col>
+                <v-col cols="12" sm="6" md="4" class="py-1">
+                  <v-switch color="cyan" :label="$t('tls.insecure')" v-model="insecure" hide-details></v-switch>
+                </v-col>
+              </v-row>
+            </div>
           </template>
+
+          <!-- Reality 设置段 -->
           <template v-if="outTls.reality && inTls.reality">
-            <v-row>
-              <v-col cols="12" sm="6" md="4">
-                <v-text-field
-                :label="$t('types.shdwTls.hs')"
-                hide-details
-                v-model="inTls.reality.handshake.server">
-                </v-text-field>
-              </v-col>
-              <v-col cols="12" sm="6" md="4">
-                <v-text-field
-                :label="$t('out.port')"
-                type="number"
-                min="0"
-                hide-details
-                v-model="server_port">
-                </v-text-field>
-              </v-col>
-              <v-spacer></v-spacer>
-              <v-col cols="auto">
+            <v-divider style="opacity: 0.05;"></v-divider>
+            <div class="d-flex flex-column" style="gap: 16px;">
+              <div class="d-flex align-center justify-space-between mb-2">
+                <span class="text-subtitle-2 font-weight-bold text-grey-lighten-2">Reality Cryptography</span>
                 <v-btn
-                  variant="tonal"
-                  density="compact"
-                  icon="mdi-key-star"
+                  class="tech-grey-btn"
+                  prepend-icon="mdi-key-star"
                   @click="genRealityKey"
-                  :loading="loading">
-                  <v-icon />
+                  :loading="loading"
+                  size="small"
+                  style="height: 36px;"
+                >
+                  {{ $t('actions.generate') }}
                   <v-tooltip activator="parent" location="top">
                     {{ $t('actions.generate') }}
                   </v-tooltip>
                 </v-btn>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="12">
-                <v-text-field
-                  :label="$t('tls.privKey')"
-                  hide-details
-                  v-model="inTls.reality.private_key">
-                </v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field
-                  :label="$t('tls.pubKey')"
-                  hide-details
-                  v-model="outTls.reality.public_key">
-                </v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field
-                  label="Short IDs"
-                  hide-details
-                  append-icon="mdi-refresh"
-                  @click:append="randomSID"
-                  v-model="short_id">
-                </v-text-field>
-              </v-col>
-              <v-col cols="12" sm="6" md="4" v-if="optionTime">
-                <v-text-field
-                label="Max Time Diference"
-                type="number"
-                min="1"
-                :suffix="$t('date.m')"
-                hide-details
-                v-model="max_time">
-                </v-text-field>
-              </v-col>
-            </v-row>
+              </div>
+
+              <v-row style="row-gap: 16px;">
+                <v-col cols="12" sm="6" md="4" class="py-1">
+                  <v-text-field
+                    :label="$t('types.shdwTls.hs')"
+                    hide-details
+                    v-model="inTls.reality.handshake.server"
+                    variant="outlined"
+                    class="dark-input"
+                    density="comfortable"
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="6" md="4" class="py-1">
+                  <v-text-field
+                    :label="$t('out.port')"
+                    type="number"
+                    min="0"
+                    hide-details
+                    v-model="server_port"
+                    variant="outlined"
+                    class="dark-input"
+                    density="comfortable"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+
+              <v-row style="row-gap: 16px;">
+                <v-col cols="12" class="py-1">
+                  <v-text-field
+                    :label="$t('tls.privKey')"
+                    hide-details
+                    v-model="inTls.reality.private_key"
+                    variant="outlined"
+                    class="dark-input font-mono"
+                    density="comfortable"
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" class="py-1">
+                  <v-text-field
+                    :label="$t('tls.pubKey')"
+                    hide-details
+                    v-model="outTls.reality.public_key"
+                    variant="outlined"
+                    class="dark-input font-mono"
+                    density="comfortable"
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" class="py-1">
+                  <v-text-field
+                    label="Short IDs"
+                    hide-details
+                    append-inner-icon="mdi-refresh"
+                    @click:append-inner="randomSID"
+                    v-model="short_id"
+                    variant="outlined"
+                    class="dark-input font-mono"
+                    density="comfortable"
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="6" md="4" v-if="optionTime" class="py-1">
+                  <v-text-field
+                    label="Max Time Difference"
+                    type="number"
+                    min="1"
+                    :suffix="$t('date.m')"
+                    hide-details
+                    v-model="max_time"
+                    variant="outlined"
+                    class="dark-input"
+                    density="comfortable"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+            </div>
           </template>
-          <v-row v-if="outTls.utls != undefined">
-            <v-col cols="12" sm="6" md="4">
+
+          <v-row v-if="outTls.utls != undefined" style="row-gap: 16px;">
+            <v-col cols="12" sm="6" md="4" class="py-1">
               <v-select
                 hide-details
                 label="Fingerprint"
                 :items="fingerprints"
-                v-model="outTls.utls.fingerprint">
-              </v-select>
+                v-model="outTls.utls.fingerprint"
+                variant="outlined"
+                class="dark-input"
+                density="comfortable"
+              ></v-select>
             </v-col>
           </v-row>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-menu v-model="menu" :close-on-content-click="false" location="start">
+
+          <!-- 更多设置高级面板 -->
+          <v-divider style="opacity: 0.05;"></v-divider>
+          <div class="d-flex justify-end pt-2">
+            <v-menu content-class="v-menu-custom-options" v-model="menu" :close-on-content-click="false" location="top" transition="slide-y-transition">
               <template v-slot:activator="{ props }">
-                <v-btn v-bind="props" hide-details variant="tonal">{{ $t('tls.options') }}</v-btn>
+                <v-btn v-bind="props" class="v-menu-custom-activator tech-grey-btn px-4 text-none" prepend-icon="mdi-cog-outline">
+                  {{ $t('tls.options') }}
+                </v-btn>
               </template>
-              <v-card>
-                <v-list>
-                  <template v-if="tlsType == 0">
-                    <v-list-item>
-                      <v-switch v-model="optionSNI" color="primary" label="SNI" hide-details></v-switch>
+              <v-card class="panel-modal pa-3" style="border-radius: 8px; min-width: 260px;">
+                <v-list bg-color="transparent" density="compact">
+                  <template v-if="tlsType === '0'">
+                    <v-list-item class="px-1">
+                      <v-switch v-model="optionSNI" color="cyan" label="SNI" hide-details></v-switch>
                     </v-list-item>
-                    <v-list-item>
-                      <v-switch v-model="optionALPN" color="primary" label="ALPN" hide-details></v-switch>
+                    <v-list-item class="px-1">
+                      <v-switch v-model="optionALPN" color="cyan" label="ALPN" hide-details></v-switch>
                     </v-list-item>
-                    <v-list-item>
-                      <v-switch v-model="optionMinV" color="primary" :label="$t('tls.minVer')" hide-details></v-switch>
+                    <v-list-item class="px-1">
+                      <v-switch v-model="optionMinV" color="cyan" :label="$t('tls.minVer')" hide-details></v-switch>
                     </v-list-item>
-                    <v-list-item>
-                      <v-switch v-model="optionMaxV" color="primary" :label="$t('tls.maxVer')" hide-details></v-switch>
+                    <v-list-item class="px-1">
+                      <v-switch v-model="optionMaxV" color="cyan" :label="$t('tls.maxVer')" hide-details></v-switch>
                     </v-list-item>
-                    <v-list-item>
-                      <v-switch v-model="optionCS" color="primary" :label="$t('tls.cs')" hide-details></v-switch>
+                    <v-list-item class="px-1">
+                      <v-switch v-model="optionCS" color="cyan" :label="$t('tls.cs')" hide-details></v-switch>
                     </v-list-item>
                   </template>
                   <template v-else>
-                    <v-list-item>
-                      <v-switch v-model="optionTime" color="primary" label="Max Time Difference" hide-details></v-switch>
+                    <v-list-item class="px-1">
+                      <v-switch v-model="optionTime" color="cyan" label="Max Time Difference" hide-details></v-switch>
                     </v-list-item>
                   </template>
-                  <v-list-item>
-                    <v-switch v-model="optionFP" color="primary" label="UTLS" hide-details></v-switch>
+                  <v-list-item class="px-1">
+                    <v-switch v-model="optionFP" color="cyan" label="UTLS" hide-details></v-switch>
                   </v-list-item>
                 </v-list>
               </v-card>
             </v-menu>
-          </v-card-actions>
-        </v-card>
-        <AcmeVue :tls="inTls" />
-        <EchVue :iTls="inTls" :oTls="outTls" />
+          </div>
+
+          <v-divider style="opacity: 0.05;"></v-divider>
+          <AcmeVue :tls="inTls" />
+          <EchVue :iTls="inTls" :oTls="outTls" />
+        </div>
       </v-card-text>
-      <v-card-actions>
+      
+      <v-card-actions class="px-2 pt-4">
         <v-spacer></v-spacer>
         <v-btn
-          color="blue-darken-1"
-          variant="text"
+          class="tech-grey-btn px-4"
+          size="comfortable"
           @click="closeModal"
         >
           {{ $t('actions.close') }}
         </v-btn>
         <v-btn
-          color="blue-darken-1"
-          variant="text"
+          class="tech-blue-btn px-4"
+          size="comfortable"
           :loading="loading"
           @click="saveChanges"
         >
@@ -306,8 +384,8 @@ export default {
       title: "add",
       loading: false,
       menu: false,
-      tlsType: 0,
-      usePath: 0,
+      tlsType: "0",
+      usePath: "0",
       alpn: [
         { title: "H3", value: 'h3' },
         { title: "H2", value: 'h2' },
@@ -357,19 +435,19 @@ export default {
       if (this.$props.index != -1) {
         const newData = JSON.parse(this.$props.data)
         this.tls = newData
-        this.tlsType = newData.server?.reality == undefined ? 0 : 1
-        this.usePath = newData.server?.key == undefined ? 0 : 1
+        this.tlsType = newData.server?.reality == undefined ? "0" : "1"
+        this.usePath = newData.server?.key == undefined ? "0" : "1"
         this.title = "edit"
       }
       else {
         this.tls = { id: 0, name: '', inbounds: [], server: {enabled: true}, client: {} }
-        this.tlsType = 0
-        this.usePath = 0
+        this.tlsType = "0"
+        this.usePath = "0"
         this.title = "add"
       }
     },
     changeTlsType(){
-      if (this.tlsType) {
+      if (this.tlsType === "1") {
         this.tls.server = <iTls>{
           enabled: true,
           reality: { enabled: true, handshake: { server_port: 443 }, short_id: RandomUtil.randomShortId() },
@@ -396,7 +474,7 @@ export default {
       if (msg.success) {
         this.inTls.key_path=undefined
         this.inTls.certificate_path=undefined
-        this.usePath = 1
+        this.usePath = "1"
         if (msg.obj.length>0){
           let privateKey = <string[]>[]
           let publicKey = <string[]>[]

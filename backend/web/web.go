@@ -85,6 +85,13 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 	assetsBasePath := base_url + "assets/"
 
 	store := cookie.NewStore(secret)
+	store.Options(sessions.Options{
+		Path:     "/",
+		MaxAge:   86400 * 30,
+		Secure:   false,
+		HttpOnly: false,
+		SameSite: http.SameSiteLaxMode,
+	})
 	engine.Use(sessions.Sessions("s-ui", store))
 
 	engine.Use(func(c *gin.Context) {
@@ -124,6 +131,7 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 			c.Redirect(http.StatusTemporaryRedirect, base_url)
 			return
 		}
+		c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
 		c.HTML(http.StatusOK, "index.html", gin.H{"BASE_URL": base_url})
 	})
 

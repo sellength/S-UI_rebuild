@@ -17,6 +17,7 @@ export const InTypes = {
   TUIC: 'tuic',
   Hysteria2: 'hysteria2',
   VLESS: 'vless',
+  AnyTLS: 'anytls',
   // Tun: 'tun',
   Redirect: 'redirect',
   TProxy: 'tproxy',
@@ -164,6 +165,10 @@ export interface Hysteria2 extends InboundBasics {
   masquerade?: string
   brutal_debug?: boolean
 }
+export interface AnyTLS extends InboundBasics {
+  users: NamePass[]
+  tls: iTls
+}
 export interface Tun extends InboundBasics {
   [otherProperties: string]: any
 }
@@ -187,6 +192,7 @@ type InterfaceMap = {
   tuic: TUIC
   hysteria2: Hysteria2
   vless: VLESS
+  anytls: AnyTLS
   // tun: Tun
   redirect: Redirect
   tproxy: TProxy
@@ -208,6 +214,7 @@ type userEnabledTypes = {
   tuic: TUIC
   hysteria2: Hysteria2
   vless: VLESS
+  anytls: AnyTLS
 }
 
 // Create union type from userEnabledTypes
@@ -228,6 +235,7 @@ const defaultValues: Record<InType, Inbound> = {
   tuic: <TUIC>{ type: InTypes.TUIC, users: <TuicUser[]>[], congestion_control: "cubic", tls: { enabled: true } },
   hysteria2: <Hysteria2>{ type: InTypes.Hysteria2, users: <NamePass[]>[], tls: { enabled: true } },
   vless: <VLESS>{ type: InTypes.VLESS, users: <VlessUser[]>[], tls: {}, multiplex: {}, transport: {} },
+  anytls: <AnyTLS>{ type: InTypes.AnyTLS, users: <NamePass[]>[], tls: { enabled: true } },
   // tun: <Tun>{ type: InTypes.Tun },
   redirect: <Redirect>{ type: InTypes.Redirect },
   tproxy: <TProxy>{ type: InTypes.TProxy },

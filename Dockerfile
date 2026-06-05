@@ -1,24 +1,34 @@
-FROM --platform=$BUILDPLATFORM node:alpine as front-builder
-WORKDIR /app
-COPY frontend/ ./
-RUN npm install && npm run build
+# ========================================================
+# Phase 1: Minimal and Secure Runtime Environment for s-ui
+# ========================================================
+FROM debian:bookworm-slim
 
-FROM golang:1.22-alpine AS backend-builder
-WORKDIR /app
-ARG TARGETARCH
-ENV CGO_CFLAGS="-D_LARGEFILE64_SOURCE"
-ENV CGO_ENABLED=1
-ENV GOARCH=$TARGETARCH
-RUN apk update && apk --no-cache --update add build-base gcc wget unzip
-COPY backend/ ./
-COPY --from=front-builder  /app/dist/ /app/web/html/
-RUN go build -ldflags="-w -s" -o sui main.go
+LABEL org.opencontainers.image.authors="coolnnek" \
+      org.opencontainers.image.description="s-ui: Advanced Dual-Stack Sing-box User Interface Dashboard"
 
-FROM --platform=$TARGETPLATFORM alpine
-LABEL org.opencontainers.image.authors="alireza7@gmail.com"
-ENV TZ=Asia/Tehran
-WORKDIR /app
-RUN apk add  --no-cache --update ca-certificates tzdata
-COPY --from=backend-builder  /app/sui /app/
-VOLUME [ "s-ui" ]
-CMD [ "./sui" ]
+# Install essential runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    tzdata \
+    sqlite3 \
+    curl \
+    bash \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set system default timezone
+ENV TZ=Asia/Shanghai
+
+WORKDIR /usr/local/s-ui
+
+# Copy pre-compiled s-ui binary from host backend folder
+COPY backend/sui /usr/local/s-ui/sui
+
+# Ensure database, cert and bin directory structures exist with proper permissions
+RUN mkdir -p /usr/local/s-ui/db /usr/local/s-ui/bin /usr/local/s-ui/cert && \
+    chmod +x /usr/local/s-ui/sui
+
+# Expose s-ui standard dashboard administration port
+EXPOSE 2095
+
+# Command to execute migrations first, then run panel main process
+CMD ["/bin/sh", "-c", "/usr/local/s-ui/sui migrate && /usr/local/s-ui/sui"]

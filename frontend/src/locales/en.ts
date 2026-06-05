@@ -23,6 +23,7 @@ export default {
   noData: "No data!",
   invalidLogin: "Invalid Login!",
   online: "Online",
+  status: "Status",
   version: "Version",
   email: "Email",
   commaSeparated: "(comma separated)",
@@ -103,6 +104,7 @@ export default {
     disable: "Disable",
     close: "Close",
     restartApp: "Restart App",
+    search: "Search",
   },
   login: {
     title: "Login",
@@ -153,6 +155,8 @@ export default {
     directDns: "Direct DNS",
     toDirectDns: "Route to Direct DNS",
     jsonSubOptions: "Other Options",
+    langTip: "* Language settings are saved automatically to the browser. No need to click Save.",
+    langSaved: "Language settings saved locally",
   },
   client: {
     name: "Name",

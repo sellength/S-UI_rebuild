@@ -1,5 +1,5 @@
 <template>
-  <v-card subtitle="ACME" style="background-color: inherit;">
+  <v-card subtitle="ACME" class="px-4 pb-4" style="background-color: inherit;">
     <v-row>
       <v-col cols="12" sm="6" md="4">
         <v-switch color="primary" :label="$t('enable')" v-model="enabled" hide-details></v-switch>
@@ -122,9 +122,9 @@
       </v-row>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-menu v-model="menu" :close-on-content-click="false" location="start">
+        <v-menu content-class="v-menu-custom-options" v-model="menu" :close-on-content-click="false" location="start">
           <template v-slot:activator="{ props }">
-            <v-btn v-bind="props" hide-details variant="tonal">{{ $t('tls.acme.options') }}</v-btn>
+            <v-btn class="v-menu-custom-activator" v-bind="props" hide-details variant="tonal">{{ $t('tls.acme.options') }}</v-btn>
           </template>
           <v-card>
             <v-list>

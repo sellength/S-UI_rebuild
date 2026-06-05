@@ -1,5 +1,5 @@
 <template>
-  <v-card subtitle="ECH" style="background-color: inherit;">
+  <v-card subtitle="ECH" class="px-4 pb-4" style="background-color: inherit;">
     <v-row>
       <v-col cols="12" sm="6" md="4">
         <v-switch color="primary" :label="$t('enable')" v-model="enabled" hide-details></v-switch>
@@ -17,15 +17,18 @@
       <v-row>
         <v-col cols="auto">
           <v-btn-toggle v-model="useEchPath"
-          class="rounded-xl"
-          density="compact"
+          density="comfortable"
           variant="outlined"
-          shaped
-          mandatory>
+          mandatory
+          >
             <v-btn
+              value="0"
+              class="px-4 text-none"
               @click="delete ech.key"
             >{{ $t('tls.usePath') }}</v-btn>
             <v-btn
+              value="1"
+              class="px-4 text-none"
               @click="delete ech.key_path"
             >{{ $t('tls.useText') }}</v-btn>
           </v-btn-toggle>
@@ -45,7 +48,7 @@
           </v-btn>
         </v-col>
       </v-row>
-      <v-row v-if="useEchPath == 0">
+      <v-row v-if="useEchPath === '0'">
         <v-col cols="12">
           <v-text-field
             :label="$t('tls.keyPath')"
@@ -86,7 +89,7 @@ export default {
   props: ['iTls','oTls'],
   data() {
     return {
-      useEchPath: this.$props.iTls?.ech?.key? 1:0,
+      useEchPath: this.$props.iTls?.ech?.key? "1":"0",
       loading: false,
     }
   },
@@ -97,7 +100,7 @@ export default {
       this.loading = false
       if (msg.success && this.iTls.ech && this.oTls.ech) {
         this.iTls.ech.key_path=undefined
-        this.useEchPath = 1
+        this.useEchPath = "1"
         if (msg.obj.length>0){
           let config = <string[]>[]
           let key = <string[]>[]

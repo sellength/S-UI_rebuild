@@ -24,6 +24,7 @@ export default {
   noData: "無數據！",
   invalidLogin: "登錄無效！",
   online: "在線",
+  status: "狀態",
   version: "版本",
   email: "電子郵件",
   commaSeparated: "（逗號分隔）",
@@ -104,6 +105,7 @@ export default {
     disable: "禁用",
     close: "關閉",
     restartApp: "重啟面板",
+    search: "搜尋",
   },
   login: {
     title: "登錄",
@@ -154,6 +156,8 @@ export default {
     directDns: "直連 DNS",
     toDirectDns: "路由到直連 DNS",
     jsonSubOptions: "其他選項",
+    langTip: "* 語言切換將自動保存至瀏覽器，無需點擊右上角「保存」",
+    langSaved: "語言設置已成功保存至瀏覽器本地",
   },
   client: {
     name: "名稱",

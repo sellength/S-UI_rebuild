@@ -1,47 +1,64 @@
 <template>
   <v-dialog transition="dialog-bottom-transition" width="90%" max-width="1200" :loading="loading">
-    <v-card class="rounded-lg">
-      <v-card-title>
-        <v-row>
-          <v-col>{{ $t('basic.log.title') + " - " + (logType == 's-ui'? "S-UI" : "Sing-Box") }}</v-col>
+    <v-card class="panel-modal pa-4" style="border-radius: 12px;">
+      <v-card-title class="px-2 pb-2">
+        <v-row align="center">
+          <v-col class="text-h6 font-weight-bold text-grey-lighten-3 d-flex align-center">
+            <v-icon color="cyan" class="mr-2">mdi-text-box-search-outline</v-icon>
+            {{ $t('basic.log.title') + " - " + (logType == 's-ui'? "S-UI" : "Sing-Box") }}
+          </v-col>
           <v-spacer></v-spacer>
           <v-col cols="auto">
-            <v-icon icon="mdi-close" @click="$emit('close')" />
+            <v-btn icon="mdi-close" variant="text" size="small" color="grey" @click="$emit('close')"></v-btn>
           </v-col>
         </v-row>
       </v-card-title>
-      <v-divider></v-divider>
-      <v-card-text>
-        <v-row>
-          <v-col cols="12" sm="6" md="4">
+      <v-divider class="mb-4" style="opacity: 0.1;"></v-divider>
+      
+      <v-card-text class="pa-2">
+        <v-row align="center" style="row-gap: 16px;">
+          <v-col cols="12" sm="5" class="py-1">
             <v-select
-            hide-details
-            :label="$t('basic.log.level')"
-            :items="logLevels"
-            v-model="logLevel"
-            @update:model-value="loadData">
-            </v-select>
+              hide-details
+              :label="$t('basic.log.level')"
+              :items="logLevels"
+              v-model="logLevel"
+              @update:model-value="loadData"
+              variant="outlined"
+              class="dark-input"
+              density="compact"
+            ></v-select>
           </v-col>
-          <v-col cols="12" sm="6" md="4">
+          <v-col cols="12" sm="5" class="py-1">
             <v-select
-            hide-details
-            :label="$t('count')"
-            :items="[10,20,30,50,100]"
-            v-model.number="logCount"
-            @update:model-value="loadData">
-            </v-select>
+              hide-details
+              :label="$t('count')"
+              :items="[10,20,30,50,100]"
+              v-model.number="logCount"
+              @update:model-value="loadData"
+              variant="outlined"
+              class="dark-input"
+              density="compact"
+            ></v-select>
           </v-col>
-          <v-col cols="auto" align="center" justify="center">
+          <v-col cols="auto" class="d-flex align-center justify-center py-1">
             <v-btn
               icon="mdi-refresh"
-              variant="tonal"
+              class="tech-blue-btn"
               :loading="loading"
-              @click="loadData">
-              <v-icon  />
-            </v-btn>
+              @click="loadData"
+              style="width: 40px; height: 40px; border-radius: 6px;"
+            ></v-btn>
           </v-col>
         </v-row>
-        <v-card style="background-color: background" dir="ltr" v-html="lines.join('<br />')"></v-card>
+        
+        <!-- 极客终端风格黑色卡片框 -->
+        <div 
+          class="pa-4 rounded mt-4 font-mono text-caption text-grey-lighten-2 overflow-y-auto" 
+          style="background: #090d16; border: 1px solid rgba(255, 255, 255, 0.05); max-height: 450px; line-height: 1.6; white-space: pre-wrap; word-break: break-all;"
+          dir="ltr"
+          v-html="lines.join('<br />')"
+        ></div>
       </v-card-text>
     </v-card>
   </v-dialog>

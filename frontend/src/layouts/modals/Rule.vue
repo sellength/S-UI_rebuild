@@ -1,72 +1,109 @@
 <template>
   <v-dialog transition="dialog-bottom-transition" width="800">
-    <v-card class="rounded-lg">
-      <v-card-title>
-        {{ $t('actions.' + title) + " " + $t('objects.rule') }}
+    <v-card class="panel-modal pa-4" style="border-radius: 12px; max-height: 90vh; display: flex; flex-direction: column;">
+      <v-card-title class="px-2 pb-2">
+        <span class="text-h6 font-weight-bold text-grey-lighten-3">
+          {{ $t('actions.' + title) + " " + $t('objects.rule') }}
+        </span>
       </v-card-title>
-      <v-divider></v-divider>
-      <v-card-text style="padding: 0 16px;">
-        <v-row>
-          <v-col cols="12" sm="6" md="4">
-            <v-switch color="primary" v-model="logical" :label="$t('rule.logical')" hide-details></v-switch>
-          </v-col>
-          <v-spacer></v-spacer>
-          <v-col cols="auto" v-if="logical" justify="center" align="center">
-            <v-btn color="primary" @click="ruleData.rules.push({})" hide-details>{{ $t('actions.add') + " " + $t('objects.rule') }}</v-btn>
-          </v-col>
-        </v-row>
-        <v-card style="background-color: inherit; margin-bottom: 5px;" v-for="(r, index) in ruleData.rules" v-if="ruleData.type == 'logical'">
-          <v-card-subtitle>{{ $t('objects.rule') + ' ' + (index+1) }}
-            <v-icon @click="ruleData.rules.splice(index,1)" icon="mdi-delete" v-if="ruleData.rules.length>1" />
-          </v-card-subtitle>
-          <v-card-text style="padding: 0;">
-            <RuleOptions
-              :rule="r"
-              :clients="clients"
-              :inTags="inTags"
-              :rsTags="rsTags" />
-          </v-card-text>
-        </v-card>
-        <RuleOptions
-          v-else
-          :rule="ruleData.rules[0]"
-          :clients="clients"
-          :inTags="inTags"
-          :rsTags="rsTags" />
-        <v-row>
-          <v-col cols="12" sm="6" md="4">
-            <v-combobox
-              v-model="ruleData.outbound"
-              :items="outTags"
-              :label="$t('objects.outbound')"
-              hide-details
-            ></v-combobox>
-          </v-col>
-          <v-col cols="12" sm="6" md="4" v-if="logical">
-            <v-combobox
-              v-model="ruleData.mode"
-              :items="['and', 'or']"
-              :label="$t('rule.mode')"
-              hide-details
-            ></v-combobox>
-          </v-col>
-          <v-col cols="12" sm="6" md="4">
-            <v-switch color="primary" v-model="ruleData.invert" :label="$t('rule.invert')" hide-details></v-switch>
-          </v-col>
-        </v-row>
+      <v-divider class="mb-4" style="opacity: 0.1;"></v-divider>
+      
+      <v-card-text style="padding: 0 20px; overflow-y: auto;" class="flex-grow-1">
+        <v-container style="padding: 0;">
+          <v-row align="center" class="mb-4">
+            <v-col cols="12" sm="6" class="py-1">
+              <v-switch color="cyan" v-model="logical" :label="$t('rule.logical')" hide-details></v-switch>
+            </v-col>
+            <v-spacer></v-spacer>
+            <v-col cols="auto" v-if="logical" class="py-1">
+              <v-btn class="tech-blue-btn text-none" size="small" prepend-icon="mdi-plus" @click="ruleData.rules.push({})">
+                {{ $t('actions.add') + " " + $t('objects.rule') }}
+              </v-btn>
+            </v-col>
+          </v-row>
+
+          <!-- 逻辑多规则嵌套列表 -->
+          <template v-if="ruleData.type == 'logical'">
+            <div 
+              v-for="(r, index) in ruleData.rules" 
+              :key="index" 
+              class="flat-card pa-4 mb-4" 
+              style="border-radius: 8px;"
+            >
+              <div class="text-subtitle-2 text-grey-lighten-2 d-flex align-center justify-space-between mb-2">
+                <span>{{ $t('objects.rule') + ' ' + (index+1) }}</span>
+                <v-btn 
+                  v-if="ruleData.rules.length > 1" 
+                  icon="mdi-delete-outline" 
+                  color="error" 
+                  variant="text" 
+                  size="small" 
+                  @click="ruleData.rules.splice(index,1)"
+                ></v-btn>
+              </div>
+              <v-divider class="mb-4" style="opacity: 0.1;"></v-divider>
+              <RuleOptions
+                :rule="r"
+                :clients="clients"
+                :inTags="inTags"
+                :rsTags="rsTags" 
+              />
+            </div>
+          </template>
+          
+          <template v-else>
+            <div class="flat-card pa-4 mb-4" style="border-radius: 8px;">
+              <RuleOptions
+                :rule="ruleData.rules[0]"
+                :clients="clients"
+                :inTags="inTags"
+                :rsTags="rsTags" 
+              />
+            </div>
+          </template>
+
+          <v-row style="row-gap: 16px; margin-top: 10px;">
+            <v-col cols="12" sm="4" class="py-1">
+              <v-combobox
+                v-model="ruleData.outbound"
+                :items="outTags"
+                :label="$t('objects.outbound')"
+                hide-details
+                variant="outlined"
+                class="dark-input"
+                density="comfortable"
+              ></v-combobox>
+            </v-col>
+            <v-col cols="12" sm="4" v-if="logical" class="py-1">
+              <v-combobox
+                v-model="ruleData.mode"
+                :items="['and', 'or']"
+                :label="$t('rule.mode')"
+                hide-details
+                variant="outlined"
+                class="dark-input"
+                density="comfortable"
+              ></v-combobox>
+            </v-col>
+            <v-col cols="12" sm="4" class="py-1 d-flex align-center">
+              <v-switch color="cyan" v-model="ruleData.invert" :label="$t('rule.invert')" hide-details></v-switch>
+            </v-col>
+          </v-row>
+        </v-container>
       </v-card-text>
-      <v-card-actions>
+      
+      <v-card-actions class="px-2 pt-4">
         <v-spacer></v-spacer>
         <v-btn
-          color="blue-darken-1"
-          variant="outlined"
+          class="tech-grey-btn px-4"
+          size="comfortable"
           @click="closeModal"
         >
           {{ $t('actions.close') }}
         </v-btn>
         <v-btn
-          color="blue-darken-1"
-          variant="tonal"
+          class="tech-blue-btn px-4"
+          size="comfortable"
           :loading="loading"
           @click="saveChanges"
         >
@@ -165,5 +202,4 @@ export default {
   },
   components: { RuleOptions }
 }
-
 </script>

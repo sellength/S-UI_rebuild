@@ -3,8 +3,24 @@
     <v-icon v-if="isMobile" icon="mdi-menu" @click="$emit('toggleDrawer')" />
     <span v-else style="width: 24px"></span>
     <v-app-bar-title :text="$t(<string>$router.currentRoute.value.name)" class="align-center text-center " />
-    <v-btn prepend-icon="mdi-content-save" v-if="stateChange" :text="$t('actions.save')" @click="saveChanges"></v-btn>
-    <v-icon icon="mdi-theme-light-dark" @click="toggleTheme()" style="margin: 0 10px;"></v-icon>
+    
+    <!-- Shaking red alarm bell + Save Button -->
+    <div v-if="stateChange" class="d-flex align-center mr-2">
+      <v-icon color="error" class="alarm-shaking mr-1" size="22">mdi-bell-ring</v-icon>
+      <v-btn prepend-icon="mdi-content-save" :text="$t('actions.save')" @click="saveChanges"></v-btn>
+    </div>
+
+    <v-switch
+      v-model="darkMode"
+      @update:modelValue="toggleTheme"
+      hide-details
+      inset
+      true-icon="mdi-moon-waning-crescent"
+      false-icon="mdi-white-balance-sunny"
+      color="primary"
+      class="ml-2 mr-4"
+      style="max-width: 54px;"
+    ></v-switch>
   </v-app-bar>
 </template>
 
@@ -22,7 +38,6 @@ const darkMode = ref(localStorage.getItem('theme') == "dark")
 const store = Data()
 
 const toggleTheme = () => {
-  darkMode.value = !darkMode.value
   theme.global.name.value = darkMode.value ? "dark" : "light"
   localStorage.setItem('theme', theme.global.name.value)
 }
@@ -43,3 +58,24 @@ const stateChange = computed((): any => {
   return !FindDiff.deepCompare(newData.value,oldData.value)
 })
 </script>
+
+<style scoped>
+@keyframes alarm-wobble {
+  0% { transform: rotate(0); }
+  15% { transform: rotate(15deg); }
+  30% { transform: rotate(-15deg); }
+  45% { transform: rotate(10deg); }
+  60% { transform: rotate(-10deg); }
+  75% { transform: rotate(5deg); }
+  90% { transform: rotate(-5deg); }
+  100% { transform: rotate(0); }
+}
+
+.alarm-shaking {
+  animation: alarm-wobble 0.6s infinite;
+  display: inline-block;
+  transform-origin: top center;
+  margin-top: -2px; /* Pull the bell up slightly to align with the button */
+}
+</style>
+

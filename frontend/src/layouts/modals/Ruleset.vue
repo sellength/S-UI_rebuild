@@ -1,69 +1,84 @@
 <template>
   <v-dialog transition="dialog-bottom-transition" width="800">
-    <v-card class="rounded-lg">
-      <v-card-title>
-        {{ $t('actions.' + title) + " Ruleset" }}
+    <v-card class="panel-modal pa-4" style="border-radius: 12px;">
+      <v-card-title class="px-2 pb-2">
+        <span class="text-h6 font-weight-bold text-grey-lighten-3">
+          {{ $t('actions.' + title) + " Ruleset" }}
+        </span>
       </v-card-title>
-      <v-divider></v-divider>
-      <v-card-text style="padding: 0 16px;">
-        <v-row>
-          <v-col cols="12" sm="6" md="4">
+      <v-divider class="mb-4" style="opacity: 0.1;"></v-divider>
+      
+      <v-card-text class="pa-2">
+        <v-row style="row-gap: 16px;" class="mb-4">
+          <v-col cols="12" sm="6" md="4" class="py-1">
             <v-select
               hide-details
               :label="$t('type')"
               :items="[{title: $t('ruleset.local'), value: 'local'},{ title: $t('ruleset.remote'), value: 'remote'}]"
               @update:model-value="updateType($event)"
-              v-model="rule_set.type">
-            </v-select>
+              v-model="rule_set.type"
+              variant="outlined"
+              class="dark-input"
+              density="comfortable"
+            ></v-select>
           </v-col>
-          <v-col cols="12" sm="6" md="4">
-            <v-text-field v-model="rule_set.tag" :label="$t('objects.tag')" hide-details></v-text-field>
+          <v-col cols="12" sm="6" md="4" class="py-1">
+            <v-text-field v-model="rule_set.tag" :label="$t('objects.tag')" hide-details variant="outlined" class="dark-input" density="comfortable"></v-text-field>
           </v-col>
-          <v-col cols="12" sm="6" md="4">
+          <v-col cols="12" sm="6" md="4" class="py-1">
             <v-select
               hide-details
               :label="$t('ruleset.format')"
               :items="['source', 'binary']"
-              v-model="rule_set.format">
-            </v-select>
+              v-model="rule_set.format"
+              variant="outlined"
+              class="dark-input"
+              density="comfortable"
+            ></v-select>
           </v-col>
         </v-row>
-        <v-row v-if="rule_set.type == 'local'">
-          <v-col cols="12">
-            <v-text-field v-model="rule_set.path" :label="$t('transport.path')" hide-details></v-text-field>
+
+        <v-row v-if="rule_set.type == 'local'" style="row-gap: 16px;" class="mb-4">
+          <v-col cols="12" class="py-1">
+            <v-text-field v-model="rule_set.path" :label="$t('transport.path')" hide-details variant="outlined" class="dark-input" density="comfortable"></v-text-field>
           </v-col>
         </v-row>
-        <v-row v-else>
-          <v-col cols="12">
-            <v-text-field v-model="rule_set.url" label="URL" hide-details></v-text-field>
+        
+        <v-row v-else style="row-gap: 16px;" class="mb-4">
+          <v-col cols="12" class="py-1">
+            <v-text-field v-model="rule_set.url" label="URL" hide-details variant="outlined" class="dark-input" density="comfortable"></v-text-field>
           </v-col>
-          <v-col cols="12" sm="6" md="4">
+          <v-col cols="12" sm="6" md="4" class="py-1">
             <v-select
               hide-details
               :label="$t('objects.outbound')"
               :items="outTags"
               clearable
               @click:clear="delete rule_set.download_detour"
-              v-model="rule_set.download_detour">
-            </v-select>
+              v-model="rule_set.download_detour"
+              variant="outlined"
+              class="dark-input"
+              density="comfortable"
+            ></v-select>
           </v-col>
-          <v-col cols="12" sm="6" md="4">
-            <v-text-field v-model.number="update_intervals" :suffix="$t('date.d')" type="number" min="0" :label="$t('ruleset.interval')" hide-details></v-text-field>
+          <v-col cols="12" sm="6" md="4" class="py-1">
+            <v-text-field v-model.number="update_intervals" :suffix="$t('date.d')" type="number" min="0" :label="$t('ruleset.interval')" hide-details variant="outlined" class="dark-input" density="comfortable"></v-text-field>
           </v-col>
         </v-row>
       </v-card-text>
-      <v-card-actions>
+      
+      <v-card-actions class="px-2 pt-4">
         <v-spacer></v-spacer>
         <v-btn
-          color="blue-darken-1"
-          variant="outlined"
+          class="tech-grey-btn px-4"
+          size="comfortable"
           @click="closeModal"
         >
           {{ $t('actions.close') }}
         </v-btn>
         <v-btn
-          color="blue-darken-1"
-          variant="tonal"
+          class="tech-blue-btn px-4"
+          size="comfortable"
           :loading="loading"
           @click="saveChanges"
         >

@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/gob"
+	"net/http"
 	"s-ui/database/model"
 
 	sessions "github.com/Calidity/gin-sessions"
@@ -25,8 +26,11 @@ func SetLoginUser(c *gin.Context, userName string) error {
 func SetMaxAge(c *gin.Context, maxAge int) error {
 	s := sessions.Default(c)
 	s.Options(sessions.Options{
-		Path:   "/",
-		MaxAge: maxAge,
+		Path:     "/",
+		MaxAge:   maxAge,
+		Secure:   false,
+		HttpOnly: false,
+		SameSite: http.SameSiteLaxMode,
 	})
 	return s.Save()
 }
@@ -52,8 +56,11 @@ func ClearSession(c *gin.Context) {
 	s := sessions.Default(c)
 	s.Clear()
 	s.Options(sessions.Options{
-		Path:   "/",
-		MaxAge: -1,
+		Path:     "/",
+		MaxAge:   -1,
+		Secure:   false,
+		HttpOnly: false,
+		SameSite: http.SameSiteLaxMode,
 	})
 	s.Save()
 }

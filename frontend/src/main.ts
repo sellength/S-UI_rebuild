@@ -46,6 +46,34 @@ app.provide('loading', loading)
 
 registerPlugins(app)
 
+app.mixin({
+  watch: {
+    menu(this: any, val: any) {
+      if (typeof val === 'boolean') {
+        if (val) {
+          document.addEventListener('click', this._handleOutsideClickCapture, true)
+        } else {
+          document.removeEventListener('click', this._handleOutsideClickCapture, true)
+        }
+      }
+    }
+  },
+  beforeUnmount(this: any) {
+    if (typeof this.menu === 'boolean') {
+      document.removeEventListener('click', this._handleOutsideClickCapture, true)
+    }
+  },
+  methods: {
+    _handleOutsideClickCapture(this: any, e: MouseEvent) {
+      const target = e.target as HTMLElement
+      if (target && (target.closest('.v-menu-custom-options') || target.closest('.v-menu-custom-activator'))) {
+        return
+      }
+      this.menu = false
+    }
+  }
+})
+
 app
   .use(router)
   .use(store)

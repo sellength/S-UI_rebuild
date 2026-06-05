@@ -1,25 +1,34 @@
 <template>
   <v-dialog transition="dialog-bottom-transition" width="800">
-    <v-card class="rounded-lg" :loading="loading" color="background">
-      <v-card-title>
-        <v-row>
-          <v-col cols="auto">
+    <v-card class="panel-modal pa-4" :loading="loading" style="border-radius: 12px; max-height: 90vh; display: flex; flex-direction: column;">
+      <v-card-title class="px-2 pb-2">
+        <v-row align="center">
+          <v-col class="text-h6 font-weight-bold text-grey-lighten-3 d-flex align-center">
+            <v-icon color="cyan" class="mr-2">mdi-chart-timeline-variant-shimmer</v-icon>
             {{ $t('stats.graphTitle') }}
           </v-col>
           <v-spacer></v-spacer>
-          <v-col cols="auto"><v-icon icon="mdi-close" @click="$emit('close')"></v-icon></v-col>
+          <v-col cols="auto">
+            <v-btn icon="mdi-close" variant="text" size="small" color="grey" @click="$emit('close')"></v-btn>
+          </v-col>
         </v-row>
       </v-card-title>
-      <v-divider></v-divider>
-      <v-card-text style="padding: 0 16px;">
-        <div style="text-align: center; margin: 5px;">
-          {{ $t('objects.' + resource) + " : " + tag }}
+      <v-divider class="mb-4" style="opacity: 0.1;"></v-divider>
+      
+      <v-card-text style="padding: 0 20px; overflow-y: auto;" class="flex-grow-1">
+        <div class="d-flex align-center justify-center pa-2 mb-4 flat-card" style="border-radius: 6px; font-family: monospace;">
+          <span class="text-caption text-grey mr-2">{{ $t('objects.' + resource) }}:</span>
+          <span class="text-subtitle-2 font-weight-bold text-cyan">{{ tag }}</span>
         </div>
-        <v-radio-group v-model="limit" @change="loadData" density="compact" :loading="loading" inline hide-details>
-          <v-radio v-for="p in periods" :label="p.title" :value="p.value"></v-radio>
-        </v-radio-group>
-        <v-container id="container" style="height:40vh;">
-          <v-alert :text="$t('noData')" type="warning" variant="outlined" v-if="alert"></v-alert>
+
+        <div class="mb-4 d-flex justify-center">
+          <v-radio-group v-model="limit" @change="loadData" density="compact" :loading="loading" inline hide-details color="cyan">
+            <v-radio v-for="p in periods" :key="p.value" :label="p.title" :value="p.value" class="mr-4 text-caption"></v-radio>
+          </v-radio-group>
+        </div>
+
+        <v-container id="container" style="height:40vh; position: relative;">
+          <v-alert :text="$t('noData')" type="warning" variant="outlined" v-if="alert" style="border-radius: 8px;"></v-alert>
           <Line v-if="loaded" :data="usage" :options="<any>options" />
         </v-container>
       </v-card-text>
@@ -87,9 +96,15 @@ export default {
           mode: 'index',
         },
         elements: {
-          point: { pointStyle: 'crossRot' }
+          point: { pointStyle: 'circle', radius: 1, hoverRadius: 5 }
         },
         plugins: {
+          legend: {
+            labels: {
+              color: '#94a3b8',
+              font: { size: 11 }
+            }
+          },
           tooltip: {
             callbacks: {
               text: (ctx:any) => {
@@ -103,12 +118,23 @@ export default {
           }
         },
         scales: {
+          x: {
+            grid: {
+              color: 'rgba(255, 255, 255, 0.03)',
+            },
+            ticks: {
+              color: '#64748b',
+              font: { size: 10 }
+            }
+          },
           y: {
             grid: {
-              color: () => { return this.$vuetify.theme.current.colors.secondary },
+              color: 'rgba(255, 255, 255, 0.05)',
             },
             beginAtZero: true,
             ticks: {
+              color: '#64748b',
+              font: { size: 10 },
               callback: function(label:any, index: number) {
                 return label == 0 ? 0 : HumanReadable.sizeFormat(label,0)
               },
@@ -152,15 +178,17 @@ export default {
           datasets: [
             {
               label: i18n.global.t('stats.upload'),
-              backgroundColor: 'rgba(255, 165, 0, 0.4)',
-              borderColor: 'rgba(255, 165, 0)',
+              backgroundColor: 'rgba(245, 158, 11, 0.15)',
+              borderColor: '#f59e0b',
+              borderWidth: 1.5,
               fill: true,
               data: uplinkData
             },
             {
               label: i18n.global.t('stats.download'),
-              backgroundColor: 'rgba(0, 128, 0, 0.2)',
-              borderColor: 'rgba(0, 128, 0)',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              borderColor: '#10b981',
+              borderWidth: 1.5,
               fill: true,
               data: downlinkData
             }

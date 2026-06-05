@@ -1,5 +1,5 @@
 <template>
-    <TlsVue 
+  <TlsVue 
     v-model="modal.visible"
     :visible="modal.visible"
     :index="modal.index"
@@ -7,75 +7,164 @@
     @close="closeModal"
     @save="saveModal"
   />
-  <v-row>
-    <v-col cols="12" justify="center" align="center">
-      <v-btn color="primary" @click="showModal(-1)">{{ $t('actions.add') }}</v-btn>
+
+  <!-- 精致顶部 Action Bar -->
+  <v-row class="mb-4">
+    <v-col cols="12">
+      <div class="d-flex flex-column flex-sm-row align-sm-center justify-space-between pa-4 flat-card" style="gap: 16px;">
+        <div class="text-h6 font-weight-bold text-grey-lighten-3 d-flex align-center">
+          <v-icon color="primary" class="mr-2">mdi-shield-lock-outline</v-icon>
+          {{ $t('pages.tls') || 'TLS Settings' }}
+        </div>
+        <div class="d-flex align-center flex-grow-1 flex-sm-grow-0" style="gap: 12px; max-width: 450px; width: 100%;">
+          <v-text-field
+            v-model="searchQuery"
+            prepend-inner-icon="mdi-magnify"
+            :placeholder="$t('actions.search') || 'Search...'"
+            hide-details
+            density="compact"
+            variant="outlined"
+            class="dark-input flex-grow-1"
+          ></v-text-field>
+          <v-btn class="tech-blue-btn text-none" prepend-icon="mdi-plus" @click="showModal(-1)" style="height: 40px; border-radius: 6px;">
+            {{ $t('actions.add') }}
+          </v-btn>
+        </div>
+      </div>
     </v-col>
   </v-row>
+
+  <!-- TLS 卡片网格 -->
   <v-row>
-    <v-col cols="12" sm="4" md="3" lg="2" v-for="(item, index) in <any[]>tlsConfigs" :key="item.id">
-      <v-card rounded="xl" elevation="5" min-width="200" :title="(item.id? item.id + '. ' : '*') + item.name">
-        <v-card-subtitle style="margin-top: -20px;">
-          {{ item.server?.server_name?.length>0 ? item.server.server_name : "-" }}
-        </v-card-subtitle>
-        <v-card-text>
-          <v-row>
-            <v-col>{{ $t('pages.inbounds') }}</v-col>
-            <v-col dir="ltr">
-              <v-tooltip activator="parent" dir="ltr" location="bottom" v-if="item.inbounds?.length>0">
-                <span v-for="i in item.inbounds">{{ i }}<br /></span>
-              </v-tooltip>
-              {{ item.inbounds?.length }}
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col>ACME</v-col>
-            <v-col dir="ltr">
-              {{ $t(item.server?.acme == undefined ? 'no' : 'yes') }}
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col>ECH</v-col>
-            <v-col dir="ltr">
-              {{ $t(item.server?.ech == undefined ? 'no' : 'yes') }}
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col>Reality</v-col>
-            <v-col dir="ltr">
-              {{ $t(item.server?.reality == undefined ? 'no' : 'yes') }}
-            </v-col>
-          </v-row>
-        </v-card-text>
-        <v-divider></v-divider>
-        <v-card-actions style="padding: 0;">
-          <v-btn icon="mdi-file-edit" @click="showModal(index)">
-            <v-icon />
-            <v-tooltip activator="parent" location="top" :text="$t('actions.edit')"></v-tooltip>
-          </v-btn>
-          <v-btn v-if="item.inbounds?.length == 0" icon="mdi-file-remove" style="margin-inline-start:0;" color="warning" @click="delOverlay[index] = true">
-            <v-icon />
-            <v-tooltip activator="parent" location="top" :text="$t('actions.del')"></v-tooltip>
-          </v-btn>
-          <v-overlay
-            v-model="delOverlay[index]"
-            contained
-            class="align-center justify-center"
-          >
-            <v-card :title="$t('actions.del')" rounded="lg">
-              <v-divider></v-divider>
-              <v-card-text>{{ $t('confirm') }}</v-card-text>
-              <v-card-actions>
-                <v-btn color="error" variant="outlined" @click="delTls(index)">{{ $t('yes') }}</v-btn>
-                <v-btn color="success" variant="outlined" @click="delOverlay[index] = false">{{ $t('no') }}</v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-overlay>
-          <v-btn icon="mdi-content-duplicate" @click="clone(index)">
-            <v-icon />
-            <v-tooltip activator="parent" location="top" :text="$t('actions.clone')"></v-tooltip>
-          </v-btn>
-        </v-card-actions>
+    <v-col cols="12" sm="6" md="4" lg="3" v-for="item in filteredTlsConfigs" :key="item.id">
+      <v-card class="panel-card d-flex flex-column justify-space-between h-100 pa-4">
+        <div>
+          <!-- 卡片头部：ID 与名称 -->
+          <div class="d-flex align-center justify-space-between mb-1">
+            <span class="text-subtitle-1 font-weight-bold text-grey-lighten-4 truncate" style="max-width: 80%;" :title="item.name">
+              {{ (item.id ? item.id + '. ' : '* ') + item.name }}
+            </span>
+            <v-icon color="cyan" size="20">mdi-certificate-outline</v-icon>
+          </div>
+          <div class="text-caption text-grey text-truncate mb-3" style="font-family: monospace;">
+            {{ item.server?.server_name?.length > 0 ? item.server.server_name : '-' }}
+          </div>
+
+          <v-divider class="mb-4" style="opacity: 0.1;"></v-divider>
+
+          <!-- TLS 参数信息 -->
+          <div class="d-flex flex-column mb-4" style="gap: 8px;">
+            <div class="d-flex justify-space-between align-center">
+              <span class="text-caption text-grey">{{ $t('pages.inbounds') }}</span>
+              <span class="text-body-2 font-weight-bold text-cyan">
+                <v-tooltip activator="parent" dir="ltr" location="bottom" v-if="item.inbounds?.length > 0">
+                  <span v-for="i in item.inbounds" :key="i">{{ i }}<br /></span>
+                </v-tooltip>
+                {{ item.inbounds?.length || 0 }} inbounds
+              </span>
+            </div>
+
+            <div class="d-flex justify-space-between align-center">
+              <span class="text-caption text-grey">ACME</span>
+              <span class="text-body-2 d-flex align-center">
+                <v-icon 
+                  size="14" 
+                  :color="item.server?.acme !== undefined ? 'success' : 'grey'" 
+                  class="mr-1"
+                >
+                  {{ item.server?.acme !== undefined ? 'mdi-checkbox-marked-outline' : 'mdi-checkbox-blank-outline' }}
+                </v-icon>
+                <span :class="item.server?.acme !== undefined ? 'text-success font-weight-bold' : 'text-grey'">
+                  {{ $t(item.server?.acme == undefined ? 'no' : 'yes') }}
+                </span>
+              </span>
+            </div>
+
+            <div class="d-flex justify-space-between align-center">
+              <span class="text-caption text-grey">ECH</span>
+              <span class="text-body-2 d-flex align-center">
+                <v-icon 
+                  size="14" 
+                  :color="item.server?.ech !== undefined ? 'success' : 'grey'" 
+                  class="mr-1"
+                >
+                  {{ item.server?.ech !== undefined ? 'mdi-checkbox-marked-outline' : 'mdi-checkbox-blank-outline' }}
+                </v-icon>
+                <span :class="item.server?.ech !== undefined ? 'text-success font-weight-bold' : 'text-grey'">
+                  {{ $t(item.server?.ech == undefined ? 'no' : 'yes') }}
+                </span>
+              </span>
+            </div>
+
+            <div class="d-flex justify-space-between align-center">
+              <span class="text-caption text-grey">Reality</span>
+              <span class="text-body-2 d-flex align-center">
+                <v-icon 
+                  size="14" 
+                  :color="item.server?.reality !== undefined ? 'success' : 'grey'" 
+                  class="mr-1"
+                >
+                  {{ item.server?.reality !== undefined ? 'mdi-checkbox-marked-outline' : 'mdi-checkbox-blank-outline' }}
+                </v-icon>
+                <span :class="item.server?.reality !== undefined ? 'text-success font-weight-bold' : 'text-grey'">
+                  {{ $t(item.server?.reality == undefined ? 'no' : 'yes') }}
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 卡片底部操作 -->
+        <div>
+          <v-divider class="my-4" style="opacity: 0.1;"></v-divider>
+          <div class="d-flex justify-space-between align-center">
+            <div class="d-flex" style="gap: 4px;">
+              <v-btn icon="mdi-file-edit-outline" variant="text" size="small" color="primary" @click="showModal(getRealIndex(item))">
+                <v-icon size="18" />
+                <v-tooltip activator="parent" location="top" :text="$t('actions.edit')"></v-tooltip>
+              </v-btn>
+              <v-btn icon="mdi-content-duplicate" variant="text" size="small" color="cyan" @click="clone(getRealIndex(item))">
+                <v-icon size="18" />
+                <v-tooltip activator="parent" location="top" :text="$t('actions.clone')"></v-tooltip>
+              </v-btn>
+            </div>
+
+            <v-btn 
+              v-if="item.inbounds?.length == 0" 
+              icon="mdi-delete-outline" 
+              variant="text" 
+              size="small" 
+              color="error" 
+              @click="delOverlay[getRealIndex(item)] = true"
+            >
+              <v-icon size="18" />
+              <v-tooltip activator="parent" location="top" :text="$t('actions.del')"></v-tooltip>
+            </v-btn>
+          </div>
+        </div>
+
+        <!-- 删除二次确认的覆盖模态框 -->
+        <v-overlay
+          v-model="delOverlay[getRealIndex(item)]"
+          contained
+          class="align-center justify-center"
+        >
+          <v-card class="panel-modal pa-4" style="max-width: 320px; border-radius: 10px;">
+            <div class="text-subtitle-1 font-weight-bold text-grey-lighten-3 mb-2 d-flex align-center">
+              <v-icon color="error" class="mr-2">mdi-alert-circle-outline</v-icon>
+              {{ $t('actions.del') }}
+            </div>
+            <v-divider class="mb-4" style="opacity: 0.1;"></v-divider>
+            <div class="text-body-2 text-grey-lighten-1 mb-6">
+              {{ $t('confirm') }}
+            </div>
+            <div class="d-flex justify-end" style="gap: 12px;">
+              <v-btn class="tech-grey-btn px-4" size="small" @click="delOverlay[getRealIndex(item)] = false">{{ $t('no') }}</v-btn>
+              <v-btn color="error" class="px-4 font-weight-bold" size="small" @click="delTls(getRealIndex(item))">{{ $t('yes') }}</v-btn>
+            </div>
+          </v-card>
+        </v-overlay>
+
       </v-card>
     </v-col>
   </v-row>
@@ -85,10 +174,10 @@
 import TlsVue from '@/layouts/modals/Tls.vue'
 import Data from '@/store/modules/data'
 import { computed, ref } from 'vue'
-import { Config } from '@/types/config';
-import { Inbound } from '@/types/inbounds';
-import { Client } from '@/types/clients';
-import { Link, LinkUtil } from '@/plugins/link';
+import { Config } from '@/types/config'
+import { Inbound } from '@/types/inbounds'
+import { Client } from '@/types/clients'
+import { Link, LinkUtil } from '@/plugins/link'
 
 const tlsConfigs = computed((): any[] => {
   return Data().tlsConfigs
@@ -105,10 +194,24 @@ const clients = computed((): any[] => {
 const modal = ref({
   visible: false,
   index: -1,
-  data: "",
+  data: '',
 })
 
 const delOverlay = ref(new Array<boolean>(tlsConfigs.value.length).fill(false))
+const searchQuery = ref('')
+
+const filteredTlsConfigs = computed(() => {
+  if (!searchQuery.value) return tlsConfigs.value
+  const q = searchQuery.value.toLowerCase()
+  return tlsConfigs.value.filter(t => 
+    t.name.toLowerCase().includes(q) || 
+    (t.server && t.server.server_name && t.server.server_name.toLowerCase().includes(q))
+  )
+})
+
+const getRealIndex = (item: any) => {
+  return tlsConfigs.value.findIndex(t => t.id === item.id && t.name === item.name)
+}
 
 const showModal = (index: number) => {
   modal.value.index = index
@@ -120,7 +223,7 @@ const clone = (index: number) => {
   data.id = 0
   data.inbounds = []
   while (tlsConfigs.value.findIndex(t => t.name == data.name) != -1){
-    data.name += "-copy"
+    data.name += '-copy'
   }
   saveModal(data)
 }

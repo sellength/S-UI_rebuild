@@ -1,39 +1,61 @@
 <template>
   <v-dialog transition="dialog-bottom-transition" width="400">
-    <v-card class="rounded-lg">
-      <v-card-title>
+    <v-card class="panel-modal pa-4" style="border-radius: 12px;">
+      <v-card-title class="text-h6 font-weight-bold text-grey-lighten-3 px-2 pb-2">
         {{ $t('admin.changeCred') + " " + user.username }}
       </v-card-title>
-      <v-divider></v-divider>
-      <v-card-text>
-        <v-row>
-          <v-col>
-            <v-text-field v-model="newData.oldPass" :label="$t('admin.oldPass')" :rules="passwordRules" type="password" required></v-text-field>
+      <v-divider class="mb-4" style="opacity: 0.1;"></v-divider>
+      <v-card-text class="pa-2">
+        <v-row style="row-gap: 16px;">
+          <v-col cols="12" class="py-1">
+            <v-text-field 
+              v-model="newData.oldPass" 
+              :label="$t('admin.oldPass')" 
+              :rules="passwordRules" 
+              type="password" 
+              variant="outlined"
+              class="dark-input"
+              hide-details="auto"
+              required
+            ></v-text-field>
           </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <v-text-field v-model="newData.newUsername" :label="$t('admin.newUname')" :rules="usernameRules" required></v-text-field>
+          <v-col cols="12" class="py-1">
+            <v-text-field 
+              v-model="newData.newUsername" 
+              :label="$t('admin.newUname')" 
+              :rules="usernameRules" 
+              variant="outlined"
+              class="dark-input"
+              hide-details="auto"
+              required
+            ></v-text-field>
           </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <v-text-field v-model="newData.newPass" :label="$t('admin.newPass')" :rules="passwordRules" type="password" required></v-text-field>
+          <v-col cols="12" class="py-1">
+            <v-text-field 
+              v-model="newData.newPass" 
+              :label="$t('admin.newPass')" 
+              :rules="passwordRules" 
+              type="password" 
+              variant="outlined"
+              class="dark-input"
+              hide-details="auto"
+              required
+            ></v-text-field>
           </v-col>
         </v-row>
       </v-card-text>
-      <v-card-actions>
+      <v-card-actions class="px-2 pt-4">
         <v-spacer></v-spacer>
         <v-btn
-          color="blue-darken-1"
-          variant="outlined"
+          class="tech-grey-btn px-4"
+          size="comfortable"
           @click="closeModal"
         >
           {{ $t('actions.close') }}
         </v-btn>
         <v-btn
-          color="blue-darken-1"
-          variant="tonal"
+          class="tech-blue-btn px-4"
+          size="comfortable"
           @click="saveChanges"
         >
           {{ $t('actions.save') }}

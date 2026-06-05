@@ -19,86 +19,149 @@
     :tag="stats.tag"
     @close="closeStats"
   />
-  <v-row>
-    <v-col cols="12" justify="center" align="center">
-      <v-btn color="primary" @click="showModal(-1)">{{ $t('actions.add') }}</v-btn>
+
+  <!-- 精致顶部 Action Bar -->
+  <v-row class="mb-4">
+    <v-col cols="12">
+      <div class="d-flex flex-column flex-sm-row align-sm-center justify-space-between pa-4 flat-card" style="gap: 16px;">
+        <div class="text-h6 font-weight-bold d-flex align-center">
+          <v-icon color="primary" class="mr-2">mdi-router-wireless</v-icon>
+          {{ $t('pages.inbounds') || 'Inbounds' }}
+        </div>
+        <div class="d-flex align-center flex-grow-1 flex-sm-grow-0" style="gap: 12px; max-width: 450px; width: 100%;">
+          <v-text-field
+            v-model="searchQuery"
+            prepend-inner-icon="mdi-magnify"
+            :placeholder="$t('actions.search') || 'Search...'"
+            hide-details
+            density="compact"
+            variant="outlined"
+            class="dark-input flex-grow-1"
+          ></v-text-field>
+          <v-btn class="tech-blue-btn text-none" prepend-icon="mdi-plus" @click="showModal(-1)" style="height: 40px; border-radius: 6px;">
+            {{ $t('actions.add') }}
+          </v-btn>
+        </div>
+      </div>
     </v-col>
   </v-row>
+
+  <!-- 节点卡片网格 -->
   <v-row>
-    <v-col cols="12" sm="4" md="3" lg="2" v-for="(item, index) in <any[]>inbounds" :key="item.tag">
-      <v-card rounded="xl" elevation="5" min-width="200" :title="item.tag">
-        <v-card-subtitle style="margin-top: -20px;">
-          <v-row>
-            <v-col>{{ item.type }}</v-col>
-          </v-row>
-        </v-card-subtitle>
-        <v-card-text>
-          <v-row>
-            <v-col>{{ $t('in.addr') }}</v-col>
-            <v-col dir="ltr">
-              {{ item.listen }}
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col>{{ $t('in.port') }}</v-col>
-            <v-col dir="ltr">
-              {{ item.listen_port }}
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col>{{ $t('objects.tls') }}</v-col>
-            <v-col dir="ltr">
-              {{ Object.hasOwn(item,'tls') ? $t(item.tls?.enabled ? 'enable' : 'disable') : '-'  }}
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col>{{ $t('pages.clients') }}</v-col>
-            <v-col dir="ltr">
-              <v-tooltip activator="parent" dir="ltr" location="bottom" v-if="Object.hasOwn(item,'users')">
-                <span v-for="u in findInbounsUsers(item)">{{ u }}<br /></span>
-              </v-tooltip>
-              {{ Array.isArray(item.users) ? item.users.length : '-' }}
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col>{{ $t('online') }}</v-col>
-            <v-col dir="ltr">
-              <template v-if="onlines[index]">
-                <v-chip density="comfortable" size="small" color="success" variant="flat">{{ $t('online') }}</v-chip>
-              </template>
-              <template v-else>-</template>
-            </v-col>
-          </v-row>
-        </v-card-text>
-        <v-divider></v-divider>
-        <v-card-actions style="padding: 0;">
-          <v-btn icon="mdi-file-edit" @click="showModal(index)">
-            <v-icon />
-            <v-tooltip activator="parent" location="top" :text="$t('actions.edit')"></v-tooltip>
-          </v-btn>
-          <v-btn icon="mdi-file-remove" style="margin-inline-start:0;" color="warning" @click="delOverlay[index] = true">
-            <v-icon />
-            <v-tooltip activator="parent" location="top" :text="$t('actions.del')"></v-tooltip>
-          </v-btn>
-          <v-overlay
-            v-model="delOverlay[index]"
-            contained
-            class="align-center justify-center"
-          >
-            <v-card :title="$t('actions.del')" rounded="lg">
-              <v-divider></v-divider>
-              <v-card-text>{{ $t('confirm') }}</v-card-text>
-              <v-card-actions>
-                <v-btn color="error" variant="outlined" @click="delInbound(index)">{{ $t('yes') }}</v-btn>
-                <v-btn color="success" variant="outlined" @click="delOverlay[index] = false">{{ $t('no') }}</v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-overlay>
-          <v-btn icon="mdi-chart-line" @click="showStats(item.tag)" v-if="v2rayStats.inbounds.includes(item.tag)">
-            <v-icon />
-            <v-tooltip activator="parent" location="top" :text="$t('stats.graphTitle')"></v-tooltip>
-          </v-btn>
-        </v-card-actions>
+    <v-col cols="12" sm="6" md="4" lg="3" v-for="item in filteredInbounds" :key="item.tag">
+      <v-card class="panel-card d-flex flex-column justify-space-between h-100 pa-4">
+        
+        <!-- 卡片头部：Tag 与 协议 Badge -->
+        <div>
+          <div class="d-flex align-center justify-space-between mb-3">
+            <span class="text-subtitle-1 font-weight-bold text-truncate" style="max-width: 70%;" :title="item.tag">
+              {{ item.tag }}
+            </span>
+            <span class="text-caption px-2 py-0.5 rounded font-weight-bold" :style="{ backgroundColor: getProtocolBg(item.type), color: '#ffffff' }">
+              {{ item.type.toUpperCase() }}
+            </span>
+          </div>
+
+          <v-divider class="mb-4" style="opacity: 0.1;"></v-divider>
+
+          <!-- 卡片内容体：各种高对比度参数展示 -->
+          <div class="d-flex flex-column" style="gap: 8px;">
+            <div class="d-flex justify-space-between align-center">
+              <span class="text-caption text-grey">{{ $t('in.addr') }}</span>
+              <span class="text-body-2 text-truncate" style="max-width: 60%; font-family: monospace; opacity: 0.85;">{{ item.listen || '0.0.0.0' }}</span>
+            </div>
+            
+            <div class="d-flex justify-space-between align-center">
+              <span class="text-caption text-grey">{{ $t('in.port') }}</span>
+              <span class="text-body-2 font-weight-bold text-cyan" style="font-family: monospace;">{{ item.listen_port }}</span>
+            </div>
+
+            <div class="d-flex justify-space-between align-center">
+              <span class="text-caption text-grey">{{ $t('objects.tls') }}</span>
+              <span class="text-body-2 d-flex align-center">
+                <v-icon 
+                  size="14" 
+                  :color="Object.hasOwn(item,'tls') && (item as any).tls?.enabled ? 'success' : 'grey'" 
+                  class="mr-1"
+                >
+                  {{ Object.hasOwn(item,'tls') && (item as any).tls?.enabled ? 'mdi-shield-check' : 'mdi-shield-off' }}
+                </v-icon>
+                <span :class="Object.hasOwn(item,'tls') && (item as any).tls?.enabled ? 'text-success font-weight-bold' : 'text-grey'">
+                  {{ Object.hasOwn(item,'tls') ? $t((item as any).tls?.enabled ? 'enable' : 'disable') : '-'  }}
+                </span>
+              </span>
+            </div>
+
+            <div class="d-flex justify-space-between align-center">
+              <span class="text-caption text-grey">{{ $t('pages.clients') }}</span>
+              <span class="text-body-2 opacity-85">
+                <v-tooltip activator="parent" location="bottom" v-if="Object.hasOwn(item,'users')">
+                  <span v-for="u in findInbounsUsers(item)" :key="u">{{ u }}<br /></span>
+                </v-tooltip>
+                <v-icon size="14" class="mr-1" color="grey">mdi-account-group</v-icon>
+                {{ Array.isArray((item as any).users) ? (item as any).users.length : '-' }}
+              </span>
+            </div>
+
+            <div class="d-flex justify-space-between align-center">
+              <span class="text-caption text-grey">{{ $t('online') }}</span>
+              <span class="d-flex align-center">
+                <template v-if="onlines[getRealIndex(item)]">
+                  <span class="d-inline-block rounded-circle bg-success mr-2" style="width: 8px; height: 8px; box-shadow: 0 0 8px #10b981; animation: pulse 2s infinite;"></span>
+                  <span class="text-caption text-success font-weight-bold">{{ $t('online') }}</span>
+                </template>
+                <template v-else>
+                  <span class="text-body-2 text-grey">-</span>
+                </template>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 卡片底部操作按钮 -->
+        <div>
+          <v-divider class="my-4" style="opacity: 0.1;"></v-divider>
+          <div class="d-flex justify-space-between align-center">
+            <div class="d-flex" style="gap: 4px;">
+              <v-btn icon="mdi-file-edit-outline" variant="text" size="small" color="primary" @click="showModal(getRealIndex(item))">
+                <v-icon size="18" />
+                <v-tooltip activator="parent" location="top" :text="$t('actions.edit')"></v-tooltip>
+              </v-btn>
+              <v-btn icon="mdi-chart-line" variant="text" size="small" color="cyan" @click="showStats(item.tag)" v-if="v2rayStats.inbounds.includes(item.tag)">
+                <v-icon size="18" />
+                <v-tooltip activator="parent" location="top" :text="$t('stats.graphTitle')"></v-tooltip>
+              </v-btn>
+            </div>
+
+            <v-btn icon="mdi-delete-outline" variant="text" size="small" color="error" @click="delOverlay[getRealIndex(item)] = true">
+              <v-icon size="18" />
+              <v-tooltip activator="parent" location="top" :text="$t('actions.del')"></v-tooltip>
+            </v-btn>
+          </div>
+        </div>
+
+        <!-- 删除二次确认的覆盖模态框 -->
+        <v-overlay
+          v-model="delOverlay[getRealIndex(item)]"
+          contained
+          class="align-center justify-center"
+        >
+          <v-card class="panel-modal pa-4" style="max-width: 320px; border-radius: 10px;">
+            <div class="text-subtitle-1 font-weight-bold mb-2 d-flex align-center">
+              <v-icon color="error" class="mr-2">mdi-alert-circle-outline</v-icon>
+              {{ $t('actions.del') }}
+            </div>
+            <v-divider class="mb-4" style="opacity: 0.1;"></v-divider>
+            <div class="text-body-2 mb-6" style="opacity: 0.8;">
+              {{ $t('confirm') }}
+            </div>
+            <div class="d-flex justify-end" style="gap: 12px;">
+              <v-btn class="tech-grey-btn px-4" size="small" @click="delOverlay[getRealIndex(item)] = false">{{ $t('no') }}</v-btn>
+              <v-btn color="error" class="px-4 font-weight-bold" size="small" @click="delInbound(getRealIndex(item))">{{ $t('yes') }}</v-btn>
+            </div>
+          </v-card>
+        </v-overlay>
+
       </v-card>      
     </v-col>
   </v-row>
@@ -156,12 +219,37 @@ const v2rayStats = computed((): V2rayApiStats => {
 const modal = ref({
   visible: false,
   index: -1,
-  data: "",
-  cData: "",
+  data: '',
+  cData: '',
   stats: false,
 })
 
 let delOverlay = ref(new Array<boolean>)
+
+const searchQuery = ref('')
+
+const filteredInbounds = computed(() => {
+  if (!searchQuery.value) return inbounds.value
+  const q = searchQuery.value.toLowerCase()
+  return inbounds.value.filter(i => 
+    i.tag.toLowerCase().includes(q) || 
+    i.type.toLowerCase().includes(q) ||
+    String(i.listen_port).includes(q)
+  )
+})
+
+const getRealIndex = (item: Inbound) => {
+  return inbounds.value.findIndex(i => i.tag === item.tag)
+}
+
+const getProtocolBg = (type: string) => {
+  const t = type.toLowerCase()
+  if (t.includes('vless') || t.includes('vmess')) return '#06b6d4'
+  if (t.includes('trojan')) return '#8b5cf6'
+  if (t.includes('shadow')) return '#f97316'
+  if (t.includes('hysteria') || t.includes('tuic')) return '#3c6efa'
+  return '#6b7280'
+}
 
 const showModal = (index: number) => {
   modal.value.index = index
@@ -185,7 +273,7 @@ const saveModal = (data:Inbound, stats: boolean, tls_id: number, cData: any) => 
   const oldTag = modal.value.index != -1 ? inbounds.value[modal.value.index].tag : null
   if (data.tag != oldTag && inTags.value.includes(data.tag)) {
     push.error({
-      message: i18n.global.t('error.dplData') + ": " + i18n.global.t('objects.tag')
+      message: i18n.global.t('error.dplData') + ': ' + i18n.global.t('objects.tag')
     })
     return
   }
@@ -355,14 +443,14 @@ const changeClientInboundsTag = (oldtag: string, newTag:string) => {
 const findInbounsUsers = (inbound: InboundWithUser): string[] => {
   if (inbound.users === null || !Array.isArray(inbound.users) || inbound.users.length == 0) return []
 
-  const users = inbound.users.map(user => "username" in user ? user.username : user.name)
+  const users = inbound.users.map(user => 'username' in user ? user.username : user.name)
   return users
 }
 
 const stats = ref({
   visible: false,
-  resource: "inbound",
-  tag: "",
+  resource: 'inbound',
+  tag: '',
 })
 
 const showStats = (tag: string) => {

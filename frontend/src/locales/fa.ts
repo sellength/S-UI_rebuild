@@ -23,6 +23,7 @@ export default {
   noData: "بدون داده!",
   invalidLogin: "ورود نامعتبر!",
   online: "آنلاین",
+  status: "وضعیت",
   version: "نسخه",
   email: "ایمیل",
   commaSeparated: "(جداشده با کاما)",
@@ -102,6 +103,7 @@ export default {
     disable: "غیرفعال",
     close: "بستن",
     restartApp: "ریستارت پنل",
+    search: "جستجو",
   },
   login: {
     title: "ورود",
@@ -152,6 +154,8 @@ export default {
     directDns: "DNS مستقیم",
     toDirectDns: "هدایت به DNS مستقیم",
     jsonSubOptions: "گزینه‌های دیگر",
+    langTip: "* تنظیمات زبان به طور خودکار در مرورگر ذخیره می‌شوند. نیازی به کلیک روی ذخیره نیست.",
+    langSaved: "تنظیمات زبان به طور محلی ذخیره شد",
   },
   client: {
     name: "نام",

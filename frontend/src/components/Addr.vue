@@ -51,9 +51,9 @@
   <v-row>
     <v-spacer></v-spacer>
     <v-col cols="auto" align="end" justify="center">
-      <v-menu v-model="menu" :close-on-content-click="false" location="start">
+      <v-menu content-class="v-menu-custom-options" v-model="menu" :close-on-content-click="false" location="start">
         <template v-slot:activator="{ props }">
-          <v-btn v-bind="props" hide-details variant="tonal">{{ $t('in.mdOption') }}</v-btn>
+          <v-btn class="v-menu-custom-activator" v-bind="props" hide-details variant="tonal">{{ $t('in.mdOption') }}</v-btn>
         </template>
         <v-card>
           <v-list>

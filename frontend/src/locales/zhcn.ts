@@ -23,6 +23,7 @@ export default {
   noData: "无数据！",
   invalidLogin: "登录无效！",
   online: "在线",
+  status: "状态",
   version: "版本",
   email: "电子邮件",
   commaSeparated: "（逗号分隔）",
@@ -103,6 +104,7 @@ export default {
     disable: "禁用",
     close: "关闭",
     restartApp: "重启面板",
+    search: "搜索",
   },
   login: {
     title: "登录",
@@ -153,6 +155,8 @@ export default {
     directDns: "直连 DNS",
     toDirectDns: "路由到直连 DNS",
     jsonSubOptions: "其他选项",
+    langTip: "* 语言切换将自动保存至浏览器，无需点击右上角「保存」",
+    langSaved: "语言设置已成功保存至浏览器本地",
   },
   client: {
     name: "名称",

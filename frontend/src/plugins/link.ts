@@ -1,4 +1,4 @@
-import { Hysteria, Hysteria2, InTypes, Inbound, Naive, Shadowsocks, TUIC, Trojan, VLESS, VMess } from "@/types/inbounds"
+import { Hysteria, Hysteria2, InTypes, Inbound, Naive, Shadowsocks, TUIC, Trojan, VLESS, VMess, AnyTLS } from "@/types/inbounds"
 import { HTTP, WebSocket, gRPC, HTTPUpgrade, Transport, TrspTypes } from "@/types/transport"
 import RandomUtil from "./randomUtil"
 
@@ -32,6 +32,8 @@ export namespace LinkUtil {
         return trojanLink(user,<Trojan>inbound, addrs, tlsClient)
       case InTypes.VMess:
         return vmessLink(user,<VMess>inbound, addrs, tlsClient)
+      case InTypes.AnyTLS:
+        return anytlsLink(user,<AnyTLS>inbound, addrs, tlsClient)
     }
     return []
   }
@@ -457,6 +459,49 @@ export namespace LinkUtil {
         }
         newParams.ps = encodeURIComponent(a.remark ? inbound.tag + a.remark : inbound.tag)
         links.push('vmess://' + utf8ToBase64(JSON.stringify(newParams, null, 2)))
+      })
+    }
+    return links
+  }
+
+  function anytlsLink(user: string, inbound: AnyTLS, addrs: any[], tlsClient: any): string[] {
+    const password = inbound.users.find(i => i.name == user)?.password
+    const params = {
+      sni: inbound.tls.server_name?? null,
+      alpn: inbound.tls.alpn?.join(',')?? null,
+      insecure: tlsClient?.insecure ? 1 : null
+    }
+
+    let links = <string[]>[]
+    if (addrs.length == 0) {
+      const uri = new URL(`anytls://${password}@${location.hostname}:${inbound.listen_port}`)
+      for (const [key, value] of Object.entries(params)){
+        if (value) {
+          uri.searchParams.set(key, value.toString())
+        }
+      }
+      uri.hash = encodeURIComponent(inbound.tag)
+      links.push(uri.toString())
+    } else {
+      addrs.forEach(a => {
+        const uri = new URL(`anytls://${password}@${a.server}:${a.server_port}`)
+        for (const [key, value] of Object.entries(params)){
+          if (value) {
+            uri.searchParams.set(key, value.toString())
+          }
+        }
+        if (a.server_name?.length>0) {
+          uri.searchParams.set('sni', a.server_name)
+        } else {
+          inbound.tls.server_name ? uri.searchParams.set('sni', inbound.tls.server_name) : uri.searchParams.delete('sni')
+        }
+        if (a.insecure) {
+          uri.searchParams.set('insecure', '1')
+        } else {
+          tlsClient.insecure ? uri.searchParams.set('insecure', '1') : uri.searchParams.delete('insecure')
+        }
+        uri.hash = encodeURIComponent(a.remark ? inbound.tag + a.remark : inbound.tag)
+        links.push(uri.toString())
       })
     }
     return links

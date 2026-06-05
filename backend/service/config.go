@@ -31,6 +31,7 @@ type SingBoxConfig struct {
 	Outbounds    []json.RawMessage `json:"outbounds"`
 	Route        json.RawMessage   `json:"route"`
 	Experimental json.RawMessage   `json:"experimental"`
+	Api          json.RawMessage   `json:"api,omitempty"`
 }
 
 func NewConfigService() *ConfigService {
@@ -61,8 +62,11 @@ func (s *ConfigService) InitConfig() error {
 	if err != nil {
 		return err
 	}
+	s.filterLegacyOutbounds(&singboxConfig)
+	s.RefreshApiAddr(&singboxConfig)
+	singboxConfig.Api = nil
 
-	return s.RefreshApiAddr(&singboxConfig)
+	return nil
 }
 
 func (s *ConfigService) GetConfig() (*SingBoxConfig, error) {
@@ -76,6 +80,9 @@ func (s *ConfigService) GetConfig() (*SingBoxConfig, error) {
 	if err != nil {
 		return nil, err
 	}
+	s.filterLegacyOutbounds(&singboxConfig)
+	s.RefreshApiAddr(&singboxConfig)
+	singboxConfig.Api = nil
 	return &singboxConfig, nil
 }
 
@@ -171,6 +178,8 @@ func (s *ConfigService) SaveChanges(changes map[string]string, loginUser string)
 				newConfig.Route = rawObject
 			case "experimental":
 				newConfig.Experimental = rawObject
+			case "api":
+				newConfig.Api = rawObject
 			case "inbounds":
 				if change.Action == "edit" {
 					newConfig.Inbounds[change.Index] = rawObject
@@ -237,6 +246,8 @@ func (s *ConfigService) CheckChanges(lu string) (bool, error) {
 }
 
 func (s *ConfigService) Save(singboxConfig *SingBoxConfig) error {
+	s.filterLegacyOutbounds(singboxConfig)
+	singboxConfig.Api = nil
 	configPath := config.GetBinFolderPath()
 	_, err := os.Stat(configPath + "/config.json")
 	if os.IsNotExist(err) {
@@ -275,21 +286,32 @@ func (s *ConfigService) RefreshApiAddr(singboxConfig *SingBoxConfig) error {
 			if err != nil {
 				return err
 			}
-
 		}
 
-		var experimental struct {
-			V2rayApi struct {
-				Listen string      `json:"listen"`
-				Stats  interface{} `jaon:"stats"`
-			} `json:"v2ray_api"`
-		}
-		err = json.Unmarshal(singboxConfig.Experimental, &experimental)
-		if err != nil {
-			return err
+		// 1. Try parsing top-level "api" object (sing-box 1.11+)
+		if len(singboxConfig.Api) > 0 {
+			var apiConf struct {
+				Listen string `json:"listen"`
+			}
+			if err := json.Unmarshal(singboxConfig.Api, &apiConf); err == nil && apiConf.Listen != "" {
+				ApiAddr = apiConf.Listen
+				return nil
+			}
 		}
 
-		ApiAddr = experimental.V2rayApi.Listen
+		// 2. Try parsing "experimental.v2ray_api" object (older versions)
+		if len(singboxConfig.Experimental) > 0 {
+			var experimental struct {
+				V2rayApi struct {
+					Listen string      `json:"listen"`
+					Stats  interface{} `jaon:"stats"`
+				} `json:"v2ray_api"`
+			}
+			if err := json.Unmarshal(singboxConfig.Experimental, &experimental); err == nil && experimental.V2rayApi.Listen != "" {
+				ApiAddr = experimental.V2rayApi.Listen
+				return nil
+			}
+		}
 	}
 	return nil
 }
@@ -378,4 +400,24 @@ func (s *ConfigService) GetChanges(actor string, chngKey string, count string) [
 		logger.Warning(err)
 	}
 	return chngs
+}
+
+func (s *ConfigService) filterLegacyOutbounds(singboxConfig *SingBoxConfig) {
+	if singboxConfig == nil || len(singboxConfig.Outbounds) == 0 {
+		return
+	}
+	var cleanOutbounds []json.RawMessage
+	for _, outboundRaw := range singboxConfig.Outbounds {
+		var outboundMap map[string]interface{}
+		if err := json.Unmarshal(outboundRaw, &outboundMap); err == nil {
+			if obType, ok := outboundMap["type"].(string); ok {
+				if obType == "dns" || obType == "block" {
+					logger.Warning("Filtering out legacy outbound with type: ", obType, " tag: ", outboundMap["tag"])
+					continue
+				}
+			}
+		}
+		cleanOutbounds = append(cleanOutbounds, outboundRaw)
+	}
+	singboxConfig.Outbounds = cleanOutbounds
 }

@@ -1,72 +1,89 @@
 <template>
   <v-dialog transition="dialog-bottom-transition" width="800">
-    <v-card class="rounded-lg">
-      <v-card-title>
-        {{ $t('actions.' + title) + " " + $t('objects.client') }}
+    <v-card class="panel-modal pa-4" style="border-radius: 12px; max-height: 90vh; display: flex; flex-direction: column;">
+      <v-card-title class="px-2 pb-2">
+        <span class="text-h6 font-weight-bold text-grey-lighten-3">
+          {{ $t('actions.' + title) + " " + $t('objects.client') }}
+        </span>
       </v-card-title>
-      <v-divider></v-divider>
-      <v-card-text style="padding: 0 16px; overflow-y: scroll;">
+      <v-divider class="mb-4" style="opacity: 0.1;"></v-divider>
+      
+      <v-card-text style="padding: 0 20px; overflow-y: auto;" class="flex-grow-1">
         <v-container style="padding: 0;">
           <v-tabs
             v-model="tab"
-            align-tabs="center"
+            align-tabs="start"
+            density="comfortable"
+            style="margin-bottom: 20px;"
           >
-            <v-tab value="t1">{{ $t('client.basics') }}</v-tab>
-            <v-tab value="t2">{{ $t('client.config') }}</v-tab>
-            <v-tab value="t3">{{ $t('client.links') }}</v-tab>
+            <v-tab value="t1" class="text-none font-weight-bold">{{ $t('client.basics') }}</v-tab>
+            <v-tab value="t2" class="text-none font-weight-bold">{{ $t('client.config') }}</v-tab>
+            <v-tab value="t3" class="text-none font-weight-bold">{{ $t('client.links') }}</v-tab>
           </v-tabs>
-          <v-window v-model="tab">
+
+          <v-window v-model="tab" class="pt-2">
+            <!-- 基础设置 -->
             <v-window-item value="t1">
-              <v-row>
-                <v-col cols="12" sm="6" md="4">
-                  <v-switch color="primary" v-model="client.enable" :label="$t('enable')" hide-details></v-switch>
+              <v-row class="mb-2">
+                <v-col cols="12" sm="6" md="4" class="py-1">
+                  <v-switch color="cyan" v-model="client.enable" :label="$t('enable')" hide-details></v-switch>
                 </v-col>
               </v-row>
-              <v-row>
+              <v-row style="row-gap: 20px;">
                 <v-col cols="12" sm="6" md="4">
-                  <v-text-field v-model="client.name" :label="$t('client.name')" hide-details></v-text-field>
+                  <v-text-field v-model="client.name" :label="$t('client.name')" hide-details variant="outlined" class="dark-input"></v-text-field>
                 </v-col>
                 <v-col cols="12" sm="6" md="4">
-                  <v-text-field v-model="client.desc" :label="$t('client.desc')" hide-details></v-text-field>
+                  <v-text-field v-model="client.desc" :label="$t('client.desc')" hide-details variant="outlined" class="dark-input"></v-text-field>
                 </v-col>
               </v-row>
-              <v-row>
+              <v-row style="row-gap: 20px; margin-top: 10px;">
                 <v-col cols="12" sm="6" md="4">
-                  <v-text-field v-model.number="Volume" type="number" min="0" :label="$t('stats.volume')" suffix="GiB" hide-details></v-text-field>
+                  <v-text-field v-model.number="Volume" type="number" min="0" :label="$t('stats.volume')" suffix="GiB" hide-details variant="outlined" class="dark-input"></v-text-field>
                 </v-col>
                 <v-col cols="12" sm="6" md="4">
                   <DatePick :expiry="expDate" @submit="setDate" />
                 </v-col>
               </v-row>
-              <v-row v-if="index != -1">
-                <v-col cols="12" sm="6" md="4" class="d-flex flex-column">
-                  <div class="d-flex justify-space-between align-center">
-                    <div>
-                      {{ $t('stats.usage') }}: {{ total }}<sup dir="ltr" v-if="percent>0">({{ percent }}%)</sup>
-                    </div>
-                    <v-btn density="compact" variant="text" icon="mdi-restore" @click="client.up=0;client.down=0">
+
+              <!-- 流量使用状态 -->
+              <v-row v-if="index != -1" class="my-4">
+                <v-col cols="12" sm="6" md="5" class="d-flex flex-column justify-center">
+                  <div class="d-flex justify-space-between align-center mb-1">
+                    <span class="text-caption text-grey-lighten-2">
+                      {{ $t('stats.usage') }}: <span class="font-weight-bold text-grey-lighten-4">{{ total }}</span>
+                      <sup dir="ltr" v-if="percent>0" class="text-cyan font-weight-bold">({{ percent }}%)</sup>
+                    </span>
+                    <v-btn density="compact" variant="text" icon="mdi-restore" color="cyan" @click="client.up=0;client.down=0">
                       <v-tooltip activator="parent" location="top">
                         {{ $t('reset') }}
                       </v-tooltip>
-                      <v-icon />
+                      <v-icon size="16" />
                     </v-btn>
                   </div>
                   <v-progress-linear
                     v-model="percent"
                     :color="percentColor"
                     v-if="client.volume>0"
-                    bottom
-                  >
-                  </v-progress-linear>
+                    height="6"
+                    rounded
+                    class="w-100"
+                  ></v-progress-linear>
                 </v-col>
-                <v-col cols="12" sm="6" md="4">
-                  <v-icon icon="mdi-upload" color="orange" /><span class="text-orange">{{ up }}</span>
-                  / 
-                  <v-icon icon="mdi-download" color="success" /><span class="text-success">{{ down }}</span>
+                <v-col cols="12" sm="6" md="5" class="d-flex align-center font-mono text-caption" style="gap: 12px;">
+                  <div class="d-flex align-center">
+                    <v-icon icon="mdi-upload-network-outline" color="orange" size="16" class="mr-1" />
+                    <span class="text-orange font-weight-bold">{{ up }}</span>
+                  </div>
+                  <div class="d-flex align-center">
+                    <v-icon icon="mdi-download-network-outline" color="success" size="16" class="mr-1" />
+                    <span class="text-success font-weight-bold">{{ down }}</span>
+                  </div>
                 </v-col>
               </v-row>
-              <v-row>
-                <v-col>
+
+              <v-row style="margin-top: 10px;">
+                <v-col cols="12">
                   <v-combobox
                     v-model="clientInbounds"
                     :items="inboundTags"
@@ -74,101 +91,151 @@
                     multiple
                     chips
                     hide-details
+                    variant="outlined"
+                    class="dark-input"
                   ></v-combobox>
                 </v-col>
               </v-row>
-              <v-row>
+              <v-row class="mt-2">
                 <v-col cols="auto">
-                  <v-switch v-model="clientStats" color="primary" :label="$t('stats.enable')" hide-details></v-switch>
+                  <v-switch v-model="clientStats" color="cyan" :label="$t('stats.enable')" hide-details></v-switch>
                 </v-col>
               </v-row>
             </v-window-item>
+
+            <!-- 协议配置 -->
             <v-window-item value="t2">
-              <v-row v-for="(value, key) in clientConfig" :key="key">
-                <v-col cols="12" md="3" align="end" align-self="center">
-                    {{ key }}
-                </v-col>
-                <v-col>
-                  <v-text-field
-                    v-if="value.password != undefined"
-                    label="Password"
-                    v-model="value.password"
-                    hide-details>
-                  </v-text-field>
-                  <v-text-field
-                    v-if="value.uuid != undefined"
-                    label="UUID"
-                    v-model="value.uuid"
-                    hide-details>
-                  </v-text-field>
-                  <v-text-field
-                    v-if="value.flow != undefined"
-                    label="Flow"
-                    v-model="value.flow"
-                    hide-details>
-                  </v-text-field>
-                  <v-text-field
-                    v-if="value.auth_str != undefined"
-                    label="Auth"
-                    v-model="value.auth_str"
-                    hide-details>
-                  </v-text-field>
-                </v-col>
-              </v-row>
+              <div class="d-flex flex-column" style="gap: 20px; max-width: 600px; margin: 0 auto;">
+                <v-row v-for="(value, key) in clientConfig" :key="key" align="center" style="row-gap: 12px;">
+                  <v-col cols="12" sm="3" class="text-sm-right text-caption text-grey font-weight-bold py-1">
+                    {{ String(key).toUpperCase() }}
+                  </v-col>
+                  <v-col cols="12" sm="9" class="py-1">
+                    <v-text-field
+                      v-if="value.password != undefined"
+                      label="Password"
+                      v-model="value.password"
+                      hide-details
+                      variant="outlined"
+                      class="dark-input"
+                      density="compact"
+                    ></v-text-field>
+                    <v-text-field
+                      v-if="value.uuid != undefined"
+                      label="UUID"
+                      v-model="value.uuid"
+                      hide-details
+                      variant="outlined"
+                      class="dark-input"
+                      density="compact"
+                    ></v-text-field>
+                    <v-text-field
+                      v-if="value.flow != undefined"
+                      label="Flow"
+                      v-model="value.flow"
+                      hide-details
+                      variant="outlined"
+                      class="dark-input"
+                      density="compact"
+                    ></v-text-field>
+                    <v-text-field
+                      v-if="value.auth_str != undefined"
+                      label="Auth String"
+                      v-model="value.auth_str"
+                      hide-details
+                      variant="outlined"
+                      class="dark-input"
+                      density="compact"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+              </div>
             </v-window-item>
+
+            <!-- 订阅与外部链接 -->
             <v-window-item value="t3">
-              <v-row v-for="(lnk, index) in links">
-                <v-col cols="auto">{{ index + 1 }}</v-col>
-                <v-col style="direction: ltr; overflow-y: hidden;">{{ lnk.uri }}</v-col>
-              </v-row>
-              <v-row>
-                <v-col>
-                  <v-btn color="primary" @click="extLinks.push({ type: 'external', uri: ''})">{{ $t('actions.add') }} {{ $t('client.external') }}</v-btn>
-                </v-col>
-              </v-row>
-              <v-row v-for="(lnk, index) in extLinks">
-                <v-col>
-                  <v-text-field
-                  dir="ltr"
-                  :label="$t('client.external') + ' ' + (index+1)"
-                  append-icon="mdi-delete"
-                  @click:append="extLinks.splice(index,1)"
-                  placeholder="<protocol>://<data>"
-                  v-model="lnk.uri" />
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col>
-                  <v-btn color="primary" @click="subLinks.push({ type: 'sub', uri: ''})">{{ $t('actions.add') }} {{ $t('client.sub') }}</v-btn>
-                </v-col>
-              </v-row>
-              <v-row v-for="(lnk, index) in subLinks">
-                <v-col>
-                  <v-text-field
-                  dir="ltr"
-                  :label="$t('client.sub') + ' ' + (index+1)"
-                  append-icon="mdi-delete"
-                  @click:append="subLinks.splice(index,1)"
-                  placeholder="http[s]://<domain>[:]<port>/<path>"
-                  v-model="lnk.uri" />
-                </v-col>
-              </v-row>
+              <div class="d-flex flex-column" style="gap: 24px;">
+                <!-- 本地链接列表 -->
+                <div v-if="links.length > 0">
+                  <div class="text-subtitle-2 font-weight-bold text-grey-lighten-3 mb-2">Local URIs</div>
+                  <div class="d-flex flex-column" style="gap: 8px;">
+                    <div 
+                      v-for="(lnk, idx) in links" 
+                      :key="idx" 
+                      class="pa-3 rounded text-caption font-mono text-grey-lighten-2 d-flex align-center" 
+                      style="background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.05); overflow-x: auto; white-space: nowrap;"
+                    >
+                      <span class="text-cyan font-weight-bold mr-2">#{{ idx + 1 }}</span>
+                      {{ lnk.uri }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 外部连接设置 -->
+                <div>
+                  <div class="d-flex align-center justify-space-between mb-3">
+                    <span class="text-subtitle-2 font-weight-bold text-grey-lighten-3">{{ $t('client.external') }}</span>
+                    <v-btn class="tech-grey-btn text-none" size="small" prepend-icon="mdi-plus" @click="extLinks.push({ type: 'external', uri: ''})">
+                      {{ $t('actions.add') }}
+                    </v-btn>
+                  </div>
+                  <div class="d-flex flex-column" style="gap: 12px;">
+                    <div v-for="(lnk, idx) in extLinks" :key="idx" class="d-flex align-center" style="gap: 8px;">
+                      <v-text-field
+                        dir="ltr"
+                        hide-details
+                        variant="outlined"
+                        class="dark-input flex-grow-1"
+                        density="compact"
+                        :placeholder="'<protocol>://<data>'"
+                        v-model="lnk.uri"
+                      ></v-text-field>
+                      <v-btn icon="mdi-delete-outline" color="error" variant="text" size="small" @click="extLinks.splice(idx,1)"></v-btn>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 订阅链接设置 -->
+                <div>
+                  <div class="d-flex align-center justify-space-between mb-3">
+                    <span class="text-subtitle-2 font-weight-bold text-grey-lighten-3">{{ $t('client.sub') }}</span>
+                    <v-btn class="tech-grey-btn text-none" size="small" prepend-icon="mdi-plus" @click="subLinks.push({ type: 'sub', uri: ''})">
+                      {{ $t('actions.add') }}
+                    </v-btn>
+                  </div>
+                  <div class="d-flex flex-column" style="gap: 12px;">
+                    <div v-for="(lnk, idx) in subLinks" :key="idx" class="d-flex align-center" style="gap: 8px;">
+                      <v-text-field
+                        dir="ltr"
+                        hide-details
+                        variant="outlined"
+                        class="dark-input flex-grow-1"
+                        density="compact"
+                        placeholder="http[s]://<domain>[:]<port>/<path>"
+                        v-model="lnk.uri"
+                      ></v-text-field>
+                      <v-btn icon="mdi-delete-outline" color="error" variant="text" size="small" @click="subLinks.splice(idx,1)"></v-btn>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </v-window-item>
           </v-window>
         </v-container>
       </v-card-text>
-      <v-card-actions>
+      
+      <v-card-actions class="px-2 pt-4">
         <v-spacer></v-spacer>
         <v-btn
-          color="blue-darken-1"
-          variant="outlined"
+          class="tech-grey-btn px-4"
+          size="comfortable"
           @click="closeModal"
         >
           {{ $t('actions.close') }}
         </v-btn>
         <v-btn
-          color="blue-darken-1"
-          variant="tonal"
+          class="tech-blue-btn px-4"
+          size="comfortable"
           :loading="loading"
           @click="saveChanges"
         >
@@ -266,5 +333,4 @@ export default {
   },
   components: { DatePick },
 }
-
 </script>

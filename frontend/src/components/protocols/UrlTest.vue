@@ -53,9 +53,9 @@
     </v-row>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-menu v-model="menu" :close-on-content-click="false" location="start">
+      <v-menu content-class="v-menu-custom-options" v-model="menu" :close-on-content-click="false" location="start">
           <template v-slot:activator="{ props }">
-            <v-btn v-bind="props" hide-details variant="tonal">{{ $t('types.lb.urlTestOptions') }}</v-btn>
+            <v-btn class="v-menu-custom-activator" v-bind="props" hide-details variant="tonal">{{ $t('types.lb.urlTestOptions') }}</v-btn>
           </template>
           <v-card>
             <v-list>

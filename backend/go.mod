@@ -8,6 +8,7 @@ require (
 	github.com/glebarez/sqlite v1.11.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/v2fly/v2ray-core/v5 v5.51.2
+	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/gorm v1.31.1
 )
 

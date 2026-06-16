@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - dev
     tags:
       - "*"
   workflow_dispatch:
@@ -37,7 +38,7 @@ jobs:
     - name: Setup Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.24'
+        go-version: '1.25.5'
         cache: true
 
     - name: Build Backend Binary
@@ -45,7 +46,7 @@ jobs:
         cd backend
         go mod tidy
         # CGO_ENABLED=0 ensuring pure Go execution on Alpine Linux container
-        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o sui main.go
+        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags postgres -o sui main.go
 
     - name: Build Sing-box Binary
       run: |
@@ -64,21 +65,20 @@ jobs:
       uses: docker/metadata-action@v5
       with:
         images: |
-          ghcr.io/${{ github.repository_owner }}/s-ui_rebuild
+          sellength/s-ui_dev
         tags: |
           type=ref,event=branch
           type=ref,event=tag
-          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' }}
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Login to GHCR
+    - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
-        registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
     - name: Build and push
       uses: docker/build-push-action@v6

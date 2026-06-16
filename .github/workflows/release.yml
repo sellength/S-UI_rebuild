@@ -27,7 +27,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           cache: false
-          go-version: '1.22'
+          go-version: '1.25.5'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -99,7 +99,8 @@ jobs:
 
           ### Build s-ui
           cd backend
-          go build -o ../sui main.go
+          go build -tags postgres -o ../sui main.go
+          go build -o ../s-ui-agent-linux-${{ matrix.platform }} ./agent
           cd ..
 
           mkdir s-ui
@@ -120,5 +121,15 @@ jobs:
           tag: ${{ github.ref }}
           file: s-ui-linux-${{ matrix.platform }}.tar.gz
           asset_name: s-ui-linux-${{ matrix.platform }}.tar.gz
+          prerelease: true
+          overwrite: true
+
+      - name: Upload Agent
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+          file: s-ui-agent-linux-${{ matrix.platform }}
+          asset_name: s-ui-agent-linux-${{ matrix.platform }}
           prerelease: true
           overwrite: true

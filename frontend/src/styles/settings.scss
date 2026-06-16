@@ -55,6 +55,11 @@ body {
   --panel-modal-title: #1f2937;
   --panel-modal-text: #4b5563;
   --panel-border-color: rgba(0, 0, 0, 0.08);
+  --panel-soft-bg: #f8fafc;
+  --panel-soft-bg-hover: #f1f5f9;
+  --panel-strong-bg: #eef2f7;
+  --panel-strong-text: #0f172a;
+  --panel-muted-text: #64748b;
   --gauge-track-color: #f3f4f6;
   --gauge-progress-color: #0052d9;
 
@@ -87,6 +92,11 @@ body {
   --panel-modal-title: #f3f4f6;
   --panel-modal-text: #f3f4f6;
   --panel-border-color: rgba(255, 255, 255, 0.08);
+  --panel-soft-bg: rgba(16, 27, 43, 0.62);
+  --panel-soft-bg-hover: rgba(21, 36, 57, 0.82);
+  --panel-strong-bg: rgba(7, 14, 25, 0.32);
+  --panel-strong-text: rgba(235, 241, 250, 0.96);
+  --panel-muted-text: rgba(190, 202, 220, 0.7);
   --gauge-track-color: #1f2937;
   --gauge-progress-color: #3b82f6;
 }
@@ -712,4 +722,3 @@ body {
     overflow: visible !important;
   }
 }
-

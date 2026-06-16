@@ -1,12 +1,14 @@
 package database
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"s-ui/config"
 	"s-ui/database/model"
 
 	sqlite "github.com/glebarez/sqlite"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -20,9 +22,13 @@ func initUser() error {
 		return err
 	}
 	if count == 0 {
+		password, err := bcrypt.GenerateFromPassword([]byte("admin"), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
 		user := &model.User{
 			Username: "admin",
-			Password: "admin",
+			Password: string(password),
 		}
 		return db.Create(user).Error
 	}
@@ -47,7 +53,15 @@ func OpenDB(dbPath string) error {
 	c := &gorm.Config{
 		Logger: gormLogger,
 	}
-	db, err = gorm.Open(sqlite.Open(dbPath), c)
+
+	switch config.GetDBType() {
+	case "sqlite":
+		db, err = gorm.Open(sqlite.Open(dbPath), c)
+	case "postgres", "postgresql":
+		db, err = openPostgres(c)
+	default:
+		return fmt.Errorf("unsupported SUI_DB_TYPE %q", config.GetDBType())
+	}
 	return err
 }
 
@@ -65,6 +79,23 @@ func InitDB(dbPath string) error {
 		&model.Stats{},
 		&model.Client{},
 		&model.Changes{},
+		&model.Node{},
+		&model.NodeAgent{},
+		&model.NodeGroup{},
+		&model.NodeGroupMember{},
+		&model.DNSProvider{},
+		&model.Certificate{},
+		&model.CertificateVersion{},
+		&model.ProtocolTemplate{},
+		&model.DistributedInbound{},
+		&model.InboundUser{},
+		&model.ConfigVersion{},
+		&model.ConfigDeployment{},
+		&model.NodeHeartbeat{},
+		&model.NodeMetric{},
+		&model.Subscription{},
+		&model.SubStoreIntegration{},
+		&model.AuditLog{},
 	)
 	if err != nil {
 		return err

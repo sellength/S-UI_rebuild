@@ -1,0 +1,44 @@
+<svg width="1320" height="860" viewBox="0 0 1320 860" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1320" height="860" fill="#F3F6FA"/>
+  <rect x="210" y="70" width="900" height="720" rx="18" fill="white" stroke="#D8E0EA" stroke-width="2"/>
+  <text x="250" y="128" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="30" font-weight="800" fill="#172033">添加 DNS Provider</text>
+  <text x="250" y="166" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18" fill="#64748B">选择 DNS 服务商后，只显示对应的凭据字段和模板。</text>
+  <text x="250" y="218" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" fill="#64748B">名称</text>
+  <rect x="250" y="232" width="820" height="56" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+  <text x="270" y="267" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" fill="#1F2937">cf-main</text>
+  <text x="250" y="326" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" fill="#64748B">类型</text>
+  <rect x="250" y="342" width="395" height="92" rx="10" fill="#EEF5FF" stroke="#2563EB" stroke-width="2.5"/>
+  <rect x="274" y="368" width="40" height="40" rx="10" fill="#FFF3E6"/>
+  <path d="M282 394c0-7 6-12 13-12 4-8 18-7 22 2 7 1 12 6 12 12 0 7-6 12-13 12h-22c-7 0-12-6-12-14z" fill="#F38020"/>
+  <text x="330" y="380" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="20" font-weight="750" fill="#172033">Cloudflare</text>
+  <text x="330" y="409" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" fill="#64748B">CF_Token / DNS-01</text>
+  <rect x="590" y="366" width="30" height="22" rx="11" fill="#2563EB"/>
+  <circle cx="609" cy="377" r="8" fill="white"/>
+  <rect x="675" y="342" width="395" height="92" rx="10" fill="#FFFFFF" stroke="#D8E0EA" stroke-width="1.5"/>
+  <rect x="699" y="368" width="40" height="40" rx="10" fill="#FFF7ED"/>
+  <text x="707" y="393" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="700" fill="#FF9900">aws</text>
+  <path d="M708 399c11 8 28 8 40 0" stroke="#FF9900" stroke-width="2" stroke-linecap="round"/>
+  <text x="755" y="380" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="20" font-weight="750" fill="#172033">AWS Route53</text>
+  <text x="755" y="409" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" fill="#64748B">Access Key / Route53</text>
+  <rect x="250" y="454" width="395" height="92" rx="10" fill="#FFFFFF" stroke="#D8E0EA" stroke-width="1.5"/>
+  <rect x="274" y="480" width="40" height="40" rx="10" fill="#FFF7ED"/>
+  <path d="M284 493h25v7h-25v-7zm0 10h25v7h-25v-7zm31-10h-8l10 10-10 10h8l10-10-10-10z" fill="#FF6A00"/>
+  <text x="330" y="492" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="20" font-weight="750" fill="#172033">AliDNS</text>
+  <text x="330" y="521" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" fill="#64748B">Ali_Key / Ali_Secret</text>
+  <rect x="675" y="454" width="395" height="92" rx="10" fill="#FFFFFF" stroke="#D8E0EA" stroke-width="1.5"/>
+  <rect x="699" y="480" width="40" height="40" rx="10" fill="#EFF6FF"/>
+  <path d="M707 506c0-7 6-12 13-12 3-8 17-8 21 1 7 1 12 6 12 12 0 7-6 12-13 12h-21c-7 0-12-6-12-13z" stroke="#1D7AF3" stroke-width="4"/>
+  <path d="M709 516h40" stroke="#21BDB8" stroke-width="4" stroke-linecap="round"/>
+  <text x="755" y="492" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="20" font-weight="750" fill="#172033">Tencent DNSPod</text>
+  <text x="755" y="521" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="14" fill="#64748B">DP_Id / DP_Key</text>
+  <rect x="250" y="566" width="820" height="96" rx="10" fill="#F8FAFC" stroke="#D8E0EA" stroke-width="1.5"/>
+  <circle cx="284" cy="598" r="17" fill="#0F9488"/>
+  <text x="279" y="605" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="24" font-weight="800" fill="white">i</text>
+  <text x="318" y="592" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17" font-weight="750" fill="#172033">Cloudflare 凭据</text>
+  <text x="318" y="622" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" fill="#64748B">DNS-01 只临时写 TXT 记录，不要求开启橙云代理。AnyTLS 建议使用公开信任 CA。</text>
+  <rect x="250" y="682" width="820" height="64" rx="10" fill="#F8FAFC" stroke="#D8E0EA" stroke-width="1.5"/>
+  <text x="274" y="721" font-family="SFMono-Regular,Menlo,Consolas,monospace" font-size="17" fill="#2563EB">CF_Token</text>
+  <text x="410" y="721" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" fill="#64748B">必填，Cloudflare API Token</text>
+  <rect x="870" y="690" width="176" height="46" rx="8" fill="#2563EB"/>
+  <text x="912" y="720" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="750" fill="white">套用模板</text>
+</svg>

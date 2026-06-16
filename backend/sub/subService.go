@@ -24,6 +24,9 @@ func (s *SubService) GetSubs(subId string) (*string, []string, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	if !service.ClientAllowsLocal(*client) {
+		return nil, nil, fmt.Errorf("client is not allowed to use local subscriptions")
+	}
 
 	clientInfo := ""
 	subShowInfo, _ := s.SettingService.GetSubShowInfo()

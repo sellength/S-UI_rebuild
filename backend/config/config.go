@@ -68,6 +68,58 @@ func GetDBPath() string {
 	return fmt.Sprintf("%s/%s.db", GetDBFolderPath(), GetName())
 }
 
+func GetDBType() string {
+	dbType := strings.ToLower(strings.TrimSpace(os.Getenv("SUI_DB_TYPE")))
+	if dbType == "" {
+		return "sqlite"
+	}
+	return dbType
+}
+
+func GetPostgresDSN() string {
+	return strings.TrimSpace(os.Getenv("SUI_POSTGRES_DSN"))
+}
+
+func GetAgentRegisterToken() string {
+	return strings.TrimSpace(os.Getenv("SUI_AGENT_REGISTER_TOKEN"))
+}
+
+func GetSecretKey() string {
+	return strings.TrimSpace(os.Getenv("SUI_SECRET_KEY"))
+}
+
+func GetAgentCertDir() string {
+	certDir := strings.TrimSpace(os.Getenv("SUI_AGENT_CERT_DIR"))
+	if certDir == "" {
+		return "/usr/local/s-ui-agent/certs"
+	}
+	return certDir
+}
+
+func GetACMEShPath() string {
+	path := strings.TrimSpace(os.Getenv("SUI_ACME_SH"))
+	if path == "" {
+		return "acme.sh"
+	}
+	return path
+}
+
+func GetACMEHome() string {
+	home := strings.TrimSpace(os.Getenv("SUI_ACME_HOME"))
+	if home == "" {
+		return "/root/.acme.sh"
+	}
+	return home
+}
+
+func GetCertificateWorkDir() string {
+	dir := strings.TrimSpace(os.Getenv("SUI_CERTIFICATE_WORK_DIR"))
+	if dir == "" {
+		return "/usr/local/s-ui/certificates"
+	}
+	return dir
+}
+
 func GetDefaultConfig() string {
 	apiEnv := GetEnvApi()
 	if len(apiEnv) > 0 {

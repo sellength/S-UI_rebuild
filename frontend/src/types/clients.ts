@@ -6,8 +6,9 @@ export interface Client {
 	enable: boolean
 	name: string
 	config: Config
-	inbounds: string[]
+  inbounds: string[]
   links: Link[]
+  accessScope: 'local' | 'cluster' | 'both'
 	volume: number
 	expiry: number
   up: number
@@ -21,6 +22,7 @@ const defaultClient: Client = {
   config: {},
   inbounds: [],
   links: [],
+  accessScope: "local",
   volume: 0,
   expiry: 0,
   up: 0,
@@ -129,7 +131,9 @@ export function ensureConfigKeys(config: Config, user: string): Config {
 export function createClient<T extends Client>(json?: Partial<T>): Client {
   defaultClient.name = RandomUtil.randomSeq(8)
   const defaultObject: Client = { ...defaultClient, ...(json || {}) }
+  if (defaultObject.accessScope !== "local" && defaultObject.accessScope !== "cluster") {
+    defaultObject.accessScope = "local"
+  }
   defaultObject.config = ensureConfigKeys(defaultObject.config, defaultObject.name)
   return defaultObject
 }
-

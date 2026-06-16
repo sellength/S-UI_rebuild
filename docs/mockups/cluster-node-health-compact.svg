@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="720" viewBox="0 0 1440 720">
+  <defs>
+    <style>
+      .bg { fill: #f6f8fb; }
+      .panel { fill: #ffffff; stroke: #dfe7f1; stroke-width: 1; }
+      .row { fill: #f1f5f9; stroke: #e2e8f0; stroke-width: 1; }
+      .text { fill: #111827; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .muted { fill: #64748b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .title { font-size: 22px; font-weight: 700; }
+      .h2 { font-size: 17px; font-weight: 700; }
+      .body { font-size: 15px; }
+      .small { font-size: 13px; }
+      .head { font-size: 13px; font-weight: 700; fill: #475569; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .strong { font-size: 16px; font-weight: 700; }
+      .chipText { font-size: 13px; font-weight: 700; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .green { fill: #16a34a; }
+      .greenBg { fill: #dcfce7; }
+      .red { fill: #dc2626; }
+      .redBg { fill: #fee2e2; }
+      .yellow { fill: #d97706; }
+      .yellowBg { fill: #fef3c7; }
+      .gray { fill: #6b7280; }
+      .grayBg { fill: #e5e7eb; }
+      .blue { fill: #2563eb; }
+      .blueBg { fill: #dbeafe; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1440" height="720"/>
+
+  <rect class="panel" x="32" y="28" width="1376" height="84" rx="10"/>
+  <text class="text title" x="68" y="72">集群管理</text>
+  <text class="muted body" x="68" y="94">主列表只看：Agent 通信、sing-box 状态与版本、配置版本。详细配置放进节点详情。</text>
+  <rect class="blue" x="1260" y="50" width="108" height="40" rx="8"/>
+  <text class="chipText" fill="#fff" x="1288" y="75">新增节点</text>
+
+  <rect class="panel" x="32" y="136" width="1376" height="96" rx="10"/>
+  <text class="text h2" x="60" y="174">节点健康摘要</text>
+  <g transform="translate(60 192)">
+    <circle class="green" cx="8" cy="8" r="6"/>
+    <text class="muted small" x="24" y="13">1 个 Agent 在线</text>
+  </g>
+  <g transform="translate(248 192)">
+    <circle class="yellow" cx="8" cy="8" r="6"/>
+    <text class="muted small" x="24" y="13">1 个 Agent 未接入</text>
+  </g>
+  <g transform="translate(454 192)">
+    <circle class="green" cx="8" cy="8" r="6"/>
+    <text class="muted small" x="24" y="13">1 个 sing-box 运行中</text>
+  </g>
+  <g transform="translate(684 192)">
+    <circle class="gray" cx="8" cy="8" r="6"/>
+    <text class="muted small" x="24" y="13">1 个 sing-box 未上报</text>
+  </g>
+
+  <rect class="panel" x="32" y="260" width="1376" height="380" rx="10"/>
+  <text class="text h2" x="60" y="300">节点列表</text>
+  <text class="muted small" x="60" y="322">状态灯可以轻微闪烁：绿色正常、黄色未接入/待应用、红色异常。</text>
+
+  <line x1="60" y1="352" x2="1380" y2="352" stroke="#e5e7eb"/>
+  <text class="head" x="78" y="384">节点</text>
+  <text class="head" x="330" y="384">Agent 通信</text>
+  <text class="head" x="560" y="384">sing-box</text>
+  <text class="head" x="860" y="384">配置</text>
+  <text class="head" x="1088" y="384">最后心跳</text>
+  <text class="head" x="1260" y="384">操作</text>
+
+  <rect class="row" x="60" y="402" width="1320" height="86" rx="8"/>
+  <text class="text strong" x="78" y="436">us-01</text>
+  <text class="muted small" x="78" y="459">US · us.example.com</text>
+  <rect class="greenBg" x="330" y="424" width="116" height="32" rx="16"/>
+  <circle class="green" cx="350" cy="440" r="6"/>
+  <text class="green chipText" x="366" y="445">Agent 在线</text>
+  <rect class="greenBg" x="560" y="424" width="188" height="32" rx="16"/>
+  <circle class="green" cx="580" cy="440" r="6"/>
+  <text class="green chipText" x="596" y="445">sing-box 运行中 · 1.12.0</text>
+  <text class="text body" x="860" y="443">v4 已应用</text>
+  <text class="text body" x="1088" y="443">12 秒前</text>
+  <rect class="panel" x="1230" y="422" width="64" height="36" rx="8"/>
+  <text class="blue chipText" x="1250" y="445">详情</text>
+  <rect class="blue" x="1304" y="422" width="64" height="36" rx="8"/>
+  <text class="chipText" fill="#fff" x="1324" y="445">发布</text>
+
+  <rect class="row" x="60" y="506" width="1320" height="86" rx="8"/>
+  <text class="text strong" x="78" y="540">sg-01</text>
+  <text class="muted small" x="78" y="563">SG · sg.example.com</text>
+  <rect class="yellowBg" x="330" y="528" width="116" height="32" rx="16"/>
+  <circle class="yellow" cx="350" cy="544" r="6"/>
+  <text class="yellow chipText" x="366" y="549">Agent 未接入</text>
+  <rect class="grayBg" x="560" y="528" width="154" height="32" rx="16"/>
+  <circle class="gray" cx="580" cy="544" r="6"/>
+  <text class="gray chipText" x="596" y="549">sing-box 未上报</text>
+  <text class="text body" x="860" y="547">v2 待应用</text>
+  <text class="muted body" x="1088" y="547">从未上报</text>
+  <rect class="panel" x="1230" y="526" width="64" height="36" rx="8"/>
+  <text class="blue chipText" x="1250" y="549">详情</text>
+  <rect class="blue" x="1304" y="526" width="64" height="36" rx="8"/>
+  <text class="chipText" fill="#fff" x="1324" y="549">发布</text>
+
+  <rect class="panel" x="32" y="660" width="1376" height="42" rx="8"/>
+  <text class="muted small" x="60" y="686">详情抽屉再展示：域名、公网 IP、服务入口、Agent 版本、配置 SHA256、最近错误。主列表不放这些，避免覆盖节点配置。</text>
+</svg>

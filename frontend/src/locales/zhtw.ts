@@ -37,11 +37,19 @@ export default {
   pages: {
     login: "登錄",
     home: "主頁",
+    localNode: "本地節點搭建",
+    localOverview: "本地概覽",
     inbounds: "入站管理",
     outbounds: "出站管理",
     clients: "用戶管理",
     rules: "路由列表",
     tls: "TLS 設置",
+    distributed: "集群管理",
+    clusterOverview: "集群概覽",
+    certificateCenter: "證書中心",
+    serviceEntrances: "服務入口",
+    subscriptions: "訂閱",
+    configTemplates: "配置模板",
     basics: "基礎信息",
     admins: "管理員",
     settings: "設置",
@@ -116,6 +124,8 @@ export default {
   },
   menu: {
     logout: "退出登錄",
+    userAndSubscription: "用戶與訂閱",
+    system: "系統",
   },
   admin: {
     changeCred: "更改憑據",

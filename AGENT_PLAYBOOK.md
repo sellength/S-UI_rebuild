@@ -13,7 +13,7 @@
 | 任务场景 | 推荐调用的 Skill | 核心执行逻辑 |
 | :--- | :--- | :--- |
 | **功能开发与 Bug 修复** | `systematic-debugging` | **铁律**：严禁猜测和打补丁。必须遵循：1. 确认错误信息 -> 2. 编写/执行最小复现脚本 -> 3. 顺着调用栈回溯根源 (Root Cause) -> 4. 实施单点修复 -> 5. 验证是否解决。 |
-| **前端 UI 美化与重构** | `ui-ux-pro-max` | 维持 Obsidian 暗黑曜石风格。全站组件必须使用磨砂玻璃面板 (Glassmorphism)，按钮与控制控件使用平滑的过渡曲线与微交互。不允许出现 Mock 图片，需要时必须调用 `generate_image` 产生。 |
+| **前端 UI 美化与重构** | 项目可用的 UI / UX / Product Design Skill | UI 讨论、布局出图和重构前，必须先使用项目可用的 UI 相关 skill 或 `docs/UI_WORKFLOW.md` 中定义的流程。禁止直接使用通用图片生成工具猜后台界面；需要出图时优先做可控 SVG/HTML 线框稿或真实前端原型。 |
 | **后端 Go 接口与数据库** | `backend-dev-guidelines` | 遵循 Go 的强类型安全，在编写 GORM 数据库操作时务必注意数据库锁与防竞态。处理 IP 解析或配置热重载时应有超时控制。 |
 | **部署方案与本地测试** | `kaizen` | 遵循 Kaizen（持续改进）的精简原则。在打包运行环境时，抛弃笨重的 Debian，选用 Alpine 作为基础运行环境，保证体积小、加载快。 |
 | **任务成果交付** | `verification-before-completion` | 在任何时候声称“任务完成”前，必须进行自动化或手动的双重验证（如前端执行 build，后端通过编译，Docker 推送成功）。 |

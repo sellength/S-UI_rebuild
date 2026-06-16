@@ -68,6 +68,7 @@
           <thead>
             <tr style="border-bottom: 2px solid var(--panel-border-color);">
               <th class="text-left text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent;">{{ $t('client.name') || 'Username' }}</th>
+              <th class="text-left text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent;">可用范围</th>
               <th class="text-left text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent;">{{ $t('pages.inbounds') || 'Inbounds' }}</th>
               <th class="text-left text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent;">{{ $t('stats.usage') || 'Usage' }}</th>
               <th class="text-left text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent;">{{ $t('date.expiry') || 'Expiry' }}</th>
@@ -98,6 +99,12 @@
                     <div class="text-body-1 font-weight-bold">{{ item.name }}</div>
                     <div class="text-caption text-grey">{{ item.desc || '-' }}</div>
                   </div>
+                </div>
+              </td>
+              <td class="py-3" style="background: transparent;">
+                <div class="d-flex flex-wrap" style="gap: 6px;">
+                  <v-chip v-if="allowsLocal(item)" size="small" color="primary" variant="tonal">本地</v-chip>
+                  <v-chip v-if="allowsCluster(item)" size="small" color="cyan" variant="tonal">集群</v-chip>
                 </div>
               </td>
               <!-- 2. 绑定的入站节点 -->
@@ -290,6 +297,14 @@ const checkFilter = (c:any) :boolean => {
   }
 }
 
+const allowsLocal = (client: any) => {
+  return client.accessScope !== 'cluster'
+}
+
+const allowsCluster = (client: any) => {
+  return client.accessScope === 'cluster'
+}
+
 const filteredClients = computed(() => {
   let list = clients.value
   list = list.filter(checkFilter)
@@ -317,16 +332,12 @@ const modal = ref({
 const delOverlay = ref(new Array<boolean>(clients.value.length).fill(false))
 
 const copySubLink = (item: any) => {
-  if (item.links && item.links.length > 0) {
-    const link = item.links[0].uri
-    navigator.clipboard.writeText(link).then(() => {
-      push.success({ message: i18n.global.t('copy') || 'Copied!' })
-    }).catch(() => {
-      push.error({ message: 'Copy failed!' })
-    })
-  } else {
-    push.warning({ message: 'No links available' })
-  }
+  const link = primarySubLink(item)
+  navigator.clipboard.writeText(link).then(() => {
+    push.success({ message: i18n.global.t('copy') || 'Copied!' })
+  }).catch(() => {
+    push.error({ message: 'Copy failed!' })
+  })
 }
 
 const showModal = (index: number) => {
@@ -341,6 +352,7 @@ const closeModal = () => {
 const saveModal = (data:any, stats:boolean) => {
   // Check duplicate name
   const oldName = modal.value.index != -1 ? clients.value[modal.value.index].name : null
+  const oldInbounds = modal.value.index != -1 ? [...(clients.value[modal.value.index].inbounds || [])] : []
   if (data.name != oldName && clients.value.findIndex(c => c.name == data.name) != -1) {
     push.error({
       message: i18n.global.t('error.dplData') + ': ' + i18n.global.t('client.name')
@@ -354,7 +366,7 @@ const saveModal = (data:any, stats:boolean) => {
   }
 
   // Rebuild affected inbounds
-  buildInboundsUsers(data.inbounds)
+  buildInboundsUsers(Array.from(new Set([...oldInbounds, ...(data.inbounds || [])])))
 
   // Rebuild links
   data.links = updateLinks(data)
@@ -427,6 +439,11 @@ const updateLinks = (c:Client):Link[] => {
   links = [...newLinks, ...links.filter(l => l.type != 'local')]
 
   return links
+}
+
+const primarySubLink = (client: any) => {
+  if (client.accessScope === 'cluster') return `${Data().subURI}${client.name}?format=distributed-json`
+  return `${Data().subURI}${client.name}`
 }
 const delClient = (clientIndex: number) => {
   const id = clients.value[clientIndex].id

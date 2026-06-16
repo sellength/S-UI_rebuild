@@ -4,13 +4,24 @@ release/
 backup/
 bin/
 db/
+acme/
+cert/*
+certificates/
 sui
 main
+s-ui-agent
+s-ui-agent-*
 tmp
 .sync*
 *.tar.gz
+.codegraph/
+.local/
+mnt/
+dns-provider-icon/
+dns-provider-icons.zip
 
 # local env files
+.env
 .env.local
 .env.*.local
 

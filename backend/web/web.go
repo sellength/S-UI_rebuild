@@ -112,6 +112,9 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 	group_api := engine.Group(base_url + "api")
 	api.NewAPIHandler(group_api)
 
+	group_agent := engine.Group(base_url + "agent")
+	api.NewAgentAPIHandler(group_agent)
+
 	// Serve index.html as the entry point
 	// Handle all other routes by serving index.html
 	engine.NoRoute(func(c *gin.Context) {

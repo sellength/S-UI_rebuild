@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: s-ui-dev-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sui
+      POSTGRES_USER: sui
+      POSTGRES_PASSWORD: sui_dev_password
+      TZ: Asia/Shanghai
+    ports:
+      - "54329:5432"
+    volumes:
+      - s-ui-dev-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sui -d sui"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  s-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: s-ui-dev-control
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SUI_DB_TYPE: postgres
+      SUI_POSTGRES_DSN: "host=postgres user=sui password=sui_dev_password dbname=sui port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+      SINGBOX_API: 127.0.0.1:1080
+      SUI_BIN_FOLDER: /usr/local/s-ui/bin
+      SUI_ACME_SH: /usr/local/s-ui/acme/acme.sh
+      SUI_ACME_HOME: /usr/local/s-ui/acme
+      SUI_CERTIFICATE_WORK_DIR: /usr/local/s-ui/certificates
+      SUI_AGENT_REGISTER_TOKEN: dev-register-token-change-me
+      SUI_SECRET_KEY: dev-secret-key-change-me-before-production-32chars
+      SUI_DEBUG: "true"
+      TZ: Asia/Shanghai
+    ports:
+      - "2095:2095"
+      - "2096:2096"
+    volumes:
+      - s-ui-dev-bin:/usr/local/s-ui/bin
+      - s-ui-dev-acme:/usr/local/s-ui/acme
+      - s-ui-dev-certificates:/usr/local/s-ui/certificates
+      - ./cert:/usr/local/s-ui/cert
+
+volumes:
+  s-ui-dev-postgres:
+  s-ui-dev-bin:
+  s-ui-dev-acme:
+  s-ui-dev-certificates:

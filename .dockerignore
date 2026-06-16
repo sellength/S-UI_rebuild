@@ -12,6 +12,14 @@ agent_instructions.md
 db/
 bin/
 cert/
+acme/
+certificates/
+.env
+.env.*
+.codegraph/
+.local/
+mnt/
+dns-provider-icons.zip
 frontend/node_modules/
 frontend/dist/
 backend/bin/

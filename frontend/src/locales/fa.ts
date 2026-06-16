@@ -36,11 +36,19 @@ export default {
   pages: {
     login: "ورود",
     home: "خانه",
+    localNode: "Local Node Setup",
+    localOverview: "Local Overview",
     inbounds: "ورودی‌ها",
     outbounds: "خروجی‌ها",
     clients: "کاربران",
     rules: "قوانین",
     tls: "رمزنگاری‌ها",
+    distributed: "Cluster Management",
+    clusterOverview: "Cluster Overview",
+    certificateCenter: "Certificate Center",
+    serviceEntrances: "Service Entrances",
+    subscriptions: "Subscriptions",
+    configTemplates: "Config Templates",
     basics: "ترازها",
     admins: "ادمین‌ها",
     settings: "پیکربندی",
@@ -114,6 +122,8 @@ export default {
   },
   menu: {
     logout: "خروج",
+    userAndSubscription: "کاربران و اشتراک‌ها",
+    system: "سیستم",
   },
   admin: {
     changeCred: "ویرایش داده‌ها",

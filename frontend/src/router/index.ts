@@ -20,9 +20,14 @@ const routes = [
         component: () => import('@/views/Home.vue'),
       },
       {
+        path: '/local-node',
+        name: 'pages.localNode',
+        redirect: { path: '/distributed', query: { tab: 'nodes' } },
+      },
+      {
         path: '/inbounds',
         name: 'pages.inbounds',
-        component: () => import('@/views/Inbounds.vue'),
+        redirect: { path: '/distributed', query: { tab: 'inbounds' } },
       },
       {
         path: '/clients',
@@ -32,22 +37,32 @@ const routes = [
       {
         path: '/outbounds',
         name: 'pages.outbounds',
-        component: () => import('@/views/Outbounds.vue'),
+        redirect: { path: '/distributed', query: { tab: 'versions' } },
       },
       {
         path: '/rules',
         name: 'pages.rules',
-        component: () => import('@/views/Rules.vue'),
+        redirect: { path: '/distributed', query: { tab: 'versions' } },
       },
       {
         path: '/tls',
         name: 'pages.tls',
-        component: () => import('@/views/Tls.vue'),
+        redirect: { path: '/distributed', query: { tab: 'certificates' } },
+      },
+      {
+        path: '/distributed',
+        name: 'pages.distributed',
+        component: () => import('@/views/Distributed.vue'),
+      },
+      {
+        path: '/subscriptions',
+        name: 'pages.subscriptions',
+        component: () => import('@/views/Distributed.vue'),
       },
       {
         path: '/basics',
         name: 'pages.basics',
-        component: () => import('@/views/Basics.vue'),
+        redirect: { path: '/distributed', query: { tab: 'nodes' } },
       },
       {
         path: '/admins',

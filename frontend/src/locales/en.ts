@@ -36,11 +36,19 @@ export default {
   pages: {
     login: "Login",
     home: "Home",
+    localNode: "Local Node Setup",
+    localOverview: "Local Overview",
     inbounds: "Inbounds",
     outbounds: "Outbounds",
     clients: "Clients",
     rules: "Rules",
     tls: "TLS Settings",
+    distributed: "Cluster Management",
+    clusterOverview: "Cluster Overview",
+    certificateCenter: "Certificate Center",
+    serviceEntrances: "Service Entrances",
+    subscriptions: "Subscriptions",
+    configTemplates: "Config Templates",
     basics: "Basics",
     admins: "Admins",
     settings: "Settings",
@@ -115,6 +123,8 @@ export default {
   },
   menu: {
     logout: "Logout",
+    userAndSubscription: "Users & Subscriptions",
+    system: "System",
   },
   admin: {
     changeCred: "Change credentials",

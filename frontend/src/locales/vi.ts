@@ -36,11 +36,19 @@ export default {
   pages: {
     login: "Đăng nhập",
     home: "Trang chủ",
+    localNode: "Thiết lập node local",
+    localOverview: "Tổng quan local",
     inbounds: "Đầu Vào",
     outbounds: "Đầu ra",
     clients: "Khách hàng",
     rules: "Quy tắc",
     tls: "Cài đặt TLS",
+    distributed: "Quản lý cụm",
+    clusterOverview: "Tổng quan cụm",
+    certificateCenter: "Trung tâm chứng chỉ",
+    serviceEntrances: "Cổng dịch vụ",
+    subscriptions: "Đăng ký",
+    configTemplates: "Mẫu cấu hình",
     basics: "Cơ bản",
     admins: "Quản trị viên",
     settings: "Cài đặt",
@@ -115,6 +123,8 @@ export default {
   },
   menu: {
     logout: "Đăng xuất",
+    userAndSubscription: "Người dùng & đăng ký",
+    system: "Hệ thống",
   },
   admin: {
     changeCred: "Thay đổi thông tin đăng nhập",

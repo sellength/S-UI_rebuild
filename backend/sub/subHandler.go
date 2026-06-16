@@ -15,6 +15,7 @@ type SubHandler struct {
 	SubService
 	JsonService
 	ClashService
+	DistributedService
 }
 
 func NewSubHandler(g *gin.RouterGroup) {
@@ -37,6 +38,10 @@ func (s *SubHandler) subs(c *gin.Context) {
 		switch format {
 		case "json":
 			result, err = s.JsonService.GetJson(subId, format)
+		case "distributed-json":
+			result, err = s.DistributedService.GetDistributedJson(subId)
+		case "distributed-source", "distributed-raw":
+			result, err = s.DistributedService.GetDistributedRaw(subId)
 		case "clash":
 			result, headers, err = s.ClashService.GetClash(subId)
 		}

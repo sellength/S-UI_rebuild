@@ -1,6 +1,8 @@
 package api
 
 import (
+	"encoding/json"
+	"s-ui/database/model"
 	"s-ui/logger"
 	"s-ui/service"
 	"s-ui/util"
@@ -21,6 +23,12 @@ type APIHandler struct {
 	service.PanelService
 	service.StatsService
 	service.ServerService
+	service.NodeService
+	service.CertificateService
+	service.ConfigVersionService
+	service.DistributedInboundService
+	service.SubscriptionService
+	service.ConfigTemplateService
 }
 
 func NewAPIHandler(g *gin.RouterGroup) {
@@ -148,6 +156,171 @@ func (a *APIHandler) postHandler(c *gin.Context) {
 		link := c.Request.FormValue("link")
 		result, _, err := util.GetOutbound(link, 0)
 		jsonObj(c, result, err)
+	case "saveNode":
+		node := model.Node{}
+		err = c.ShouldBind(&node)
+		if err == nil {
+			err = a.NodeService.Save(&node)
+		}
+		jsonMsg(c, "save", err)
+	case "deleteNode":
+		id, convErr := strconv.Atoi(c.Request.FormValue("id"))
+		if convErr != nil {
+			jsonMsg(c, "", convErr)
+			return
+		}
+		err = a.NodeService.Delete(uint(id))
+		jsonMsg(c, "delete", err)
+	case "saveDNSProvider":
+		provider := model.DNSProvider{
+			Id:                   formUint(c, "id"),
+			Enable:               formBool(c, "enable", true),
+			Name:                 c.Request.FormValue("name"),
+			Type:                 c.Request.FormValue("type"),
+			CredentialsEncrypted: c.Request.FormValue("credentialsEncrypted"),
+			Config:               rawFormJSON(c, "config", `{}`),
+		}
+		err = a.CertificateService.SaveDNSProvider(&provider)
+		jsonMsg(c, "save", err)
+	case "deleteDNSProvider":
+		id, convErr := strconv.Atoi(c.Request.FormValue("id"))
+		if convErr != nil {
+			jsonMsg(c, "", convErr)
+			return
+		}
+		err = a.CertificateService.DeleteDNSProvider(uint(id))
+		jsonMsg(c, "delete", err)
+	case "saveCertificate":
+		certificate := model.Certificate{
+			Id:              formUint(c, "id"),
+			Enable:          formBool(c, "enable", true),
+			Name:            c.Request.FormValue("name"),
+			Source:          c.Request.FormValue("source"),
+			Domains:         rawFormJSON(c, "domains", `[]`),
+			Config:          rawFormJSON(c, "config", `{}`),
+			Wildcard:        formBool(c, "wildcard", false),
+			AutoRenew:       formBool(c, "autoRenew", false),
+			DNSProviderId:   formUint(c, "dnsProviderId"),
+			ActiveVersionId: formUint(c, "activeVersionId"),
+		}
+		err = a.CertificateService.SaveCertificate(&certificate)
+		jsonMsg(c, "save", err)
+	case "deleteCertificate":
+		id, convErr := strconv.Atoi(c.Request.FormValue("id"))
+		if convErr != nil {
+			jsonMsg(c, "", convErr)
+			return
+		}
+		err = a.CertificateService.DeleteCertificate(uint(id))
+		jsonMsg(c, "delete", err)
+	case "saveCertificateVersion":
+		version := model.CertificateVersion{}
+		err = c.ShouldBind(&version)
+		if err == nil {
+			err = a.CertificateService.SaveCertificateVersion(&version)
+		}
+		jsonMsg(c, "save", err)
+	case "issueCertificate":
+		id, convErr := strconv.Atoi(c.Request.FormValue("id"))
+		if convErr != nil {
+			jsonMsg(c, "", convErr)
+			return
+		}
+		version, issueErr := a.CertificateService.IssueCertificate(uint(id))
+		jsonObj(c, version, issueErr)
+	case "saveConfigVersion":
+		version := model.ConfigVersion{}
+		err = c.ShouldBind(&version)
+		if err == nil {
+			err = a.ConfigVersionService.SaveConfigVersion(&version)
+		}
+		jsonMsg(c, "save", err)
+	case "saveConfigDeployment":
+		deployment := model.ConfigDeployment{}
+		err = c.ShouldBind(&deployment)
+		if err == nil {
+			err = a.ConfigVersionService.SaveConfigDeployment(&deployment)
+		}
+		jsonMsg(c, "save", err)
+	case "saveNodeConfigTemplates":
+		templates := service.NodeConfigTemplates{
+			Log:          rawFormJSON(c, "log", `{"level":"info"}`),
+			DNS:          rawFormJSON(c, "dns", `{}`),
+			Outbounds:    rawFormJSON(c, "outbounds", `[]`),
+			Route:        rawFormJSON(c, "route", `{}`),
+			Experimental: rawFormJSON(c, "experimental", `{}`),
+		}
+		err = a.ConfigTemplateService.SaveNodeConfigTemplates(&templates)
+		jsonMsg(c, "save", err)
+	case "saveDistributedInbound":
+		inbound := model.DistributedInbound{
+			Id:                    formUint(c, "id"),
+			Enable:                formBool(c, "enable", true),
+			NodeId:                formUint(c, "nodeId"),
+			Protocol:              c.Request.FormValue("protocol"),
+			Tag:                   c.Request.FormValue("tag"),
+			PublicHost:            c.Request.FormValue("publicHost"),
+			Listen:                c.Request.FormValue("listen"),
+			ListenPort:            formUint(c, "listenPort"),
+			TemplateId:            formUint(c, "templateId"),
+			TlsProfileId:          formUint(c, "tlsProfileId"),
+			CertificateId:         formUint(c, "certificateId"),
+			FormValuesJson:        rawFormJSON(c, "formValuesJson", `{}`),
+			AdvancedOverridesJson: rawFormJSON(c, "advancedOverridesJson", `{}`),
+			PolicyOverridesJson:   rawFormJSON(c, "policyOverridesJson", `{}`),
+		}
+		err = a.DistributedInboundService.SaveDistributedInbound(&inbound)
+		jsonMsg(c, "save", err)
+	case "deleteDistributedInbound":
+		id, convErr := strconv.Atoi(c.Request.FormValue("id"))
+		if convErr != nil {
+			jsonMsg(c, "", convErr)
+			return
+		}
+		err = a.DistributedInboundService.DeleteDistributedInbound(uint(id))
+		jsonMsg(c, "delete", err)
+	case "saveInboundUser":
+		user := model.InboundUser{
+			Id:        formUint(c, "id"),
+			InboundId: formUint(c, "inboundId"),
+			ClientId:  formUint(c, "clientId"),
+			Name:      c.Request.FormValue("name"),
+			Password:  c.Request.FormValue("password"),
+		}
+		err = a.DistributedInboundService.SaveInboundUser(&user)
+		jsonMsg(c, "save", err)
+	case "deleteInboundUser":
+		id, convErr := strconv.Atoi(c.Request.FormValue("id"))
+		if convErr != nil {
+			jsonMsg(c, "", convErr)
+			return
+		}
+		err = a.DistributedInboundService.DeleteInboundUser(uint(id))
+		jsonMsg(c, "delete", err)
+	case "renderDistributedAnyTLSInbound":
+		id, convErr := strconv.Atoi(c.Request.FormValue("id"))
+		if convErr != nil {
+			jsonMsg(c, "", convErr)
+			return
+		}
+		result, err := service.RenderDistributedInbound(uint(id))
+		jsonObj(c, result, err)
+	case "publishNodeConfig":
+		nodeId, convErr := strconv.Atoi(c.Request.FormValue("nodeId"))
+		if convErr != nil {
+			jsonMsg(c, "", convErr)
+			return
+		}
+		result, err := service.PublishNodeConfigVersion(uint(nodeId), GetLoginUser(c))
+		jsonObj(c, result, err)
+	case "createSubscription":
+		clientId, convErr := strconv.Atoi(c.Request.FormValue("clientId"))
+		if convErr != nil {
+			jsonMsg(c, "", convErr)
+			return
+		}
+		result, err := a.SubscriptionService.CreateSubscription(uint(clientId))
+		jsonObj(c, result, err)
 	default:
 		jsonMsg(c, "API call", nil)
 	}
@@ -222,6 +395,44 @@ func (a *APIHandler) getHandler(c *gin.Context) {
 		options := c.Query("o")
 		keypair := a.ServerService.GenKeypair(kType, options)
 		jsonObj(c, keypair, nil)
+	case "nodes":
+		nodes, err := a.NodeService.GetAll()
+		jsonObj(c, nodes, err)
+	case "dnsProviders":
+		providers, err := a.CertificateService.GetDNSProviders()
+		jsonObj(c, providers, err)
+	case "certificates":
+		certificates, err := a.CertificateService.GetCertificates()
+		jsonObj(c, certificates, err)
+	case "certificateVersions":
+		id, _ := strconv.Atoi(c.Query("certificateId"))
+		versions, err := a.CertificateService.GetCertificateVersions(uint(id))
+		jsonObj(c, versions, err)
+	case "configVersions":
+		nodeId, _ := strconv.Atoi(c.Query("nodeId"))
+		limit, _ := strconv.Atoi(c.Query("limit"))
+		versions, err := a.ConfigVersionService.GetConfigVersions(uint(nodeId), limit)
+		jsonObj(c, versions, err)
+	case "configDeployments":
+		configVersionId, _ := strconv.ParseUint(c.Query("configVersionId"), 10, 64)
+		nodeId, _ := strconv.Atoi(c.Query("nodeId"))
+		deployments, err := a.ConfigVersionService.GetConfigDeployments(configVersionId, uint(nodeId))
+		jsonObj(c, deployments, err)
+	case "nodeConfigTemplates":
+		templates, err := a.ConfigTemplateService.GetNodeConfigTemplates()
+		jsonObj(c, templates, err)
+	case "distributedInbounds":
+		nodeId, _ := strconv.Atoi(c.Query("nodeId"))
+		inbounds, err := a.DistributedInboundService.GetDistributedInbounds(uint(nodeId))
+		jsonObj(c, inbounds, err)
+	case "inboundUsers":
+		inboundId, _ := strconv.Atoi(c.Query("inboundId"))
+		users, err := a.DistributedInboundService.GetInboundUsers(uint(inboundId))
+		jsonObj(c, users, err)
+	case "subscriptions":
+		clientId, _ := strconv.Atoi(c.Query("clientId"))
+		subscriptions, err := a.SubscriptionService.GetSubscriptions(uint(clientId))
+		jsonObj(c, subscriptions, err)
 	case "sse":
 		a.sseHandler(c)
 	default:
@@ -281,4 +492,29 @@ func (a *APIHandler) loadData(c *gin.Context) (interface{}, error) {
 	}
 
 	return data, nil
+}
+
+func rawFormJSON(c *gin.Context, key string, fallback string) json.RawMessage {
+	value := strings.TrimSpace(c.Request.FormValue(key))
+	if value == "" {
+		value = fallback
+	}
+	return json.RawMessage(value)
+}
+
+func formUint(c *gin.Context, key string) uint {
+	value, _ := strconv.ParseUint(c.Request.FormValue(key), 10, 64)
+	return uint(value)
+}
+
+func formBool(c *gin.Context, key string, fallback bool) bool {
+	value := strings.TrimSpace(c.Request.FormValue(key))
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.ParseBool(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
 }

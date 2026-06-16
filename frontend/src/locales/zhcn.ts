@@ -36,11 +36,19 @@ export default {
   pages: {
     login: "登录",
     home: "主页",
+    localNode: "本地节点搭建",
+    localOverview: "本地概览",
     inbounds: "入站管理",
     outbounds: "出站管理",
     clients: "用户管理",
     rules: "路由列表",
     tls: "TLS 设置",
+    distributed: "集群管理",
+    clusterOverview: "集群概览",
+    certificateCenter: "证书中心",
+    serviceEntrances: "服务入口",
+    subscriptions: "订阅",
+    configTemplates: "配置模板",
     basics: "基础信息",
     admins: "管理员",
     settings: "设置",
@@ -115,6 +123,8 @@ export default {
   },
   menu: {
     logout: "退出登录",
+    userAndSubscription: "用户与订阅",
+    system: "系统",
   },
   admin: {
     changeCred: "更改凭据",

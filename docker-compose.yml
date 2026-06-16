@@ -1,23 +1,50 @@
-version: '3.8'
-
 services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: s-ui-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sui
+      POSTGRES_USER: sui
+      POSTGRES_PASSWORD: ${SUI_POSTGRES_PASSWORD:?set SUI_POSTGRES_PASSWORD in .env}
+      TZ: ${TZ:-Asia/Shanghai}
+    ports:
+      - "127.0.0.1:${SUI_POSTGRES_PORT:-54329}:5432"
+    volumes:
+      - "./db:/var/lib/postgresql/data"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sui -d sui"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   s-ui:
-    image: ghcr.io/sellength/s-ui_rebuild:latest
+    image: ${SUI_IMAGE:-sellength/s-ui_dev:latest}
     container_name: s-ui
     hostname: "s-ui-docker"
     restart: unless-stopped
     tty: true
     network_mode: host
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
+      - SUI_DB_TYPE=postgres
+      - SUI_POSTGRES_DSN=host=127.0.0.1 user=sui password=${SUI_POSTGRES_PASSWORD:?set SUI_POSTGRES_PASSWORD in .env} dbname=sui port=${SUI_POSTGRES_PORT:-54329} sslmode=disable TimeZone=${TZ:-Asia/Shanghai}
       - SINGBOX_API=127.0.0.1:1080
-      - SUI_DB_FOLDER=/usr/local/s-ui/db
       - SUI_BIN_FOLDER=/usr/local/s-ui/bin
-      - TZ=Asia/Shanghai
+      - SUI_ACME_SH=/usr/local/s-ui/acme/acme.sh
+      - SUI_ACME_HOME=/usr/local/s-ui/acme
+      - SUI_CERTIFICATE_WORK_DIR=/usr/local/s-ui/certificates
+      - SUI_AGENT_REGISTER_TOKEN=${SUI_AGENT_REGISTER_TOKEN:?set SUI_AGENT_REGISTER_TOKEN in .env}
+      - SUI_SECRET_KEY=${SUI_SECRET_KEY:?set SUI_SECRET_KEY in .env}
+      - TZ=${TZ:-Asia/Shanghai}
       - enable_deprecated_special_outbounds=true
     volumes:
       - "singbox:/usr/local/s-ui/bin"
-      - "./db:/usr/local/s-ui/db"
       - "./cert:/usr/local/s-ui/cert"
+      - "./certificates:/usr/local/s-ui/certificates"
+      - "./acme:/usr/local/s-ui/acme"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:2095/app/login"]
       interval: 10s
@@ -26,7 +53,7 @@ services:
       start_period: 5s
 
   sing-box:
-    image: docker.io/sellength/s-ui_rebuild-singbox:latest
+    image: ${SUI_SINGBOX_IMAGE:-sellength/s-ui_rebuild-singbox:latest}
     container_name: sing-box
     restart: unless-stopped
     network_mode: host

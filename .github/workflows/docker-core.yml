@@ -21,9 +21,9 @@ jobs:
       uses: docker/metadata-action@v5
       with:
         images: |
-          alireza7/s-ui-singbox
-          ghcr.io/alireza0/s-ui-singbox
+          sellength/s-ui_rebuild-singbox
         tags: |
+          type=raw,value=latest
           type=sha
           type=pep440,pattern=${{ steps.get_release.outputs.latest_release }}
 
@@ -38,13 +38,6 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_TOKEN }}
-
-    - name: Login to GHCR
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Build and push
       uses: docker/build-push-action@v6

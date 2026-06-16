@@ -46,7 +46,7 @@ services:
       - "./certificates:/usr/local/s-ui/certificates"
       - "./acme:/usr/local/s-ui/acme"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:2095/app/login"]
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:${SUI_PANEL_PORT:-2095}/app/login"]
       interval: 10s
       timeout: 5s
       retries: 3

@@ -109,8 +109,8 @@ docs/                    设计、开发、测试和 Preview 文档
 
 端口：
 
-- `2095`：面板 Web UI
-- `2096`：订阅服务
+- `2095`：面板 Web UI 默认端口，安装脚本可交互修改
+- `2096`：订阅服务默认端口，安装脚本可交互修改
 - `443` 或自定义端口：节点上的代理协议入口
 - Agent 默认不需要公网入站端口，它主动连接 Control Plane
 
@@ -163,6 +163,13 @@ docker compose -f docker-compose.dev.yml down -v
 bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-control.sh)
 ```
 
+脚本会进入交互向导，让你确认：
+
+- 面板 Web UI 端口，默认 `2095`
+- 订阅服务端口，默认 `2096`
+- PostgreSQL 本机端口，默认 `54329`，只绑定 `127.0.0.1`
+- 面板公网访问地址，例如 `https://panel.example.com` 或 `http://服务器IP:2095`
+
 默认安装到：
 
 ```text
@@ -177,8 +184,30 @@ bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/s
 - 自动生成 `SUI_POSTGRES_PASSWORD`
 - 自动生成 `SUI_SECRET_KEY`
 - 自动生成 `SUI_AGENT_REGISTER_TOKEN`
+- 写入面板端口和订阅端口
 - 创建持久化目录
 - 启动 Control Plane
+
+如果你要无人值守安装，可以用参数跳过交互：
+
+```sh
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-control.sh) \
+  --non-interactive \
+  --panel-port 2095 \
+  --sub-port 2096 \
+  --postgres-port 54329 \
+  --panel-url https://panel.example.com
+```
+
+也可以通过环境变量指定：
+
+```sh
+SUI_PANEL_PORT=2095 \
+SUI_SUB_PORT=2096 \
+SUI_POSTGRES_PORT=54329 \
+SUI_PANEL_DOMAIN=https://panel.example.com \
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-control.sh) --non-interactive
+```
 
 安装后查看：
 
@@ -229,6 +258,8 @@ cp .env.example .env
 ```text
 TZ=Asia/Shanghai
 SUI_POSTGRES_PORT=54329
+SUI_PANEL_PORT=2095
+SUI_SUB_PORT=2096
 SUI_POSTGRES_PASSWORD=replace-with-a-long-random-postgres-password
 SUI_SECRET_KEY=replace-with-a-long-random-secret-at-least-32-chars
 SUI_AGENT_REGISTER_TOKEN=replace-with-a-long-random-agent-register-token
@@ -251,7 +282,7 @@ docker compose logs -f s-ui
 访问：
 
 ```text
-http://你的服务器IP:2095/app/
+http://你的服务器IP:你的面板端口/app/
 ```
 
 如果你放在反向代理后面，建议使用 HTTPS，并把面板域名配置成：
@@ -634,12 +665,14 @@ sh -n scripts/uninstall-agent.sh
 git diff --check
 ```
 
-Docker Hub 自动发布需要在 GitHub 仓库设置 Secrets：
+如果你希望 GitHub Actions 自动把镜像构建并推送到 Docker Hub，需要在 GitHub 仓库设置 Secrets：
 
 ```text
 DOCKER_HUB_USERNAME=sellength
 DOCKER_HUB_TOKEN=你的 Docker Hub Access Token
 ```
+
+这两个变量只给 GitHub Actions 使用，不需要写入服务器 `.env`，也不需要放进 `docker-compose.yml`。服务器使用 `docker compose up -d` 拉取公开镜像时不需要 Docker Hub Token；只有镜像仓库设为私有时，才需要先在服务器上执行 `docker login`。
 
 推送 `dev` 分支会构建并推送：
 

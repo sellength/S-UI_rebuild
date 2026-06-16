@@ -151,6 +151,8 @@ sh -n scripts/uninstall-agent.sh
 
 ## Agent 部署示例
 
+Control Plane 一键脚本默认会进入交互向导，允许安装者选择面板端口、订阅端口、PostgreSQL 本机端口和公网面板 URL。无人值守部署时可以使用 `--non-interactive` 以及 `--panel-port`、`--sub-port`、`--postgres-port`、`--panel-url` 参数。
+
 安装 systemd 服务并下载最新 Release 里的 Agent：
 
 ```sh

@@ -60,6 +60,16 @@ jobs:
           cd ..
           mv frontend/dist backend/web/html
 
+      - name: Get latest sing-box release
+        id: get_sing_box_release
+        run: |
+          latest_release=$(curl -Ls "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+          if [ -z "$latest_release" ]; then
+            echo "Failed to resolve latest sing-box release" >&2
+            exit 1
+          fi
+          echo "latest_release=$latest_release" >> $GITHUB_OUTPUT
+
       - name: Build s-ui & singbox
         run: |
           export CGO_ENABLED=1
@@ -89,7 +99,7 @@ jobs:
           fi
 
           #### Build Sing-Box
-          export VERSION=v1.9.3
+          export VERSION=${{ steps.get_sing_box_release.outputs.latest_release }}
           git clone -b $VERSION https://github.com/SagerNet/sing-box
           cd sing-box
           go build -tags with_quic,with_grpc,with_wireguard,with_ech,with_utls,with_reality_server,with_acme,with_v2ray_api,with_clash_api,with_gvisor \

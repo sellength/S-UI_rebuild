@@ -39,6 +39,8 @@ GOCACHE=/private/tmp/s-ui-go-cache GOOS=linux GOARCH=amd64 go build -o /private/
 cd ..
 sh -n scripts/install-control.sh
 sh -n scripts/uninstall-control.sh
+sh -n scripts/install-control-native.sh
+sh -n scripts/uninstall-control-native.sh
 sh -n scripts/install-agent.sh
 sh -n scripts/uninstall-agent.sh
 git diff --check

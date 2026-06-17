@@ -95,9 +95,15 @@ docs/                    设计、开发、测试和 Preview 文档
 
 - Linux x86_64 VPS
 - 2 核 CPU / 2GB 内存以上，推荐 4GB 内存
-- Docker 24+ 和 Docker Compose v2
 - 已解析到面板服务器的域名
 - 如果要签发证书，需要可用 DNS Provider API Token
+
+服务端部署有两条主路径：
+
+- 实体机部署：不使用 Docker，安装到 `/usr/local/s-ui`，由 systemd 管理，默认使用 SQLite。
+- Docker 部署：使用 Docker Compose，安装到 `/opt/s-ui-distributed`，默认使用 PostgreSQL 容器。
+
+如果选择 Docker 部署，需要提前安装 Docker 24+ 和 Docker Compose v2。
 
 节点端建议：
 
@@ -155,13 +161,119 @@ docker compose -f docker-compose.dev.yml down -v
 
 ## 服务端部署
 
-### 方式一：一键脚本
+### 方式一：实体机一键脚本
+
+如果你不想在服务器上使用 Docker，可以用实体机脚本。它会下载 GitHub Release 中的 `s-ui-linux-当前架构.tar.gz`，安装到 `/usr/local/s-ui`，并创建 `s-ui.service`。
+
+在服务器上执行：
+
+```sh
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-control-native.sh)
+```
+
+脚本会进入交互向导，让你确认：
+
+- 面板 Web UI 端口，默认 `2095`
+- 订阅服务端口，默认 `2096`
+- 面板公网访问地址，例如 `https://panel.example.com` 或 `http://服务器IP:2095`
+
+默认安装到：
+
+```text
+/usr/local/s-ui
+```
+
+默认使用 SQLite：
+
+```text
+/usr/local/s-ui/db
+```
+
+脚本会自动完成：
+
+- 下载并解压 S-UI Release 包
+- 安装 acme.sh 到 `/usr/local/s-ui/acme`
+- 自动生成 `SUI_SECRET_KEY`
+- 自动生成 `SUI_AGENT_REGISTER_TOKEN`
+- 写入 `/usr/local/s-ui/s-ui.env`
+- 初始化数据库
+- 写入面板端口和订阅端口
+- 创建并启动 `s-ui.service`
+
+如果你还没有发布 GitHub Release，可以先手动上传 `s-ui-linux-amd64.tar.gz`，然后指定下载地址：
+
+```sh
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-control-native.sh) \
+  --package-url https://example.com/s-ui-linux-amd64.tar.gz
+```
+
+如果你想无人值守安装：
+
+```sh
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-control-native.sh) \
+  --non-interactive \
+  --panel-port 2095 \
+  --sub-port 2096 \
+  --panel-url https://panel.example.com
+```
+
+如果你要使用外部 PostgreSQL，而不是默认 SQLite：
+
+```sh
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-control-native.sh) \
+  --postgres-dsn 'host=127.0.0.1 user=sui password=your-password dbname=sui port=5432 sslmode=disable'
+```
+
+安装后查看：
+
+```sh
+systemctl status s-ui
+journalctl -u s-ui -f
+```
+
+卸载但保留数据：
+
+```sh
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/uninstall-control-native.sh)
+```
+
+卸载并删除数据：
+
+```sh
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/uninstall-control-native.sh) --purge
+```
+
+需要备份：
+
+```text
+/usr/local/s-ui/db
+/usr/local/s-ui/cert
+/usr/local/s-ui/certificates
+/usr/local/s-ui/acme
+/usr/local/s-ui/s-ui.env
+```
+
+其中 `s-ui.env` 里的 `SUI_SECRET_KEY` 必须备份。丢失后，已保存的 DNS API 凭据和证书私钥无法解密。
+
+### 方式二：Docker 一键脚本
 
 在服务器上执行：
 
 ```sh
 bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-control.sh)
 ```
+
+这个脚本是 Docker Compose 部署，不是实体机部署。它会拉取 Docker Hub 镜像：
+
+```text
+sellength/s-ui_dev:latest
+postgres:17-alpine
+```
+
+如果看到 `sellength/s-ui_dev:latest: not found`，说明 Docker Hub 镜像还没有由 GitHub Actions 构建并推送。解决方式有两个：
+
+- 先在 GitHub Actions 中触发 Docker Image CI，把镜像推送到 Docker Hub。
+- 改用上面的实体机一键脚本，不依赖 Docker 镜像。
 
 脚本会进入交互向导，让你确认：
 
@@ -231,7 +343,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/s
 
 如果你的系统默认没有 `bash`，可以先安装 `bash`，或下载脚本后用 `sh` 执行。
 
-### 方式二：Docker Compose
+### 方式三：Docker Compose
 
 当前 Preview 推荐用 Docker Compose 部署 Control Plane。服务器上准备目录：
 
@@ -316,11 +428,14 @@ docker compose up -d
 
 其中 `.env` 里的 `SUI_SECRET_KEY` 必须备份。丢失后，已保存的 DNS API 凭据和证书私钥无法解密。`./db` 是 PostgreSQL 数据目录，备份和迁移时不要只复制单个数据库文件。
 
-### 方式三：旧服务端脚本说明
+### 方式四：旧服务端脚本说明
 
 仓库根目录保留了原 S-UI 的 `install.sh`、`s-ui.sh`、`docker-run.sh` 等脚本，但它们主要面向旧的单机 S-UI 流程，不建议作为分布式 Preview 的服务器安装入口。
 
-当前 Preview 的服务端主路径是 `scripts/install-control.sh` 或手动 Docker Compose。
+当前 Preview 的服务端主路径是：
+
+- 实体机：`scripts/install-control-native.sh`
+- Docker：`scripts/install-control.sh` 或手动 Docker Compose
 
 ## Agent 部署
 
@@ -638,6 +753,8 @@ GOCACHE=/private/tmp/s-ui-go-cache GOOS=linux GOARCH=amd64 go build -o /private/
 ```sh
 sh -n scripts/install-control.sh
 sh -n scripts/uninstall-control.sh
+sh -n scripts/install-control-native.sh
+sh -n scripts/uninstall-control-native.sh
 sh -n scripts/install-agent.sh
 sh -n scripts/uninstall-agent.sh
 ```
@@ -660,6 +777,8 @@ GOCACHE=/private/tmp/s-ui-go-cache GOOS=linux GOARCH=amd64 go build -o /private/
 cd ..
 sh -n scripts/install-control.sh
 sh -n scripts/uninstall-control.sh
+sh -n scripts/install-control-native.sh
+sh -n scripts/uninstall-control-native.sh
 sh -n scripts/install-agent.sh
 sh -n scripts/uninstall-agent.sh
 git diff --check

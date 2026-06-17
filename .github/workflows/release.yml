@@ -11,15 +11,10 @@ jobs:
     permissions:
       contents: write
     strategy:
+      fail-fast: false
       matrix:
         platform:
           - amd64
-          - arm64
-          - armv7
-          - armv6
-          - armv5
-          - 386
-          - s390x
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository

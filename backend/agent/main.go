@@ -161,8 +161,8 @@ func loadConfig() (*agentConfig, error) {
 	if cfg.RegisterToken == "" {
 		return nil, fmt.Errorf("register token is required")
 	}
-	if cfg.Interval < 5*time.Second {
-		cfg.Interval = 5 * time.Second
+	if cfg.Interval < 3*time.Second {
+		cfg.Interval = 3 * time.Second
 	}
 	if cfg.ConfigDir == "" {
 		return nil, fmt.Errorf("config dir is required")

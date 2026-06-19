@@ -12,8 +12,8 @@ NODE_CODE=""
 AGENT_ID=""
 AGENT_TOKEN=""
 REGISTER_TOKEN=""
-INTERVAL="${INTERVAL:-30s}"
-RELOAD_COMMAND="${RELOAD_COMMAND:-}"
+INTERVAL="${INTERVAL:-3s}"
+RELOAD_COMMAND="${RELOAD_COMMAND:-systemctl reload s-ui-agent-singbox}"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -115,7 +115,92 @@ if [ ! -x "$AGENT_BIN" ]; then
   mv "$tmp_bin" "$AGENT_BIN"
 fi
 
+install_singbox() {
+  if command -v sing-box >/dev/null 2>&1; then
+    echo "sing-box is already installed in PATH."
+    return 0
+  fi
+  if [ -x "/usr/local/bin/sing-box" ]; then
+    echo "sing-box already exists in /usr/local/bin."
+    return 0
+  fi
+
+  echo "sing-box not found. Installing latest official sing-box..."
+  arch="$(detect_arch)"
+  if [ "$arch" = "unsupported" ]; then
+    echo "Unsupported CPU architecture for sing-box." >&2
+    return 1
+  fi
+
+  latest_tag=$(curl -Ls "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  if [ -z "$latest_tag" ]; then
+    latest_tag="v1.11.1"
+    echo "Failed to fetch latest sing-box version via Github API, fallback to: ${latest_tag}"
+  fi
+
+  version="${latest_tag#v}"
+  filename="sing-box-${version}-linux-${arch}"
+  url="https://github.com/SagerNet/sing-box/releases/download/${latest_tag}/${filename}.tar.gz"
+
+  echo "Downloading sing-box from:"
+  echo "  $url"
+  mkdir -p /tmp/sing-box-install
+  if ! download "$url" "/tmp/sing-box-install/sing-box.tar.gz"; then
+    echo "Failed to download sing-box." >&2
+    rm -rf /tmp/sing-box-install
+    return 1
+  fi
+
+  tar -zxf /tmp/sing-box-install/sing-box.tar.gz -C /tmp/sing-box-install/
+  if [ -f "/tmp/sing-box-install/${filename}/sing-box" ]; then
+    mv "/tmp/sing-box-install/${filename}/sing-box" "/usr/local/bin/sing-box"
+    chmod +x "/usr/local/bin/sing-box"
+    echo "Successfully installed sing-box to /usr/local/bin/sing-box"
+  else
+    echo "Failed to extract sing-box binary from downloaded archive." >&2
+    rm -rf /tmp/sing-box-install
+    return 1
+  fi
+  rm -rf /tmp/sing-box-install
+}
+
+if ! install_singbox; then
+  echo "Warning: sing-box installation failed. You may need to install it manually." >&2
+fi
+
 mkdir -p "$AGENT_DIR/configs" "$AGENT_DIR/certs" "$AGENT_DIR/logs"
+
+# Ensure a valid configuration json exists so that sing-box systemd service starts successfully
+if [ ! -f "$AGENT_DIR/configs/current.json" ]; then
+  echo '{"log":{"level":"info"},"inbounds":[],"outbounds":[{"type":"direct","tag":"direct"}]}' > "$AGENT_DIR/configs/current.json"
+fi
+
+# Create isolated systemd service for agent's proxy core
+SINGBOX_SERVICE_FILE="/etc/systemd/system/s-ui-agent-singbox.service"
+cat > "$SINGBOX_SERVICE_FILE" <<EOF
+[Unit]
+Description=S-UI Node Agent Sing-Box Service
+After=network.target nss-lookup.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=$AGENT_DIR
+ExecStart=/usr/local/bin/sing-box run -c $AGENT_DIR/configs/current.json
+ExecReload=/bin/kill -HUP \$MAINPID
+Restart=always
+RestartSec=5
+LimitNPROC=500
+LimitNOFILE=1000000
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable s-ui-agent-singbox
+systemctl start s-ui-agent-singbox
+
 
 systemd_env_value() {
   printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g; s/%/%%/g'

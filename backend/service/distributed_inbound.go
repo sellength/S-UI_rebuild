@@ -92,7 +92,11 @@ func (s *DistributedInboundService) SaveDistributedInbound(inbound *model.Distri
 	}
 	inbound.UpdatedAt = now
 
-	return db.Save(inbound).Error
+	err := db.Save(inbound).Error
+	if err == nil {
+		_, _ = CalculateNodeDraftSha256(inbound.NodeId)
+	}
+	return err
 }
 
 func listenAddressesConflict(left string, right string) bool {
@@ -142,6 +146,14 @@ func (s *DistributedInboundService) DeleteDistributedInbound(id uint) error {
 		return fmt.Errorf("distributed inbound id is required")
 	}
 	db := database.GetDB()
+	inbound := model.DistributedInbound{}
+	if err := db.Model(model.DistributedInbound{}).Where("id = ?", id).First(&inbound).Error; err == nil {
+		errDel := db.Where("id = ?", id).Delete(model.DistributedInbound{}).Error
+		if errDel == nil {
+			_, _ = CalculateNodeDraftSha256(inbound.NodeId)
+		}
+		return errDel
+	}
 	return db.Where("id = ?", id).Delete(model.DistributedInbound{}).Error
 }
 
@@ -191,7 +203,16 @@ func (s *DistributedInboundService) SaveInboundUser(user *model.InboundUser) err
 	}
 	user.UpdatedAt = now
 
-	return db.Save(user).Error
+	err := db.Save(user).Error
+	if err == nil {
+		inbound := model.DistributedInbound{}
+		if errDb := db.Model(model.DistributedInbound{}).Where("id = ?", user.InboundId).First(&inbound).Error; errDb == nil {
+			inbound.RenderedConfigJson = nil
+			db.Save(&inbound)
+			_, _ = CalculateNodeDraftSha256(inbound.NodeId)
+		}
+	}
+	return err
 }
 
 func (s *DistributedInboundService) DeleteInboundUser(id uint) error {
@@ -199,6 +220,19 @@ func (s *DistributedInboundService) DeleteInboundUser(id uint) error {
 		return fmt.Errorf("inbound user id is required")
 	}
 	db := database.GetDB()
+	user := model.InboundUser{}
+	if err := db.Model(model.InboundUser{}).Where("id = ?", id).First(&user).Error; err == nil {
+		errDel := db.Where("id = ?", id).Delete(model.InboundUser{}).Error
+		if errDel == nil {
+			inbound := model.DistributedInbound{}
+			if errDb := db.Model(model.DistributedInbound{}).Where("id = ?", user.InboundId).First(&inbound).Error; errDb == nil {
+				inbound.RenderedConfigJson = nil
+				db.Save(&inbound)
+				_, _ = CalculateNodeDraftSha256(inbound.NodeId)
+			}
+		}
+		return errDel
+	}
 	return db.Where("id = ?", id).Delete(model.InboundUser{}).Error
 }
 

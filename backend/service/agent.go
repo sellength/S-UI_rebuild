@@ -32,6 +32,7 @@ type AgentHeartbeatRequest struct {
 	AgentVersion       string `json:"agentVersion" form:"agentVersion"`
 	SingboxVersion     string `json:"singboxVersion" form:"singboxVersion"`
 	ResourceSummaryRaw string `json:"resourceSummary" form:"resourceSummary"`
+	AppliedSha256      string `json:"appliedSha256" form:"appliedSha256"`
 }
 
 type AgentConfigReportRequest struct {
@@ -133,6 +134,9 @@ func (s *AgentService) Heartbeat(req *AgentHeartbeatRequest) error {
 
 	node.AgentStatus = strings.TrimSpace(req.AgentStatus)
 	node.SingboxStatus = strings.TrimSpace(req.SingboxStatus)
+	if req.AppliedSha256 != "" {
+		node.AppliedSha256 = strings.TrimSpace(req.AppliedSha256)
+	}
 	node.LastSeenAt = now
 	if err := db.Save(node).Error; err != nil {
 		return err

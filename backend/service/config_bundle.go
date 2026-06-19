@@ -20,11 +20,7 @@ type SingboxNodeConfig struct {
 	Experimental map[string]interface{}   `json:"experimental,omitempty"`
 }
 
-func PublishNodeConfigVersion(nodeId uint, actor string) (*model.ConfigVersion, error) {
-	if nodeId == 0 {
-		return nil, fmt.Errorf("node id is required")
-	}
-
+func renderNodeConfigJson(nodeId uint) ([]byte, error) {
 	db := database.GetDB()
 	node := model.Node{}
 	if err := db.Model(model.Node{}).Where("id = ?", nodeId).First(&node).Error; err != nil {
@@ -77,10 +73,28 @@ func PublishNodeConfigVersion(nodeId uint, actor string) (*model.ConfigVersion, 
 		Experimental: experimental,
 	}
 
-	content, err := json.Marshal(config)
+	return json.Marshal(config)
+}
+
+func PublishNodeConfigVersion(nodeId uint, actor string) (*model.ConfigVersion, error) {
+	if nodeId == 0 {
+		return nil, fmt.Errorf("node id is required")
+	}
+
+	content, err := renderNodeConfigJson(nodeId)
 	if err != nil {
 		return nil, err
 	}
+
+	sum := sha256.Sum256(content)
+	sha256Hex := hex.EncodeToString(sum[:])
+
+	db := database.GetDB()
+	latest := model.ConfigVersion{}
+	latestErr := db.Model(model.ConfigVersion{}).
+		Where("node_id = ?", nodeId).
+		Order("version desc").
+		First(&latest).Error
 
 	var maxVersion uint64
 	if err := db.Model(model.ConfigVersion{}).
@@ -90,33 +104,62 @@ func PublishNodeConfigVersion(nodeId uint, actor string) (*model.ConfigVersion, 
 		return nil, err
 	}
 
+	var version *model.ConfigVersion
+	if latestErr == nil && latest.Sha256 == sha256Hex {
+		version = &latest
+	} else {
+		newVersion := model.ConfigVersion{
+			Version:     maxVersion + 1,
+			Scope:       "node",
+			NodeId:      nodeId,
+			Sha256:      sha256Hex,
+			Status:      "published",
+			ContentJson: content,
+			CreatedBy:   actor,
+			CreatedAt:   time.Now().Unix(),
+		}
+		if err := db.Create(&newVersion).Error; err != nil {
+			return nil, err
+		}
+		version = &newVersion
+	}
+
+	// 自动更新 Node 表中的已发布和暂存哈希指纹
+	node := model.Node{}
+	if err := db.Model(model.Node{}).Where("id = ?", nodeId).First(&node).Error; err == nil {
+		node.PublishedSha256 = sha256Hex
+		node.DraftSha256 = sha256Hex
+		db.Save(&node)
+	}
+
+	return version, nil
+}
+
+func CalculateNodeDraftSha256(nodeId uint) (string, error) {
+	if nodeId == 0 {
+		return "", fmt.Errorf("node id is required")
+	}
+
+	content, err := renderNodeConfigJson(nodeId)
+	if err != nil {
+		return "", err
+	}
+
 	sum := sha256.Sum256(content)
 	sha256Hex := hex.EncodeToString(sum[:])
 
-	latest := model.ConfigVersion{}
-	latestErr := db.Model(model.ConfigVersion{}).
-		Where("node_id = ?", nodeId).
-		Order("version desc").
-		First(&latest).Error
-	if latestErr == nil && latest.Sha256 == sha256Hex {
-		return &latest, nil
+	db := database.GetDB()
+	node := model.Node{}
+	if err := db.Model(model.Node{}).Where("id = ?", nodeId).First(&node).Error; err != nil {
+		return "", err
 	}
 
-	version := model.ConfigVersion{
-		Version:     maxVersion + 1,
-		Scope:       "node",
-		NodeId:      nodeId,
-		Sha256:      sha256Hex,
-		Status:      "published",
-		ContentJson: content,
-		CreatedBy:   actor,
-		CreatedAt:   time.Now().Unix(),
-	}
-	if err := db.Create(&version).Error; err != nil {
-		return nil, err
+	node.DraftSha256 = sha256Hex
+	if err := db.Save(&node).Error; err != nil {
+		return "", err
 	}
 
-	return &version, nil
+	return sha256Hex, nil
 }
 
 func applyInboundPolicyOverrides(

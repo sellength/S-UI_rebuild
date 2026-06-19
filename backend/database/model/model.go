@@ -80,6 +80,9 @@ type Node struct {
 	Metadata      json.RawMessage `json:"metadata" form:"metadata"`
 	CreatedAt     int64           `json:"createdAt" form:"createdAt"`
 	UpdatedAt     int64           `json:"updatedAt" form:"updatedAt"`
+	DraftSha256     string          `json:"draftSha256" form:"draftSha256" gorm:"type:varchar(64)"`
+	PublishedSha256 string          `json:"publishedSha256" form:"publishedSha256" gorm:"type:varchar(64)"`
+	AppliedSha256   string          `json:"appliedSha256" form:"appliedSha256" gorm:"type:varchar(64)"`
 }
 
 type NodeAgent struct {

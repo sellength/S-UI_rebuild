@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -199,12 +201,16 @@ func register(client *http.Client, cfg *agentConfig) error {
 func heartbeat(client *http.Client, cfg *agentConfig) error {
 	state := loadState(cfg.StatePath)
 	singboxStatus, singboxVersion := collectSingboxHealth(cfg)
+	currentPath := filepath.Join(cfg.ConfigDir, "current.json")
+	appliedSha256 := fileSHA256(currentPath)
+
 	body := map[string]interface{}{
 		"configVersion":  state.LastAppliedVersion,
 		"agentStatus":    "online",
 		"singboxStatus":  singboxStatus,
 		"agentVersion":   "0.1.0",
 		"singboxVersion": singboxVersion,
+		"appliedSha256":  appliedSha256,
 		"resourceSummary": fmt.Sprintf(
 			`{"goos":%q,"goarch":%q,"goroutines":%d,"singboxBin":%q}`,
 			runtime.GOOS,
@@ -216,6 +222,15 @@ func heartbeat(client *http.Client, cfg *agentConfig) error {
 
 	_, err := postJSON(client, cfg.BaseURL+"/heartbeat", body, agentHeaders(cfg))
 	return err
+}
+
+func fileSHA256(path string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	sum := sha256.Sum256(data)
+	return hex.EncodeToString(sum[:])
 }
 
 func getDesiredConfig(client *http.Client, cfg *agentConfig) (*desiredConfig, error) {

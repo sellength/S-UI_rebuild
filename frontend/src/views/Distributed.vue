@@ -109,7 +109,7 @@
 
                   <div class="cluster-node-cell">
                     <div class="cluster-node-config-wrap">
-                      <span class="config-version-pill" :class="{ 'config-version-pill--pending': !latestVersion(node.id)?.version }">
+                      <span class="config-version-pill" :class="nodeConfigClass(node)">
                         {{ nodeConfigLabel(node) }}
                       </span>
                       <span class="cluster-node-submeta">{{ nodeInboundCount(node.id) }} 个服务入口</span>
@@ -131,7 +131,7 @@
                       详情
                     </v-btn>
                     <v-btn class="tech-blue-btn text-none" size="small" prepend-icon="mdi-rocket-launch-outline" @click="publishNode(node.id)">
-                      发布
+                      下发配置
                     </v-btn>
                   </div>
                 </div>
@@ -2293,12 +2293,31 @@ function singboxStatusMeta(node: any) {
 }
 
 function nodeConfigLabel(node: any) {
-  const version = latestVersion(node.id)?.version
-  if (!version) return '未发布'
-  const appliedVersion = Number(node.configVersion || 0)
-  if (appliedVersion && Number(version) === appliedVersion) return `v${version} 已应用`
-  if (appliedVersion && Number(version) !== appliedVersion) return `v${version} 待应用`
-  return `v${version} 待下发`
+  const draft = String(node.draftSha256 || '').trim()
+  const published = String(node.publishedSha256 || '').trim()
+  const applied = String(node.appliedSha256 || '').trim()
+
+  if (!published || draft !== published) {
+    return '配置待下发'
+  }
+  if (published !== applied) {
+    return '正在同步中...'
+  }
+  return '同步成功'
+}
+
+function nodeConfigClass(node: any) {
+  const draft = String(node.draftSha256 || '').trim()
+  const published = String(node.publishedSha256 || '').trim()
+  const applied = String(node.appliedSha256 || '').trim()
+
+  if (!published || draft !== published) {
+    return 'config-version-pill--pending'
+  }
+  if (published !== applied) {
+    return ''
+  }
+  return 'config-version-pill--success'
 }
 
 function lastSeenText(value: any) {
@@ -2875,6 +2894,11 @@ function randomPassword() {
 .config-version-pill--pending {
   background: rgba(100, 116, 139, 0.12);
   color: var(--panel-muted-text);
+}
+
+.config-version-pill--success {
+  background: rgba(22, 163, 74, 0.10);
+  color: #16a34a;
 }
 
 .cluster-node-config-wrap {

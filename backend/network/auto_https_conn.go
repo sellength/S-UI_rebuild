@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"sync"
@@ -12,8 +13,9 @@ import (
 type AutoHttpsConn struct {
 	net.Conn
 
-	firstBuf []byte
-	bufStart int
+	firstBuf     []byte
+	bufStart     int
+	isRedirected bool
 
 	readRequestOnce sync.Once
 }
@@ -24,35 +26,46 @@ func NewAutoHttpsConn(conn net.Conn) net.Conn {
 	}
 }
 
-func (c *AutoHttpsConn) readRequest() bool {
+func (c *AutoHttpsConn) readRequest() {
 	c.firstBuf = make([]byte, 2048)
 	n, err := c.Conn.Read(c.firstBuf)
-	c.firstBuf = c.firstBuf[:n]
 	if err != nil {
-		return false
+		c.firstBuf = c.firstBuf[:0]
+		return
 	}
+	c.firstBuf = c.firstBuf[:n]
+
 	reader := bytes.NewReader(c.firstBuf)
 	bufReader := bufio.NewReader(reader)
 	request, err := http.ReadRequest(bufReader)
 	if err != nil {
-		return false
+		// Non-HTTP request (likely TLS Client Hello), keep firstBuf for Read transparent transmission
+		return
 	}
+
 	resp := http.Response{
-		Header: http.Header{},
+		StatusCode: http.StatusTemporaryRedirect,
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+		Header:     http.Header{},
 	}
-	resp.StatusCode = http.StatusTemporaryRedirect
-	location := fmt.Sprintf("https://%v%v", request.Host, request.RequestURI)
-	resp.Header.Set("Location", location)
-	resp.Write(c.Conn)
-	c.Close()
+	resp.Header.Set("Location", fmt.Sprintf("https://%v%v", request.Host, request.RequestURI))
+	resp.Header.Set("Connection", "close")
+	resp.ContentLength = 0
+	_ = resp.Write(c.Conn)
+
+	c.isRedirected = true
 	c.firstBuf = nil
-	return true
 }
 
 func (c *AutoHttpsConn) Read(buf []byte) (int, error) {
 	c.readRequestOnce.Do(func() {
 		c.readRequest()
 	})
+
+	if c.isRedirected {
+		return 0, io.EOF
+	}
 
 	if c.firstBuf != nil {
 		n := copy(buf, c.firstBuf[c.bufStart:])
@@ -65,3 +78,4 @@ func (c *AutoHttpsConn) Read(buf []byte) (int, error) {
 
 	return c.Conn.Read(buf)
 }
+

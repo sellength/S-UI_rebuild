@@ -460,12 +460,23 @@ func systemctlSingboxStatus() (string, bool) {
 	if _, err := exec.LookPath("systemctl"); err != nil {
 		return "", false
 	}
-	cmd := exec.Command("systemctl", "is-active", "sing-box")
+	
+	// 优先检测 S-UI Node Agent 单独的 s-ui-agent-singbox 服务
+	cmd := exec.Command("systemctl", "is-active", "s-ui-agent-singbox")
 	output, err := cmd.CombinedOutput()
 	status := strings.TrimSpace(string(output))
 	if err == nil && status == "active" {
 		return "running", true
 	}
+
+	// 备用检测系统原生的 sing-box 服务
+	cmd = exec.Command("systemctl", "is-active", "sing-box")
+	output, err = cmd.CombinedOutput()
+	status = strings.TrimSpace(string(output))
+	if err == nil && status == "active" {
+		return "running", true
+	}
+
 	switch status {
 	case "inactive", "failed", "deactivating", "activating":
 		return status, true

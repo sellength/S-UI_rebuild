@@ -458,10 +458,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/s
 
 > [!TIP]
 > **如何获取 `SUI_AGENT_REGISTER_TOKEN`（平台注册 Token）：**
-> * **Docker 部署**：在主控端安装目录 `/opt/s-ui-distributed/.env` 文件中查看 `SUI_AGENT_REGISTER_TOKEN` 的值。
-> * **实体机部署**：在主控端安装目录 `/usr/local/s-ui/s-ui.env` 文件中查看 `SUI_AGENT_REGISTER_TOKEN` 的值。
-> * **动态提取**：可以直接在主控端服务器终端执行以下命令，从当前正在运行的 `sui` 进程中读取：
->   `cat /proc/$(pgrep -f "/usr/local/s-ui/sui")/environ 2>/dev/null | tr '\0' '\n' | grep SUI_AGENT_REGISTER_TOKEN | cut -d '=' -f 2-`
+> * **Docker 部署**：在主控端服务器的 `/opt/s-ui-distributed/.env` 文件的 `SUI_AGENT_REGISTER_TOKEN` 选项中复制。
+> * **实体机部署**：在主控端服务器的 `/usr/local/s-ui/s-ui.env` 文件的 `SUI_AGENT_REGISTER_TOKEN` 选项中复制。
 
 脚本会自动完成：
 

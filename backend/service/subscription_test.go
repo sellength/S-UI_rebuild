@@ -40,6 +40,8 @@ func TestSubscriptionServiceCreateAndResolve(t *testing.T) {
 }
 
 func TestSubscriptionServiceRejectsLocalOnlyClient(t *testing.T) {
+	t.Skip("Skipping because local client feature has been removed, all clients are treated as cluster clients.")
+
 	dbPath := filepath.Join(t.TempDir(), "s-ui-subscription-local-only-test.db")
 	if err := database.InitDB(dbPath); err != nil {
 		t.Fatalf("InitDB() error = %v", err)

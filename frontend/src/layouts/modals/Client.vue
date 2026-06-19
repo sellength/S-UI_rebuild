@@ -46,27 +46,7 @@
                 </v-col>
               </v-row>
 
-              <v-row class="mt-3">
-                <v-col cols="12">
-                  <div class="scope-box">
-                    <div>
-                      <div class="text-subtitle-2 font-weight-bold text-grey-lighten-3">账号类型</div>
-                      <div class="text-caption text-grey mt-1">当前阶段一个用户只绑定一种代理体系，避免订阅链接混用。</div>
-                    </div>
-                    <v-btn-toggle
-                      v-model="client.accessScope"
-                      color="primary"
-                      density="comfortable"
-                      mandatory
-                      selected-class="font-weight-bold"
-                      variant="outlined"
-                    >
-                      <v-btn value="local" class="text-none">本地代理账号</v-btn>
-                      <v-btn value="cluster" class="text-none">集群代理账号</v-btn>
-                    </v-btn-toggle>
-                  </div>
-                </v-col>
-              </v-row>
+
 
               <!-- 流量使用状态 -->
               <v-row v-if="index != -1" class="my-4">
@@ -104,23 +84,7 @@
                 </v-col>
               </v-row>
 
-              <v-row v-if="client.accessScope === 'local'" style="margin-top: 10px;">
-                <v-col cols="12">
-                  <v-combobox
-                    v-model="clientInbounds"
-                    :items="inboundTags"
-                    :label="$t('client.inboundTags')"
-                    multiple
-                    chips
-                    hide-details
-                    variant="outlined"
-                    class="dark-input"
-                  ></v-combobox>
-                </v-col>
-              </v-row>
-              <v-alert v-else type="info" variant="tonal" density="compact" class="mt-4">
-                当前用户是集群代理账号，不会绑定本地入站。
-              </v-alert>
+
               <v-row class="mt-2">
                 <v-col cols="auto">
                   <v-switch v-model="clientStats" color="cyan" :label="$t('stats.enable')" hide-details></v-switch>
@@ -318,7 +282,7 @@ export default {
     },
     saveChanges() {
       this.loading = true
-      if (this.client.accessScope !== 'local') this.client.inbounds = []
+      this.client.inbounds = []
       this.client.config = updateConfigs(this.clientConfig, this.client.name)
       this.client.links = [
                         ...this.links,
@@ -332,10 +296,6 @@ export default {
     }
   },
   computed: {
-    clientInbounds: {
-      get() { return this.client.inbounds.length>0 ? this.client.inbounds.filter(i => this.inboundTags.includes(i)) : [] },
-      set(newValue:string[]) { this.client.inbounds = newValue.length == 0 ?  [] : newValue }
-    },
     expDate: {
       get() { return this.client.expiry},
       set(v:any) { this.client.expiry = v }
@@ -362,21 +322,4 @@ export default {
 </script>
 
 <style scoped>
-.scope-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px;
-  border: 1px solid var(--panel-card-border);
-  border-radius: 8px;
-  background: var(--panel-soft-bg);
-}
-
-@media (max-width: 600px) {
-  .scope-box {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-}
 </style>

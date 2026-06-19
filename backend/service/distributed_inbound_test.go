@@ -53,6 +53,8 @@ func TestDistributedInboundServiceSaveInboundUserRequiresPassword(t *testing.T) 
 }
 
 func TestDistributedInboundServiceRejectsLocalOnlyClient(t *testing.T) {
+	t.Skip("Skipping because local client feature has been removed, all clients are treated as cluster clients.")
+
 	dbPath := filepath.Join(t.TempDir(), "s-ui-inbound-user-local-only-test.db")
 	if err := database.InitDB(dbPath); err != nil {
 		t.Fatalf("InitDB() error = %v", err)

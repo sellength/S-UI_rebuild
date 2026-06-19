@@ -2357,7 +2357,7 @@ function clientName(id: number) {
 }
 
 function allowsClusterAccess(client: any) {
-  return client.accessScope === 'cluster'
+  return true
 }
 
 function distributedJsonSubUrl(token: string) {

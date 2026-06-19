@@ -31,7 +31,7 @@
             <div class="d-flex flex-column" style="gap: 24px; padding: 10px 0;">
               <!-- Sub QR -->
               <div class="flat-card pa-4 d-flex flex-column align-center" style="border-radius: 8px;">
-                <span class="text-caption font-weight-bold text-grey-lighten-2 mb-3">{{ client.accessScope === 'cluster' ? '集群订阅' : $t('setting.sub') }}</span>
+                <span class="text-caption font-weight-bold text-grey-lighten-2 mb-3">集群订阅</span>
                 <div class="qrcode-wrapper pa-3 bg-white rounded-lg cursor-pointer" @click="copyToClipboard(clientSub)">
                   <QrcodeVue :value="clientSub" :size="size" :margin="1" />
                 </div>
@@ -40,7 +40,7 @@
 
               <!-- JSON Sub QR -->
               <div class="flat-card pa-4 d-flex flex-column align-center" style="border-radius: 8px;">
-                <span class="text-caption font-weight-bold text-grey-lighten-2 mb-3">{{ client.accessScope === 'cluster' ? 'Raw 节点订阅' : $t('setting.jsonSub') }}</span>
+                <span class="text-caption font-weight-bold text-grey-lighten-2 mb-3">Raw 节点订阅</span>
                 <div class="qrcode-wrapper pa-3 bg-white rounded-lg cursor-pointer" @click="copyToClipboard(secondarySub)">
                   <QrcodeVue :value="secondarySub" :size="size" :margin="1" />
                 </div>
@@ -133,16 +133,13 @@ export default {
       return this.clients[this.$props.index]
     },
     clientSub() {
-      if (this.client.accessScope === 'cluster') return Data().subURI + this.client.name + '?format=distributed-json'
-      return Data().subURI + this.client.name
+      return Data().subURI + this.client.name + '?format=distributed-json'
     },
     secondarySub() {
-      if (this.client.accessScope === 'cluster') return Data().subURI + this.client.name + '?format=distributed-source'
-      return Data().subURI + this.client.name + '?format=json'
+      return Data().subURI + this.client.name + '?format=distributed-source'
     },
     singbox() {
-      const format = this.client.accessScope === 'cluster' ? 'distributed-json' : 'json'
-      const url = Data().subURI + this.client.name + '?format=' + format
+      const url = Data().subURI + this.client.name + '?format=distributed-json'
       return 'sing-box://import-remote-profile?url=' +  encodeURIComponent(url) + '#' + this.client.name
     },
     clientLinks() {

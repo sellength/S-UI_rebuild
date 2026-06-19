@@ -22,7 +22,7 @@ const defaultClient: Client = {
   config: {},
   inbounds: [],
   links: [],
-  accessScope: "local",
+  accessScope: "cluster",
   volume: 0,
   expiry: 0,
   up: 0,
@@ -131,8 +131,8 @@ export function ensureConfigKeys(config: Config, user: string): Config {
 export function createClient<T extends Client>(json?: Partial<T>): Client {
   defaultClient.name = RandomUtil.randomSeq(8)
   const defaultObject: Client = { ...defaultClient, ...(json || {}) }
-  if (defaultObject.accessScope !== "local" && defaultObject.accessScope !== "cluster") {
-    defaultObject.accessScope = "local"
+  if (defaultObject.accessScope !== "cluster") {
+    defaultObject.accessScope = "cluster"
   }
   defaultObject.config = ensureConfigKeys(defaultObject.config, defaultObject.name)
   return defaultObject

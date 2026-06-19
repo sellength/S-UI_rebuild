@@ -13,9 +13,11 @@ func clientAllowsCluster(client model.Client) bool {
 }
 
 func ClientAllowsCluster(client model.Client) bool {
-	return client.AccessScope == ClientAccessCluster
+	// 本地代理账号功能已去除，所有账号均作为集群（分布式）代理账号处理。
+	return true
 }
 
 func ClientAllowsLocal(client model.Client) bool {
-	return client.AccessScope == "" || client.AccessScope == ClientAccessLocal
+	// 本地代理账号功能已去除，不再支持本地代理
+	return false
 }

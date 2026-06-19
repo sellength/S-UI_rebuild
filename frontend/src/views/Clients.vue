@@ -68,8 +68,6 @@
           <thead>
             <tr style="border-bottom: 2px solid var(--panel-border-color);">
               <th class="text-left text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent;">{{ $t('client.name') || 'Username' }}</th>
-              <th class="text-left text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent;">可用范围</th>
-              <th class="text-left text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent;">{{ $t('pages.inbounds') || 'Inbounds' }}</th>
               <th class="text-left text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent;">{{ $t('stats.usage') || 'Usage' }}</th>
               <th class="text-left text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent;">{{ $t('date.expiry') || 'Expiry' }}</th>
               <th class="text-left text-grey text-subtitle-2 font-weight-bold py-3" style="background: transparent; width: 100px;">{{ $t('status') || 'Status' }}</th>
@@ -101,32 +99,7 @@
                   </div>
                 </div>
               </td>
-              <td class="py-3" style="background: transparent;">
-                <div class="d-flex flex-wrap" style="gap: 6px;">
-                  <v-chip v-if="allowsLocal(item)" size="small" color="primary" variant="tonal">本地</v-chip>
-                  <v-chip v-if="allowsCluster(item)" size="small" color="cyan" variant="tonal">集群</v-chip>
-                </div>
-              </td>
-              <!-- 2. 绑定的入站节点 -->
-              <td class="py-3" style="background: transparent;">
-                <div class="d-flex flex-wrap" style="gap: 4px; max-width: 250px;">
-                  <v-tooltip activator="parent" location="bottom" v-if="item.inbounds && item.inbounds.length > 0">
-                    <span v-for="i in item.inbounds" :key="i">{{ i }}<br /></span>
-                  </v-tooltip>
-                  <span 
-                    v-for="inb in item.inbounds.slice(0, 3)" 
-                    :key="inb"
-                    class="text-caption px-2 py-0.5 rounded font-weight-medium"
-                    style="background-color: var(--panel-border-color); opacity: 0.9;"
-                  >
-                    {{ inb }}
-                  </span>
-                  <span v-if="item.inbounds.length > 3" class="text-caption text-grey">
-                    +{{ item.inbounds.length - 3 }}
-                  </span>
-                  <span v-if="item.inbounds.length === 0" class="text-grey">-</span>
-                </div>
-              </td>
+
               <!-- 3. 流量已用/限额 -->
               <td class="py-3" style="background: transparent;">
                 <div style="max-width: 180px;">
@@ -297,13 +270,6 @@ const checkFilter = (c:any) :boolean => {
   }
 }
 
-const allowsLocal = (client: any) => {
-  return client.accessScope !== 'cluster'
-}
-
-const allowsCluster = (client: any) => {
-  return client.accessScope === 'cluster'
-}
 
 const filteredClients = computed(() => {
   let list = clients.value
@@ -442,8 +408,7 @@ const updateLinks = (c:Client):Link[] => {
 }
 
 const primarySubLink = (client: any) => {
-  if (client.accessScope === 'cluster') return `${Data().subURI}${client.name}?format=distributed-json`
-  return `${Data().subURI}${client.name}`
+  return `${Data().subURI}${client.name}?format=distributed-json`
 }
 const delClient = (clientIndex: number) => {
   const id = clients.value[clientIndex].id

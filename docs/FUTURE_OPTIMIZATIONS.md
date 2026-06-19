@@ -55,3 +55,13 @@ This document serves as a guide for removing the legacy single-node `Sing-Box Co
 ## 3. Localization Cleanups (Optional)
 * **Files**: i18n files under `frontend/src/locales/` (e.g. `en.ts`, `zhcn.ts`)
 * **Details**: Clean up unused keys under `error.core` and `main.info.sbd`.
+
+---
+
+## 4. Remove "Local Proxy Account" Option in Client Modal (Completed)
+
+> [!NOTE]
+> **已完成**：此优化内容已于 2026-06-19 彻底实装完成。
+> 1. 前端 `Client.vue`、`Clients.vue`、`QrCode.vue` 等页面的“账号类型”切换、本地入站绑定输入框以及相关的可用范围列均已精简并移除，且默认并强制采用 `cluster` 集群模式。
+> 2. 后端 `client_scope.go` 中的验证逻辑已强制对所有客户端开放集群权限，并阻断本地代理，原先的单元测试用例也已相应地更新完毕。
+

@@ -121,6 +121,9 @@ SUI_AGENT_STATE_PATH
 `SUI_AGENT_INTERVAL` 支持 Go duration 格式，例如 `30s`、`1m`。
 
 `SUI_AGENT_REGISTER_TOKEN` 是必填项，必须和控制端环境变量保持一致。控制端未配置该变量时会拒绝 Agent 注册。
+> **获取方式**：
+> * 在主控端机器 `/opt/s-ui-distributed/.env` (Docker) 或 `/usr/local/s-ui/s-ui.env` (实体机) 的 `SUI_AGENT_REGISTER_TOKEN` 中配置或查看。
+> * 也可登录主控端服务器终端执行 `cat /proc/$(pgrep -f "/usr/local/s-ui/sui")/environ 2>/dev/null | tr '\0' '\n' | grep SUI_AGENT_REGISTER_TOKEN | cut -d '=' -f 2-` 动态捕获当前正在生效的 Token。
 
 `SUI_AGENT_CHECK_CONFIG=false` 可以在没有 sing-box 二进制的开发环境跳过配置检查。
 

@@ -28,13 +28,7 @@ const Data = defineStore('Data', {
         if (msg.obj.tls) this.oldData.tlsConfigs = msg.obj.tls
         if (msg.obj.inData) this.oldData.inData = msg.obj.inData
         this.onlines = msg.obj.onlines
-        if (msg.obj.lastLog) {
-          push.error({
-            title: i18n.global.t('error.core'),
-            duration: 5000,
-            message: msg.obj.lastLog
-          })
-        }
+
         
         if (msg.obj.config) {
           // To avoid ref copy

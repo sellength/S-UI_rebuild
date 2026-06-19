@@ -181,13 +181,7 @@ func (s *ServerService) GetNetInfo() map[string]interface{} {
 
 func (s *ServerService) GetSingboxInfo() map[string]interface{} {
 	info := make(map[string]interface{}, 0)
-	sysStats, err := s.SingBoxService.GetSysStats()
-	if err == nil {
-		info["running"] = true
-		info["stats"] = sysStats
-	} else {
-		info["running"] = s.SingBoxService.IsRunning()
-	}
+	info["version"] = s.SingBoxService.Version()
 	return info
 }
 

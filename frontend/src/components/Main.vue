@@ -190,44 +190,15 @@
           <div class="service-item">
             <div class="d-flex align-center justify-space-between mb-3">
               <span class="service-name font-weight-bold">Sing-Box Core</span>
-              <v-chip density="compact" :color="tilesData.sbd?.running ? 'success' : 'error'" variant="flat" size="small" class="px-2">
-                {{ tilesData.sbd?.running ? '运行中' : '已停止' }}
+              <v-chip density="compact" color="cyan" variant="flat" size="small" class="px-2 font-mono">
+                {{ tilesData.sbd?.version || 'unknown' }}
               </v-chip>
             </div>
-            <template v-if="tilesData.sbd?.running">
-              <div class="service-metrics">
-                <div class="metric">
-                  <span class="label">内存占用</span>
-                  <span class="value">{{ formattedSbdMem }}</span>
-                </div>
-                <div class="metric">
-                  <span class="label">协程数量</span>
-                  <span class="value">{{ tilesData.sbd?.stats?.NumGoroutine || '-' }}</span>
-                </div>
-                <div class="metric">
-                  <span class="label">运行时间</span>
-                  <span class="value select-text">{{ formattedSbdUptime }}</span>
-                </div>
+            <div class="service-metrics">
+              <div class="metric">
+                <span class="label">用途</span>
+                <span class="value">配置校验与审计</span>
               </div>
-            </template>
-            <div class="service-actions mt-3 d-flex align-center justify-end" style="gap: 8px;">
-              <!-- 启动 / 停止 状态切换按钮 -->
-              <v-btn v-if="tilesData.sbd?.running" variant="text" size="small" density="comfortable" color="error" class="px-2 font-weight-bold" @click="stopSingbox" :loading="loadingSingbox" :disabled="loadingSingbox">
-                <v-icon icon="mdi-stop" class="mr-1" />停止
-              </v-btn>
-              <v-btn v-else variant="text" size="small" density="comfortable" color="success" class="px-2 font-weight-bold" @click="restartSingbox" :loading="loadingSingbox" :disabled="loadingSingbox">
-                <v-icon icon="mdi-play" class="mr-1" />启动
-              </v-btn>
-
-              <!-- 重启按钮 始终常驻 -->
-              <v-btn variant="text" size="small" density="comfortable" color="warning" class="px-2 font-weight-bold" @click="restartSingbox" :loading="loadingSingbox" :disabled="loadingSingbox">
-                <v-icon icon="mdi-refresh" class="mr-1" />重启
-              </v-btn>
-
-              <!-- 查看日志 始终常驻 -->
-              <v-btn variant="text" size="small" density="comfortable" color="primary" class="px-2 font-weight-bold" @click="openLogs('sing-box')">
-                <v-icon icon="mdi-list-box-outline" class="mr-1" />查看日志
-              </v-btn>
             </div>
           </div>
 
@@ -260,7 +231,6 @@ const onlineCount = computed(() => Data().onlines?.user?.length || 0)
 const ruleCount = computed(() => Data().config?.route?.rules?.length || 0)
 
 // 实时的系统 API 轮询数据
-const loadingSingbox = ref(false)
 const tilesData = ref<any>({})
 const oldNet = ref<any>(null)
 
@@ -274,17 +244,13 @@ const totalRecv = ref('0 B')
 const formattedUptime = computed(() => {
   return tilesData.value.uptime ? HumanReadable.formatSecond(tilesData.value.uptime) : '-'
 })
-const formattedSbdUptime = computed(() => {
-  return tilesData.value.sbd?.stats?.Uptime ? HumanReadable.formatSecond(tilesData.value.sbd?.stats?.Uptime) : '-'
-})
+
 
 // 内存计算自适应
 const formattedAppMem = computed(() => {
   return tilesData.value.sys?.appMem ? HumanReadable.sizeFormat(tilesData.value.sys?.appMem) : '-'
 })
-const formattedSbdMem = computed(() => {
-  return tilesData.value.sbd?.stats?.Alloc ? HumanReadable.sizeFormat(tilesData.value.sbd?.stats?.Alloc) : '-'
-})
+
 
 // 监听状态数据以动态更新流量统计和上/下行速度
 watch(tilesData, (newVal) => {
@@ -355,33 +321,7 @@ const closeLogs = () => {
   logModal.value.visible = false
 }
 
-const restartSingbox = async () => {
-  loadingSingbox.value = true
-  try {
-    const msg = await HttpUtils.post('api/restartSingbox', {})
-    if (msg.success) {
-      await reloadData()
-    }
-  } catch (err) {
-    console.error('Failed to restart Sing-Box:', err)
-  } finally {
-    loadingSingbox.value = false
-  }
-}
 
-const stopSingbox = async () => {
-  loadingSingbox.value = true
-  try {
-    const msg = await HttpUtils.post('api/stopSingbox', {})
-    if (msg.success) {
-      await reloadData()
-    }
-  } catch (err) {
-    console.error('Failed to stop Sing-Box:', err)
-  } finally {
-    loadingSingbox.value = false
-  }
-}
 </script>
 
 <style scoped>

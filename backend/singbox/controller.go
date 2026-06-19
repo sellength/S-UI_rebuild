@@ -52,3 +52,33 @@ func (s *Controller) Stop() error {
 
 	return s.signalSingbox("stop")
 }
+
+func (s *Controller) Version() string {
+	binPath := s.GetBinaryPath()
+	if _, err := os.Stat(binPath); err != nil {
+		return "unknown"
+	}
+	cmd := exec.Command(binPath, "version")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "unknown"
+	}
+	
+	lines := strings.Split(string(output), "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		fields := strings.Fields(line)
+		for i, field := range fields {
+			if strings.EqualFold(field, "version") && i+1 < len(fields) {
+				return strings.TrimPrefix(strings.TrimSpace(fields[i+1]), "v")
+			}
+		}
+		if len(fields) == 1 && strings.HasPrefix(fields[0], "v") {
+			return strings.TrimPrefix(fields[0], "v")
+		}
+	}
+	return "unknown"
+}

@@ -449,13 +449,7 @@ func (a *APIHandler) loadData(c *gin.Context) (interface{}, error) {
 	}
 	onlines, err := a.StatsService.GetOnlines()
 
-	sysInfo := a.ServerService.GetSingboxInfo()
-	if sysInfo["running"] == false {
-		logs := a.ServerService.GetLogs("sing-box", "1", "debug")
-		if len(logs) > 0 {
-			data["lastLog"] = logs[0]
-		}
-	}
+
 
 	if err != nil {
 		return "", err

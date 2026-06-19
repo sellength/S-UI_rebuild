@@ -115,6 +115,60 @@ if [ ! -x "$AGENT_BIN" ]; then
   mv "$tmp_bin" "$AGENT_BIN"
 fi
 
+install_singbox() {
+  if command -v sing-box >/dev/null 2>&1; then
+    echo "sing-box is already installed in PATH."
+    return 0
+  fi
+  if [ -x "/usr/local/bin/sing-box" ]; then
+    echo "sing-box already exists in /usr/local/bin."
+    return 0
+  fi
+
+  echo "sing-box not found. Installing latest official sing-box..."
+  arch="$(detect_arch)"
+  if [ "$arch" = "unsupported" ]; then
+    echo "Unsupported CPU architecture for sing-box." >&2
+    return 1
+  fi
+
+  latest_tag=$(curl -Ls "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  if [ -z "$latest_tag" ]; then
+    latest_tag="v1.11.1"
+    echo "Failed to fetch latest sing-box version via Github API, fallback to: ${latest_tag}"
+  fi
+
+  version="${latest_tag#v}"
+  filename="sing-box-${version}-linux-${arch}"
+  url="https://github.com/SagerNet/sing-box/releases/download/${latest_tag}/${filename}.tar.gz"
+
+  echo "Downloading sing-box from:"
+  echo "  $url"
+  mkdir -p /tmp/sing-box-install
+  if ! download "$url" "/tmp/sing-box-install/sing-box.tar.gz"; then
+    echo "Failed to download sing-box." >&2
+    rm -rf /tmp/sing-box-install
+    return 1
+  fi
+
+  tar -zxf /tmp/sing-box-install/sing-box.tar.gz -C /tmp/sing-box-install/
+  if [ -f "/tmp/sing-box-install/${filename}/sing-box" ]; then
+    mv "/tmp/sing-box-install/${filename}/sing-box" "/usr/local/bin/sing-box"
+    chmod +x "/usr/local/bin/sing-box"
+    echo "Successfully installed sing-box to /usr/local/bin/sing-box"
+  else
+    echo "Failed to extract sing-box binary from downloaded archive." >&2
+    rm -rf /tmp/sing-box-install
+    return 1
+  fi
+  rm -rf /tmp/sing-box-install
+}
+
+if ! install_singbox; then
+  echo "Warning: sing-box installation failed. You may need to install it manually." >&2
+fi
+
+
 mkdir -p "$AGENT_DIR/configs" "$AGENT_DIR/certs" "$AGENT_DIR/logs"
 
 systemd_env_value() {

@@ -55,6 +55,7 @@ func (s *SubscriptionService) CreateSubscription(clientId uint) (*SubscriptionTo
 	subscription := model.Subscription{
 		Enable:    true,
 		ClientId:  clientId,
+		Token:     token,
 		TokenHash: hashSubscriptionToken(token),
 		CreatedAt: now,
 		UpdatedAt: now,

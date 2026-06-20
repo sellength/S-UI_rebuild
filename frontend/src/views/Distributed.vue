@@ -451,25 +451,43 @@
                 <td>{{ clientName(sub.clientId) }}</td>
                 <td class="text-truncate" style="max-width: 420px; font-family: monospace;">{{ sub.tokenHash }}</td>
                 <td>{{ sub.lastUsedAt ? formatTimestamp(sub.lastUsedAt) : '-' }}</td>
-                <td>完整链接只在生成时显示一次</td>
+                <td>{{ sub.token ? '自适应唯一订阅' : '旧版订阅 (只在生成时显示一次)' }}</td>
                 <td class="text-right">
+                  <!-- 复制完整订阅链接 -->
                   <v-btn
-                    icon="mdi-qrcode"
+                    v-if="sub.token"
+                    icon
+                    size="small"
+                    variant="text"
+                    color="primary"
+                    class="mr-2"
+                    @click="copyText(distributedSubUrl(sub.token))"
+                  >
+                    <v-icon size="18">mdi-content-copy</v-icon>
+                    <v-tooltip activator="parent" location="top">复制链接</v-tooltip>
+                  </v-btn>
+                  <!-- 二维码 -->
+                  <v-btn
+                    v-if="sub.token"
+                    icon
                     size="small"
                     variant="text"
                     color="cyan"
                     class="mr-2"
-                    @click="showQrCode('', getClientById(sub.clientId))"
+                    @click="showQrCode(sub.token, getClientById(sub.clientId))"
                   >
-                    <v-tooltip activator="parent" location="top">直连二维码</v-tooltip>
+                    <v-icon size="18">mdi-qrcode</v-icon>
+                    <v-tooltip activator="parent" location="top">二维码</v-tooltip>
                   </v-btn>
+                  <!-- 删除 -->
                   <v-btn
-                    icon="mdi-trash-can-outline"
+                    icon
                     size="small"
                     variant="text"
                     color="error"
                     @click="deleteSubscription(sub.id)"
                   >
+                    <v-icon size="18">mdi-trash-can-outline</v-icon>
                     <v-tooltip activator="parent" location="top">删除</v-tooltip>
                   </v-btn>
                 </td>

@@ -241,6 +241,7 @@ type Subscription struct {
 	Id         uint            `json:"id" form:"id" gorm:"primaryKey;autoIncrement"`
 	Enable     bool            `json:"enable" form:"enable"`
 	ClientId   uint            `json:"clientId" form:"clientId" gorm:"index"`
+	Token      string          `json:"token" form:"token" gorm:"type:varchar(64)"`
 	TokenHash  string          `json:"tokenHash" form:"tokenHash" gorm:"uniqueIndex"`
 	Policy     json.RawMessage `json:"policy" form:"policy"`
 	LastUsedAt int64           `json:"lastUsedAt" form:"lastUsedAt"`

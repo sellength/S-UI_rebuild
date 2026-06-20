@@ -12,6 +12,7 @@ import (
 	"s-ui/network"
 	"s-ui/service"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -47,6 +48,9 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 	subPath, err := s.SettingService.GetSubPath()
 	if err != nil {
 		return nil, err
+	}
+	if len(subPath) > 1 && strings.HasSuffix(subPath, "/") {
+		subPath = subPath[:len(subPath)-1]
 	}
 
 	subDomain, err := s.SettingService.GetSubDomain()

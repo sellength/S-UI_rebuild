@@ -1,5 +1,5 @@
 <template>
-  <v-dialog transition="dialog-bottom-transition" width="400">
+  <v-dialog :model-value="visible" @update:model-value="$emit('close')" transition="dialog-bottom-transition" width="400">
     <v-card class="panel-modal pa-4" id="qrcode-modal" style="border-radius: 12px; max-height: 90vh; display: flex; flex-direction: column;">
       <v-card-title class="px-2 pb-2">
         <v-row align="center">
@@ -25,8 +25,18 @@
             </div>
             <div v-else class="text-grey text-caption py-6">无有效订阅 Token</div>
 
-            <span v-if="clientSub" class="text-caption text-grey mt-2 text-center select-text w-100 text-truncate px-2">{{ clientSub }}</span>
-            <span v-if="clientSub" class="text-caption text-primary mt-1">点击二维码复制链接</span>
+            <v-textarea
+              v-if="clientSub"
+              v-model="clientSub"
+              readonly
+              rows="3"
+              variant="outlined"
+              density="compact"
+              hide-details
+              class="w-100 mt-2 text-caption font-mono"
+              style="font-size: 11px; word-break: break-all;"
+            ></v-textarea>
+            <span v-if="clientSub" class="text-caption text-primary mt-2">点击二维码或复制按钮可复制链接</span>
           </div>
 
           <div v-if="clientSub" class="d-flex flex-column" style="gap: 8px;">

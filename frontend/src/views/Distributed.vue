@@ -243,7 +243,7 @@
                     <th>申请方式</th>
                     <th>DNS Provider</th>
                     <th>状态</th>
-                    <th>版本</th>
+                    <th>到期日期</th>
                     <th class="text-right">操作</th>
                   </tr>
                 </thead>
@@ -258,7 +258,7 @@
                         {{ cert.activeVersionId ? '已签发' : '未签发' }}
                       </v-chip>
                     </td>
-                    <td>{{ cert.activeVersionId ? `#${cert.activeVersionId}` : '-' }}</td>
+                    <td>{{ cert.notAfter ? formatTimestamp(cert.notAfter) : '-' }}</td>
                     <td class="text-right">
                       <v-btn icon="mdi-pencil" size="small" variant="text" @click="editCertificate(cert)" />
                       <v-btn
@@ -344,7 +344,18 @@
                     <td>{{ inbound.protocol }}</td>
                     <td>{{ inbound.publicHost || nodeHost(inbound.nodeId) }}</td>
                     <td>{{ inbound.listenPort }}</td>
-                    <td>{{ inboundUsers.filter(u => u.inboundId === inbound.id).length }}</td>
+                    <td>
+                      <v-btn
+                        variant="text"
+                        size="small"
+                        color="primary"
+                        class="text-none font-weight-bold px-1"
+                        style="min-width: unset; text-decoration: underline;"
+                        @click="openInboundUsersDialog(inbound)"
+                      >
+                        {{ inboundUsers.filter(u => u.inboundId === inbound.id).length }}
+                      </v-btn>
+                    </td>
                     <td>
                       <v-chip size="x-small" :color="inboundHealth(inbound).color" variant="tonal">
                         {{ inboundHealth(inbound).label }}
@@ -395,25 +406,6 @@
                   </tr>
                 </tbody>
               </v-table>
-              <v-divider class="my-4" />
-              <div class="card-section-title mb-4">绑定用户</div>
-              <v-row>
-                <v-col cols="12" md="3">
-                  <v-select v-model="inboundUserForm.inboundId" :items="inboundOptions" label="入站" density="compact" variant="outlined" hide-details />
-                </v-col>
-                <v-col cols="12" md="3">
-                  <v-select v-model="inboundUserForm.clientId" :items="clientOptions" label="用户" density="compact" variant="outlined" hide-details />
-                </v-col>
-                <v-col cols="12" md="3">
-                  <v-text-field v-model="inboundUserForm.name" label="名称" density="compact" variant="outlined" hide-details />
-                </v-col>
-                <v-col cols="12" md="3">
-                  <v-text-field v-model="inboundUserForm.password" label="密码" density="compact" variant="outlined" hide-details />
-                </v-col>
-              </v-row>
-              <div class="d-flex justify-end mt-3">
-                <v-btn class="tech-blue-btn" :disabled="!canSaveInboundUser" @click="saveInboundUser">保存绑定</v-btn>
-              </div>
             </v-card>
           </v-col>
         </v-row>
@@ -429,12 +421,19 @@
             </div>
           </div>
           <v-alert v-if="lastToken" type="success" variant="tonal" class="mb-4">
-            新 token：<span class="select-text">{{ lastToken }}</span>
-            <div class="mt-2">
-              JSON 订阅：<span class="select-text">{{ distributedJsonSubUrl(lastToken) }}</span>
+            <div class="d-flex align-center justify-space-between">
+              <div>
+                <strong>新订阅生成成功！</strong>
+                <div class="text-caption text-error font-weight-bold mt-1">⚠️ 注意：由于安全策略该链接仅在生成时显示一次，请妥善保存！</div>
+              </div>
             </div>
-            <div class="mt-1">
-              Raw 订阅：<span class="select-text">{{ distributedRawSubUrl(lastToken) }}</span>
+            <v-divider class="my-2" style="opacity: 0.1;" />
+            <div class="d-flex align-center justify-space-between mt-2" style="gap: 16px;">
+              <div class="text-truncate flex-grow-1 select-text" style="font-family: monospace;">{{ distributedSubUrl(lastToken) }}</div>
+              <div class="d-flex" style="gap: 8px;">
+                <v-btn size="small" class="tech-blue-btn text-none py-1" prepend-icon="mdi-content-copy" @click="copyText(distributedSubUrl(lastToken))">复制链接</v-btn>
+                <v-btn size="small" variant="outlined" color="cyan" class="text-none py-1" prepend-icon="mdi-qrcode" @click="showQrCode(lastToken, getClientById(subscriptionClientId))">二维码</v-btn>
+              </div>
             </div>
           </v-alert>
           <v-table density="compact">
@@ -444,14 +443,36 @@
                 <th>Token Hash</th>
                 <th>最近使用</th>
                 <th>说明</th>
+                <th class="text-right">操作</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="sub in subscriptions" :key="sub.id">
                 <td>{{ clientName(sub.clientId) }}</td>
                 <td class="text-truncate" style="max-width: 420px; font-family: monospace;">{{ sub.tokenHash }}</td>
-                <td>{{ sub.lastUsedAt || '-' }}</td>
-                <td>完整链接只在生成时显示</td>
+                <td>{{ sub.lastUsedAt ? formatTimestamp(sub.lastUsedAt) : '-' }}</td>
+                <td>完整链接只在生成时显示一次</td>
+                <td class="text-right">
+                  <v-btn
+                    icon="mdi-qrcode"
+                    size="small"
+                    variant="text"
+                    color="cyan"
+                    class="mr-2"
+                    @click="showQrCode('', getClientById(sub.clientId))"
+                  >
+                    <v-tooltip activator="parent" location="top">直连二维码</v-tooltip>
+                  </v-btn>
+                  <v-btn
+                    icon="mdi-trash-can-outline"
+                    size="small"
+                    variant="text"
+                    color="error"
+                    @click="deleteSubscription(sub.id)"
+                  >
+                    <v-tooltip activator="parent" location="top">删除</v-tooltip>
+                  </v-btn>
+                </td>
               </tr>
             </tbody>
           </v-table>
@@ -886,6 +907,133 @@
         <pre class="rendered-config-preview" v-html="highlightJSON(renderedConfigDialog.content)" />
       </v-card>
     </v-dialog>
+
+    <!-- 服务入口用户绑定管理 Dialog -->
+    <v-dialog v-model="inboundUsersDialog.visible" width="700">
+      <v-card class="panel-modal pa-4">
+        <div class="d-flex align-center justify-space-between mb-4">
+          <div>
+            <div class="text-h6 font-weight-bold text-grey-lighten-3">管理授权用户</div>
+            <div class="text-caption text-grey mt-1">
+              服务入口: {{ inboundUsersDialog.inbound ? `${nodeName(inboundUsersDialog.inbound.nodeId)}:${inboundUsersDialog.inbound.listenPort}` : '-' }}
+            </div>
+          </div>
+          <v-btn icon="mdi-close" variant="text" @click="inboundUsersDialog.visible = false" />
+        </div>
+
+        <v-divider class="mb-4" />
+
+        <!-- 绑定用户列表 -->
+        <div class="card-section-title mb-2">已绑定用户列表</div>
+        <v-table density="compact" class="mb-4">
+          <thead>
+            <tr>
+              <th>用户名</th>
+              <th>关联统一用户</th>
+              <th>密码</th>
+              <th class="text-right">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="user in currentInboundUsers" :key="user.id">
+              <td>{{ user.name }}</td>
+              <td>{{ clientName(user.clientId) }}</td>
+              <td>
+                <span class="mr-2">{{ showUserPasswords[user.id] ? user.password : '••••••••' }}</span>
+                <v-btn
+                  :icon="showUserPasswords[user.id] ? 'mdi-eye-off' : 'mdi-eye'"
+                  variant="text"
+                  size="x-small"
+                  density="comfortable"
+                  @click="togglePasswordVisibility(user.id)"
+                />
+                <v-btn
+                  icon="mdi-content-copy"
+                  variant="text"
+                  size="x-small"
+                  density="comfortable"
+                  @click="copyText(user.password)"
+                />
+              </td>
+              <td class="text-right">
+                <v-btn
+                  icon="mdi-trash-can-outline"
+                  size="small"
+                  variant="text"
+                  color="error"
+                  @click="deleteInboundUser(user.id)"
+                />
+              </td>
+            </tr>
+            <tr v-if="currentInboundUsers.length === 0">
+              <td colspan="4" class="text-center text-grey py-4">暂无授权用户。请在下方录入新增。</td>
+            </tr>
+          </tbody>
+        </v-table>
+
+        <v-divider class="my-4" />
+
+        <!-- 新增绑定折叠表单 -->
+        <v-expansion-panels v-model="inboundUsersDialog.panel">
+          <v-expansion-panel value="add">
+            <v-expansion-panel-title class="font-weight-bold text-grey-lighten-2 py-2">
+              <v-icon icon="mdi-plus" class="mr-2" color="primary" />
+              新增用户绑定
+            </v-expansion-panel-title>
+            <v-expansion-panel-text>
+              <v-row class="mt-2">
+                <v-col cols="12" md="6" class="py-1">
+                  <v-select
+                    v-model="inboundUserForm.clientId"
+                    :items="clientOptions"
+                    label="选择关联用户"
+                    density="compact"
+                    variant="outlined"
+                    hide-details
+                  />
+                </v-col>
+                <v-col cols="12" md="6" class="py-1">
+                  <v-text-field
+                    v-model="inboundUserForm.name"
+                    label="认证名称"
+                    density="compact"
+                    variant="outlined"
+                    hide-details
+                  />
+                </v-col>
+                <v-col cols="12" class="py-1">
+                  <v-text-field
+                    v-model="inboundUserForm.password"
+                    label="密码"
+                    density="compact"
+                    variant="outlined"
+                    hide-details
+                  />
+                </v-col>
+              </v-row>
+              <div class="d-flex justify-end mt-4">
+                <v-btn
+                  class="tech-blue-btn text-none"
+                  :disabled="!canSaveInboundUser"
+                  @click="saveInboundUser"
+                >
+                  保存并绑定
+                </v-btn>
+              </div>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </v-card>
+    </v-dialog>
+
+    <QrCode
+      v-model="qrDialog.visible"
+      :visible="qrDialog.visible"
+      :token="qrDialog.token"
+      :client="qrDialog.client"
+      :settings="settings"
+      @close="closeQrCode"
+    />
   </v-container>
 </template>
 
@@ -896,6 +1044,8 @@ import cloudflareIcon from '@/assets/dns-providers/cloudflare.svg'
 import tencentDnspodIcon from '@/assets/dns-providers/tencent-dnspod.svg'
 import HttpUtils from '@/plugins/httputil'
 import Data from '@/store/modules/data'
+import QrCode from '@/layouts/modals/QrCode.vue'
+import { push } from 'notivue'
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -1158,6 +1308,40 @@ const inboundForm = reactive<any>(newInbound())
 const inboundUserForm = reactive<any>(newInboundUser())
 const originalInboundForm = ref<any | null>(null)
 const nodeTemplateForm = reactive<any>(defaultNodeTemplateForm())
+const settings = ref<any>({})
+
+const qrDialog = ref({
+  visible: false,
+  token: '',
+  client: null as any
+})
+
+const showQrCode = (token: string, client: any) => {
+  qrDialog.value.token = token
+  qrDialog.value.client = client
+  qrDialog.value.visible = true
+}
+
+const closeQrCode = () => {
+  qrDialog.value.visible = false
+}
+
+const getClientById = (clientId: number | null) => {
+  if (clientId === null) return null
+  return clients.value.find(c => c.id === clientId) || null
+}
+
+const inboundUsersDialog = reactive<any>({
+  visible: false,
+  inbound: null,
+  panel: []
+})
+const showUserPasswords = ref<Record<number, boolean>>({})
+
+const currentInboundUsers = computed(() => {
+  if (!inboundUsersDialog.inbound) return []
+  return inboundUsers.value.filter(u => u.inboundId === inboundUsersDialog.inbound.id)
+})
 
 const clients = computed((): any[] => Data().clients || [])
 const nodeOptions = computed<SelectItem[]>(() => nodes.value.map(n => ({ title: `${n.name} (${n.code})`, value: n.id })))
@@ -1172,17 +1356,13 @@ const canSaveDNSProvider = computed(() => {
   return dnsForm.name.trim().length > 0 && dnsForm.type && dnsProviderConfigValidation.value.valid
 })
 const issuedCertificates = computed(() => certificates.value.filter(c => !!c.activeVersionId))
-const autoRenewCertificateCount = computed(() => certificates.value.filter(c => {
-  const config = parseJSONValue(c.config, {})
-  return Boolean(config.autoRenew)
-}).length)
+const autoRenewCertificateCount = computed(() => certificates.value.filter(c => Boolean(c.autoRenew)).length)
 const expiringCertificateCount = computed(() => certificates.value.filter(c => {
-  const value = c.expiresAt || c.expireAt || c.notAfter || c.expiredAt
+  const value = c.notAfter
   if (!value) return false
-  const expiresAt = new Date(value).getTime()
-  if (Number.isNaN(expiresAt)) return false
+  const expiresAt = value * 1000
   const diff = expiresAt - Date.now()
-  return diff > 0 && diff <= 30 * 24 * 60 * 60 * 1000
+  return diff > 0 && diff <= 10 * 24 * 60 * 60 * 1000
 }).length)
 const renderedInboundCount = computed(() => distributedInbounds.value.filter(i => !!i.renderedConfigJson).length)
 const publishedNodeCount = computed(() => new Set(configVersions.value.map(v => v.nodeId)).size)
@@ -1357,8 +1537,14 @@ async function loadAll() {
     loadConfigVersions(),
     loadSubscriptions(),
     loadNodeTemplates(),
+    loadSettings(),
   ])
   loading.value = false
+}
+
+async function loadSettings() {
+  const msg = await HttpUtils.get('api/setting')
+  if (msg.success) settings.value = msg.obj || {}
 }
 
 async function loadNodes() {
@@ -1479,11 +1665,50 @@ async function deleteSelectedInbounds() {
   await loadDistributedInbounds()
 }
 
+async function deleteSubscription(id: number) {
+  if (!window.confirm("确定删除该订阅 Token 吗？删除后此 Token 对应的所有客户端将无法再次拉取配置！")) return
+  const msg = await HttpUtils.post(`api/deleteSubscription?id=${id}`, null)
+  if (msg.success) {
+    await loadSubscriptions()
+  }
+}
+
 async function saveInboundUser() {
   const msg = await HttpUtils.post('api/saveInboundUser', toForm(inboundUserForm))
   if (!msg.success) return
+  const currentInboundId = inboundUserForm.inboundId
   Object.assign(inboundUserForm, newInboundUser())
+  inboundUserForm.inboundId = currentInboundId
+  inboundUsersDialog.panel = []
   await loadInboundUsers()
+}
+
+function openInboundUsersDialog(inbound: any) {
+  inboundUsersDialog.inbound = inbound
+  inboundUsersDialog.panel = []
+  Object.assign(inboundUserForm, newInboundUser())
+  inboundUserForm.inboundId = inbound.id
+  inboundUsersDialog.visible = true
+}
+
+function togglePasswordVisibility(userId: number) {
+  showUserPasswords.value[userId] = !showUserPasswords.value[userId]
+}
+
+async function deleteInboundUser(userId: number) {
+  if (!window.confirm("确定删除该用户的绑定授权吗？")) return
+  const msg = await HttpUtils.post(`api/deleteInboundUser?id=${userId}`, null)
+  if (msg.success) {
+    await loadInboundUsers()
+  }
+}
+
+function copyText(text: string) {
+  navigator.clipboard.writeText(text).then(() => {
+    push.success({ message: "复制成功" })
+  }).catch(() => {
+    push.error({ message: "复制失败" })
+  })
 }
 
 async function renderInbound(id: number) {
@@ -2379,18 +2604,23 @@ function allowsClusterAccess(client: any) {
   return true
 }
 
-function distributedJsonSubUrl(token: string) {
-  return distributedSubUrl(token, 'distributed-json')
-}
+function distributedSubUrl(token: string) {
+  if (settings.value.subURI) {
+    let uri = settings.value.subURI.trim()
+    if (!/^https?:\/\//i.test(uri)) {
+      uri = 'http://' + uri
+    }
+    if (!uri.endsWith('/')) {
+      uri += '/'
+    }
+    return `${uri}sub/${token}`
+  }
 
-function distributedRawSubUrl(token: string) {
-  return distributedSubUrl(token, 'distributed-source')
-}
-
-function distributedSubUrl(token: string, format: string) {
-  const protocol = window.location.protocol
-  const hostname = window.location.hostname
-  return `${protocol}//${hostname}:2096/sub/${token}?format=${format}`
+  const protocol = settings.value.subCertFile ? 'https:' : window.location.protocol
+  const host = settings.value.subDomain || window.location.hostname
+  const port = settings.value.subPort ? `:${settings.value.subPort}` : ':2096'
+  const path = settings.value.subPath || '/sub/'
+  return `${protocol}//${host}${port}${path}${token}`
 }
 
 function latestVersion(nodeId: number) {
@@ -2409,6 +2639,15 @@ function formatDomains(value: any) {
     }
   }
   return ''
+}
+
+function formatTimestamp(value: number) {
+  if (!value) return '-'
+  const date = new Date(value * 1000)
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
 }
 
 function certSourceTitle(source: string) {

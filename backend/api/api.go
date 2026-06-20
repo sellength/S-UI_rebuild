@@ -321,6 +321,14 @@ func (a *APIHandler) postHandler(c *gin.Context) {
 		}
 		result, err := a.SubscriptionService.CreateSubscription(uint(clientId))
 		jsonObj(c, result, err)
+	case "deleteSubscription":
+		id, convErr := strconv.Atoi(c.Query("id"))
+		if convErr != nil {
+			jsonMsg(c, "", convErr)
+			return
+		}
+		err := a.SubscriptionService.DeleteSubscription(uint(id))
+		jsonMsg(c, "delete subscription", err)
 	default:
 		jsonMsg(c, "API call", nil)
 	}

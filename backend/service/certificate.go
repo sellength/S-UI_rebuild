@@ -155,7 +155,11 @@ func (s *CertificateService) DeleteDNSProvider(id uint) error {
 func (s *CertificateService) GetCertificates() ([]model.Certificate, error) {
 	db := database.GetDB()
 	certificates := []model.Certificate{}
-	err := db.Model(model.Certificate{}).Order("id asc").Scan(&certificates).Error
+	err := db.Model(&model.Certificate{}).
+		Select("certificates.*, cv.not_after").
+		Joins("LEFT JOIN certificate_versions cv ON cv.id = certificates.active_version_id").
+		Order("certificates.id asc").
+		Scan(&certificates).Error
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,7 @@ import (
 	"s-ui/database/model"
 	"s-ui/logger"
 	"s-ui/service"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,6 +35,17 @@ func (s *SubHandler) subs(c *gin.Context) {
 	var err error
 	subId := c.Param("subid")
 	format, isFormat := c.GetQuery("format")
+	if !isFormat {
+		ua := strings.ToLower(c.Request.UserAgent())
+		if strings.Contains(ua, "clash") {
+			format = "clash"
+			isFormat = true
+		} else if strings.Contains(ua, "sing-box") {
+			format = "distributed-json"
+			isFormat = true
+		}
+	}
+
 	if isFormat {
 		switch format {
 		case "json":

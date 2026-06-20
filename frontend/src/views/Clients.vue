@@ -9,12 +9,6 @@
     @close="closeModal"
     @save="saveModal"
   />
-  <QrCode
-    v-model="qrcode.visible"
-    :visible="qrcode.visible"
-    :index="qrcode.index"
-    @close="closeQrCode"
-  />
   <Stats
     v-model="stats.visible"
     :visible="stats.visible"
@@ -155,11 +149,6 @@
                     <v-icon size="18" />
                     <v-tooltip activator="parent" location="top" text="Copy Link"></v-tooltip>
                   </v-btn>
-                  <!-- 二维码 -->
-                  <v-btn icon="mdi-qrcode" variant="text" size="small" color="cyan" @click="showQrCode(getRealIndex(item))">
-                    <v-icon size="18" />
-                    <v-tooltip activator="parent" location="top" text="QR-Code"></v-tooltip>
-                  </v-btn>
                   <!-- 统计图表 -->
                   <v-btn icon="mdi-chart-line" variant="text" size="small" color="success" @click="showStats(item.name)" v-if="v2rayStats.users.includes(item.name)">
                     <v-icon size="18" />
@@ -211,7 +200,6 @@
 <script lang="ts" setup>
 import Data from '@/store/modules/data'
 import ClientModal from '@/layouts/modals/Client.vue'
-import QrCode from '@/layouts/modals/QrCode.vue'
 import Stats from '@/layouts/modals/Stats.vue'
 import { Client, createClient } from '@/types/clients'
 import { computed, ref } from 'vue'
@@ -427,18 +415,7 @@ const delClient = (clientIndex: number) => {
   delOverlay.value[clientIndex] = false
 }
 
-const qrcode = ref({
-  visible: false,
-  index: 0,
-})
 
-const showQrCode = (index: number) => {
-  qrcode.value.index = index
-  qrcode.value.visible = true
-}
-const closeQrCode = () => {
-  qrcode.value.visible = false
-}
 
 const stats = ref({
   visible: false,

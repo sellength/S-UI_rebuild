@@ -127,7 +127,10 @@ func (s *CertificateService) acmeDNSProvider(providerId uint) (model.DNSProvider
 	}
 	db := database.GetDB()
 	provider := model.DNSProvider{}
-	if err := db.Model(model.DNSProvider{}).Where("id = ?", providerId).First(&provider).Error; err != nil {
+	if err := db.Model(model.DNSProvider{}).Where("id = ? AND enable = ?", providerId, true).First(&provider).Error; err != nil {
+		if database.IsNotFound(err) {
+			return model.DNSProvider{}, nil, fmt.Errorf("DNS provider is disabled or not found")
+		}
 		return model.DNSProvider{}, nil, err
 	}
 	credentials, err := dnsProviderCredentials(provider)

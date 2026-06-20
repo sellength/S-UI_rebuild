@@ -2,8 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -35,6 +33,7 @@ type agentConfig struct {
 type agentState struct {
 	LastReportedConfigID uint64 `json:"lastReportedConfigId"`
 	LastAppliedVersion   uint64 `json:"lastAppliedVersion"`
+	AppliedSha256        string `json:"appliedSha256"`
 }
 
 type apiMessage struct {
@@ -63,6 +62,7 @@ type configVersion struct {
 	ID          uint64          `json:"id"`
 	Version     uint64          `json:"version"`
 	Status      string          `json:"status"`
+	Sha256      string          `json:"sha256"`
 	ContentJSON json.RawMessage `json:"contentJson"`
 }
 
@@ -101,6 +101,7 @@ func main() {
 					state.LastReportedConfigID = desired.ConfigVersion.ID
 					if status == "applied" {
 						state.LastAppliedVersion = desired.ConfigVersion.Version
+						state.AppliedSha256 = desired.ConfigVersion.Sha256
 					}
 					if err := saveState(cfg.StatePath, state); err != nil {
 						fmt.Fprintf(os.Stderr, "state save failed: %v\n", err)
@@ -201,8 +202,6 @@ func register(client *http.Client, cfg *agentConfig) error {
 func heartbeat(client *http.Client, cfg *agentConfig) error {
 	state := loadState(cfg.StatePath)
 	singboxStatus, singboxVersion := collectSingboxHealth(cfg)
-	currentPath := filepath.Join(cfg.ConfigDir, "current.json")
-	appliedSha256 := fileSHA256(currentPath)
 
 	body := map[string]interface{}{
 		"configVersion":  state.LastAppliedVersion,
@@ -210,7 +209,7 @@ func heartbeat(client *http.Client, cfg *agentConfig) error {
 		"singboxStatus":  singboxStatus,
 		"agentVersion":   "0.1.0",
 		"singboxVersion": singboxVersion,
-		"appliedSha256":  appliedSha256,
+		"appliedSha256":  state.AppliedSha256,
 		"resourceSummary": fmt.Sprintf(
 			`{"goos":%q,"goarch":%q,"goroutines":%d,"singboxBin":%q}`,
 			runtime.GOOS,
@@ -222,15 +221,6 @@ func heartbeat(client *http.Client, cfg *agentConfig) error {
 
 	_, err := postJSON(client, cfg.BaseURL+"/heartbeat", body, agentHeaders(cfg))
 	return err
-}
-
-func fileSHA256(path string) string {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return ""
-	}
-	sum := sha256.Sum256(data)
-	return hex.EncodeToString(sum[:])
 }
 
 func getDesiredConfig(client *http.Client, cfg *agentConfig) (*desiredConfig, error) {

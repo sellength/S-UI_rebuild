@@ -8,6 +8,7 @@ acme/
 cert/*
 certificates/
 sui
+sui-*
 main
 s-ui-agent
 s-ui-agent-*

@@ -100,3 +100,11 @@ func hashSubscriptionToken(token string) string {
 	sum := sha256.Sum256([]byte(token))
 	return hex.EncodeToString(sum[:])
 }
+
+func (s *SubscriptionService) DeleteSubscription(id uint) error {
+	if id == 0 {
+		return fmt.Errorf("subscription id is required")
+	}
+	db := database.GetDB()
+	return db.Where("id = ?", id).Delete(&model.Subscription{}).Error
+}

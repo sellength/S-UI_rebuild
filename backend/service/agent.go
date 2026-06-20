@@ -261,7 +261,10 @@ func (s *AgentService) authenticate(agentId string, agentToken string) (*model.N
 	}
 
 	node := model.Node{}
-	if err := db.Model(model.Node{}).Where("id = ?", agent.NodeId).First(&node).Error; err != nil {
+	if err := db.Model(model.Node{}).Where("id = ? AND enable = ?", agent.NodeId, true).First(&node).Error; err != nil {
+		if database.IsNotFound(err) {
+			return nil, nil, fmt.Errorf("node is disabled or not found")
+		}
 		return nil, nil, err
 	}
 	return &agent, &node, nil

@@ -178,7 +178,12 @@ func RenderDistributedAnyTLSInbound(inboundId uint) (json.RawMessage, error) {
 	}
 
 	inboundUsers := []model.InboundUser{}
-	if err := db.Model(model.InboundUser{}).Where("inbound_id = ?", inbound.Id).Order("id asc").Scan(&inboundUsers).Error; err != nil {
+	err := db.Model(&model.InboundUser{}).
+		Joins("JOIN clients ON clients.id = inbound_users.client_id").
+		Where("inbound_users.inbound_id = ? AND clients.enable = ?", inbound.Id, true).
+		Order("inbound_users.id asc").
+		Scan(&inboundUsers).Error
+	if err != nil {
 		return nil, err
 	}
 

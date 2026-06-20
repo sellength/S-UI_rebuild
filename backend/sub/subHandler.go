@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"s-ui/database"
 	"s-ui/database/model"
@@ -83,6 +84,20 @@ func (s *SubHandler) subs(c *gin.Context) {
 		logger.Error(err)
 		c.String(400, "Error!")
 		return
+	}
+
+	if !isFormat {
+		var links []interface{}
+		hasLocalLinks := false
+		if len(client.Links) > 0 && string(client.Links) != "null" && string(client.Links) != "[]" {
+			if err := json.Unmarshal(client.Links, &links); err == nil && len(links) > 0 {
+				hasLocalLinks = true
+			}
+		}
+		if !hasLocalLinks {
+			format = "distributed-json"
+			isFormat = true
+		}
 	}
 
 	// 2. Fetch subscription content

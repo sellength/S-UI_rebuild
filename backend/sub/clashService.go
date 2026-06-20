@@ -73,6 +73,13 @@ func (s *ClashService) GetClash(subId string) (*string, []string, error) {
 		return nil, nil, err
 	}
 
+	// Fetch distributed cluster outbounds
+	ds := &DistributedService{}
+	if distObs, distTags, err := ds.getDistributedOutbounds(client.Id); err == nil {
+		*outbounds = append(*outbounds, distObs...)
+		*outTags = append(*outTags, distTags...)
+	}
+
 	links := s.LinkService.GetLinks(&client.Links, "external", "")
 	tagNumEnable := 0
 	if len(links) > 1 {

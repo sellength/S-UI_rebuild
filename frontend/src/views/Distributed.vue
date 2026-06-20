@@ -456,35 +456,38 @@
                   <!-- 复制完整订阅链接 -->
                   <v-btn
                     v-if="sub.token"
-                    icon="mdi-content-copy"
+                    icon
                     size="small"
                     variant="text"
                     color="primary"
                     class="mr-2"
                     @click="copyText(distributedSubUrl(sub.token))"
                   >
+                    <v-icon icon="mdi-content-copy" size="18" />
                     <v-tooltip activator="parent" location="top">复制链接</v-tooltip>
                   </v-btn>
                   <!-- 二维码 -->
                   <v-btn
                     v-if="sub.token"
-                    icon="mdi-qrcode"
+                    icon
                     size="small"
                     variant="text"
                     color="cyan"
                     class="mr-2"
                     @click="showQrCode(sub.token, getClientById(sub.clientId))"
                   >
+                    <v-icon icon="mdi-qrcode" size="18" />
                     <v-tooltip activator="parent" location="top">二维码</v-tooltip>
                   </v-btn>
                   <!-- 删除 -->
                   <v-btn
-                    icon="mdi-trash-can-outline"
+                    icon
                     size="small"
                     variant="text"
                     color="error"
                     @click="deleteSubscription(sub.id)"
                   >
+                    <v-icon icon="mdi-trash-can-outline" size="18" />
                     <v-tooltip activator="parent" location="top">删除</v-tooltip>
                   </v-btn>
                 </td>

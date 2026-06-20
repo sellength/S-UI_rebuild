@@ -2,6 +2,10 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
+	"s-ui/config"
+	"s-ui/database"
 	"s-ui/database/model"
 	"s-ui/logger"
 	"s-ui/service"
@@ -11,6 +15,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	sqlite "github.com/glebarez/sqlite"
+	"gorm.io/gorm"
+	gormLogger "gorm.io/gorm/logger"
 )
 
 type APIHandler struct {
@@ -146,6 +153,67 @@ func (a *APIHandler) postHandler(c *gin.Context) {
 	case "restartApp":
 		err = a.PanelService.RestartPanel(3)
 		jsonMsg(c, "restartApp", err)
+	case "restore":
+		if config.GetDBType() != "sqlite" {
+			jsonMsg(c, "", fmt.Errorf("restore is only supported for sqlite database"))
+			return
+		}
+		file, err := c.FormFile("file")
+		if err != nil {
+			jsonMsg(c, "", fmt.Errorf("failed to get uploaded file: %w", err))
+			return
+		}
+		tempDBPath := config.GetDBPath() + ".restore"
+		if err := c.SaveUploadedFile(file, tempDBPath); err != nil {
+			jsonMsg(c, "", fmt.Errorf("failed to save uploaded file: %w", err))
+			return
+		}
+
+		tempDB, err := gorm.Open(sqlite.Open(tempDBPath), &gorm.Config{
+			Logger: gormLogger.Discard,
+		})
+		if err != nil {
+			os.Remove(tempDBPath)
+			jsonMsg(c, "", fmt.Errorf("uploaded file is not a valid sqlite database: %w", err))
+			return
+		}
+		var userCount int64
+		if err := tempDB.Table("users").Count(&userCount).Error; err != nil {
+			sqlDB, _ := tempDB.DB()
+			if sqlDB != nil {
+				sqlDB.Close()
+			}
+			os.Remove(tempDBPath)
+			jsonMsg(c, "", fmt.Errorf("uploaded database is invalid (missing 'users' table): %w", err))
+			return
+		}
+		sqlDB, _ := tempDB.DB()
+		if sqlDB != nil {
+			sqlDB.Close()
+		}
+
+		mainSQLDB, _ := database.GetDB().DB()
+		if mainSQLDB != nil {
+			mainSQLDB.Close()
+		}
+
+		mainDBPath := config.GetDBPath()
+		bakDBPath := mainDBPath + ".bak"
+		os.Remove(bakDBPath)
+		os.Rename(mainDBPath, bakDBPath)
+
+		if err := os.Rename(tempDBPath, mainDBPath); err != nil {
+			os.Rename(bakDBPath, mainDBPath)
+			jsonMsg(c, "", fmt.Errorf("failed to restore database file: %w", err))
+			return
+		}
+
+		jsonMsg(c, "restore", nil)
+
+		go func() {
+			time.Sleep(1 * time.Second)
+			os.Exit(0)
+		}()
 	case "restartSingbox":
 		err = a.ServerService.Restart()
 		jsonMsg(c, "restartSingbox", err)
@@ -403,6 +471,18 @@ func (a *APIHandler) getHandler(c *gin.Context) {
 		options := c.Query("o")
 		keypair := a.ServerService.GenKeypair(kType, options)
 		jsonObj(c, keypair, nil)
+	case "backup":
+		if config.GetDBType() != "sqlite" {
+			c.String(400, "Backup is only supported for sqlite database")
+			return
+		}
+		dbPath := config.GetDBPath()
+		c.Header("Content-Description", "File Transfer")
+		c.Header("Content-Transfer-Encoding", "binary")
+		c.Header("Content-Disposition", "attachment; filename=s-ui_backup.db")
+		c.Header("Content-Type", "application/octet-stream")
+		c.File(dbPath)
+		return
 	case "nodes":
 		nodes, err := a.NodeService.GetAll()
 		jsonObj(c, nodes, err)

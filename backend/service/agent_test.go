@@ -33,7 +33,7 @@ func TestAgentServiceRegisterAndHeartbeat(t *testing.T) {
 	initAgentTestDB(t)
 
 	nodeService := NodeService{}
-	if err := nodeService.Save(&model.Node{Name: "US-01", Code: "us-01"}); err != nil {
+	if err := nodeService.Save(&model.Node{Name: "US-01", Code: "us-01", Enable: true}); err != nil {
 		t.Fatalf("Save node error = %v", err)
 	}
 
@@ -122,10 +122,10 @@ func TestAgentServiceRegisterRejectsAgentIdMove(t *testing.T) {
 	initAgentTestDB(t)
 
 	nodeService := NodeService{}
-	if err := nodeService.Save(&model.Node{Name: "US-01", Code: "us-01"}); err != nil {
+	if err := nodeService.Save(&model.Node{Name: "US-01", Code: "us-01", Enable: true}); err != nil {
 		t.Fatalf("Save us node error = %v", err)
 	}
-	if err := nodeService.Save(&model.Node{Name: "SG-01", Code: "sg-01"}); err != nil {
+	if err := nodeService.Save(&model.Node{Name: "SG-01", Code: "sg-01", Enable: true}); err != nil {
 		t.Fatalf("Save sg node error = %v", err)
 	}
 
@@ -151,7 +151,7 @@ func TestAgentServiceReportValidatedDoesNotMarkApplied(t *testing.T) {
 	initAgentTestDB(t)
 
 	nodeService := NodeService{}
-	if err := nodeService.Save(&model.Node{Name: "US-01", Code: "us-01"}); err != nil {
+	if err := nodeService.Save(&model.Node{Name: "US-01", Code: "us-01", Enable: true}); err != nil {
 		t.Fatalf("Save node error = %v", err)
 	}
 
@@ -214,10 +214,10 @@ func TestAgentServiceReportRejectsOtherNodeVersionBeforeDeployment(t *testing.T)
 	initAgentTestDB(t)
 
 	nodeService := NodeService{}
-	if err := nodeService.Save(&model.Node{Name: "US-01", Code: "us-01"}); err != nil {
+	if err := nodeService.Save(&model.Node{Name: "US-01", Code: "us-01", Enable: true}); err != nil {
 		t.Fatalf("Save node error = %v", err)
 	}
-	if err := nodeService.Save(&model.Node{Name: "SG-01", Code: "sg-01"}); err != nil {
+	if err := nodeService.Save(&model.Node{Name: "SG-01", Code: "sg-01", Enable: true}); err != nil {
 		t.Fatalf("Save node error = %v", err)
 	}
 
@@ -269,7 +269,7 @@ func TestAgentServiceDesiredConfigIncludesCertificates(t *testing.T) {
 	t.Setenv("SUI_SECRET_KEY", "test-secret-key-at-least-32-characters")
 
 	nodeService := NodeService{}
-	if err := nodeService.Save(&model.Node{Name: "US-01", Code: "us-01"}); err != nil {
+	if err := nodeService.Save(&model.Node{Name: "US-01", Code: "us-01", Enable: true}); err != nil {
 		t.Fatalf("Save node error = %v", err)
 	}
 

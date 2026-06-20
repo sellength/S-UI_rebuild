@@ -106,7 +106,11 @@ func TestRenderDistributedAnyTLSInbound(t *testing.T) {
 	if err := database.GetDB().Create(&inbound).Error; err != nil {
 		t.Fatalf("create inbound: %v", err)
 	}
-	user := model.InboundUser{InboundId: inbound.Id, Name: "alice", Password: "secret"}
+	client := model.Client{Enable: true, Name: "alice"}
+	if err := database.GetDB().Create(&client).Error; err != nil {
+		t.Fatalf("create client: %v", err)
+	}
+	user := model.InboundUser{InboundId: inbound.Id, ClientId: client.Id, Name: "alice", Password: "secret"}
 	if err := database.GetDB().Create(&user).Error; err != nil {
 		t.Fatalf("create inbound user: %v", err)
 	}

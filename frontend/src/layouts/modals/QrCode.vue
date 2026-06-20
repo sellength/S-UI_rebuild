@@ -18,8 +18,24 @@
       <v-card-text style="overflow-y: auto; padding: 0" class="flex-grow-1">
         <div class="d-flex flex-column" style="gap: 24px; padding: 10px 0;">
           <div class="flat-card pa-4 d-flex flex-column align-center" style="border-radius: 8px;">
-            <span class="text-caption font-weight-bold text-grey-lighten-2 mb-3">自适应唯一订阅 (支持 Clash/Sing-box)</span>
+            <span class="text-caption font-weight-bold text-grey-lighten-2 mb-3">订阅配置链接格式</span>
             
+            <div class="d-flex justify-center mb-4" v-if="clientSub">
+              <v-btn-toggle
+                v-model="selectedFormat"
+                mandatory
+                color="cyan"
+                variant="tonal"
+                density="compact"
+                style="border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);"
+              >
+                <v-btn value="default" size="small">默认</v-btn>
+                <v-btn value="clash" size="small">Clash</v-btn>
+                <v-btn value="singbox" size="small">Sing-box</v-btn>
+                <v-btn value="stash" size="small">Stash</v-btn>
+              </v-btn-toggle>
+            </div>
+
             <div v-if="clientSub" class="qrcode-wrapper pa-3 bg-white rounded-lg cursor-pointer" @click="copyToClipboard(clientSub)">
               <QrcodeVue :value="clientSub" :size="size" :margin="1" />
             </div>
@@ -61,6 +77,11 @@ import { push } from 'notivue'
 
 export default {
   props: ['visible', 'token', 'client', 'settings'],
+  data() {
+    return {
+      selectedFormat: 'default'
+    }
+  },
   methods: {
     copyToClipboard(txt: string) {
       if (!txt) return
@@ -114,7 +135,12 @@ export default {
   },
   computed: {
     clientSub() {
-      return this.$props.token ? this.getSubscriptionUrl(this.$props.token) : ''
+      if (!this.$props.token) return ''
+      const baseUrl = this.getSubscriptionUrl(this.$props.token)
+      if (this.selectedFormat === 'default') {
+        return baseUrl
+      }
+      return `${baseUrl}?format=${this.selectedFormat}`
     },
     size() {
       if (window.innerWidth > 380) return 260

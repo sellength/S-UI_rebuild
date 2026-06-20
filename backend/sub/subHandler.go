@@ -70,10 +70,10 @@ func (s *SubHandler) subs(c *gin.Context) {
 	originalIsFormat := isFormat
 	if !isFormat {
 		ua := strings.ToLower(c.Request.UserAgent())
-		if strings.Contains(ua, "clash") {
+		if strings.Contains(ua, "clash") || strings.Contains(ua, "stash") {
 			format = "clash"
 			isFormat = true
-		} else if strings.Contains(ua, "sing-box") {
+		} else if strings.Contains(ua, "sing-box") || strings.Contains(ua, "singbox") {
 			format = "distributed-json"
 			isFormat = true
 		}
@@ -106,11 +106,11 @@ func (s *SubHandler) subs(c *gin.Context) {
 		switch format {
 		case "json":
 			result, err = s.JsonService.GetJson(client.Name, format)
-		case "distributed-json":
+		case "distributed-json", "sing-box", "singbox":
 			result, err = s.DistributedService.GetDistributedJson(client.Name)
 		case "distributed-source", "distributed-raw":
 			result, err = s.DistributedService.GetDistributedRaw(client.Name)
-		case "clash":
+		case "clash", "stash":
 			result, headers, err = s.ClashService.GetClash(client.Name)
 		}
 		if err != nil || result == nil {

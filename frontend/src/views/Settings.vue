@@ -43,6 +43,7 @@
         <v-tab value="t2" class="text-none font-weight-bold py-4">{{ $t('setting.sub') }}</v-tab>
         <v-tab value="t3" class="text-none font-weight-bold py-4">{{ $t('setting.jsonSub') }}</v-tab>
         <v-tab value="t4" class="text-none font-weight-bold py-4">Language</v-tab>
+        <v-tab value="t5" class="text-none font-weight-bold py-4">备份与恢复</v-tab>
       </v-tabs>
 
       <div class="pa-6">
@@ -187,6 +188,69 @@
               </v-col>
             </v-row>
           </v-window-item>
+
+          <!-- 备份与恢复 -->
+          <v-window-item value="t5">
+            <v-row class="pt-4">
+              <v-col cols="12" md="6" class="pr-md-4">
+                <v-card variant="outlined" style="border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); background: transparent;" class="pa-4 h-100 d-flex flex-column justify-space-between">
+                  <div>
+                    <div class="text-subtitle-1 font-weight-bold text-grey-lighten-3 mb-1">
+                      <v-icon color="cyan" class="mr-1" size="20">mdi-database-export</v-icon>
+                      全局备份 (Backup)
+                    </div>
+                    <div class="text-caption text-grey-lighten-1 mb-4">
+                      将面板的完整数据（包括所有节点、服务入口、TLS证书、DNS Provider、用户账户、订阅记录等）打包并导出为一份 SQLite 数据库备份文件。
+                    </div>
+                  </div>
+                  <v-btn
+                    class="tech-blue-btn text-none"
+                    prepend-icon="mdi-download"
+                    style="height: 40px; border-radius: 6px;"
+                    @click="downloadBackup"
+                  >
+                    下载备份数据
+                  </v-btn>
+                </v-card>
+              </v-col>
+
+              <v-col cols="12" md="6" class="pl-md-4">
+                <v-card variant="outlined" style="border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); background: transparent;" class="pa-4 h-100 d-flex flex-column justify-space-between">
+                  <div>
+                    <div class="text-subtitle-1 font-weight-bold text-grey-lighten-3 mb-1">
+                      <v-icon color="error" class="mr-1" size="20">mdi-database-import</v-icon>
+                      配置恢复 (Restore)
+                    </div>
+                    <div class="text-caption text-error mb-4">
+                      警告：上传备份的数据库文件将会彻底覆盖您当前所有的配置信息。导入成功后，后台服务将在 1 秒内自动重启！请谨慎操作。
+                    </div>
+                  </div>
+                  <div>
+                    <v-file-input
+                      v-model="restoreFile"
+                      label="选择备份的 .db 文件"
+                      accept=".db"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      class="dark-input w-100 mb-3"
+                    ></v-file-input>
+                    <v-btn
+                      color="error"
+                      class="text-none font-weight-bold w-100"
+                      style="height: 40px; border-radius: 6px;"
+                      :disabled="!restoreFile"
+                      :loading="restoreLoading"
+                      prepend-icon="mdi-upload"
+                      @click="uploadRestore"
+                    >
+                      开始恢复
+                    </v-btn>
+                  </div>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-window-item>
         </v-window>
       </div>
     </div>
@@ -205,6 +269,42 @@ const locale = useLocale()
 const tab = ref('t1')
 const loading:Ref = inject('loading')?? ref(false)
 const oldSettings = ref({})
+const restoreFile = ref<any>(null)
+const restoreLoading = ref(false)
+
+const downloadBackup = () => {
+  const basePath = window.location.pathname.split('/settings')[0]
+  window.open(`${window.location.origin}${basePath}/api/backup`)
+}
+
+const uploadRestore = async () => {
+  if (!restoreFile.value) return
+  restoreLoading.value = true
+  const formData = new FormData()
+  formData.append('file', restoreFile.value)
+
+  try {
+    const msg = await HttpUtils.post('api/restore', formData)
+    if (msg.success) {
+      push.success({
+        message: '数据库配置恢复成功，面板正在重启，请稍候...',
+        duration: 5000
+      })
+      await sleep(3500)
+      window.location.reload()
+    } else {
+      push.error({
+        message: msg.msg || '导入备份失败'
+      })
+    }
+  } catch (err) {
+    push.error({
+      message: '网络请求失败，请稍后重试'
+    })
+  } finally {
+    restoreLoading.value = false
+  }
+}
 
 const settings = ref({
 	webListen: '',

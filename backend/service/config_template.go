@@ -172,7 +172,7 @@ func defaultNodeDNSRaw() json.RawMessage {
 	      "tag": "google-dns-v4"
 	    }
 	  ],
-	  "final": "google-dns-v6"
+	  "final": "google-dns-v4"
 	}`)
 }
 
@@ -182,8 +182,8 @@ func defaultNodeOutboundsRaw() json.RawMessage {
 	    "type": "direct",
 	    "tag": "direct",
 	    "domain_resolver": {
-	      "server": "google-dns-v6",
-	      "strategy": "prefer_ipv6"
+	      "server": "google-dns-v4",
+	      "strategy": "prefer_ipv4"
 	    }
 	  }
 	]`)
@@ -192,8 +192,8 @@ func defaultNodeOutboundsRaw() json.RawMessage {
 func defaultNodeRouteRaw() json.RawMessage {
 	return mustCompactJSON(`{
 	  "default_domain_resolver": {
-	    "server": "google-dns-v6",
-	    "strategy": "prefer_ipv6"
+	    "server": "google-dns-v4",
+	    "strategy": "prefer_ipv4"
 	  },
 	  "rules": [
 	    {

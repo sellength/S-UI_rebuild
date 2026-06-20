@@ -139,7 +139,7 @@ type Certificate struct {
 	ActiveVersionId uint            `json:"activeVersionId" form:"activeVersionId"`
 	CreatedAt       int64           `json:"createdAt" form:"createdAt"`
 	UpdatedAt       int64           `json:"updatedAt" form:"updatedAt"`
-	NotAfter        int64           `json:"notAfter" gorm:"-"`
+	NotAfter        int64           `json:"notAfter" gorm:"->"`
 }
 
 type CertificateVersion struct {

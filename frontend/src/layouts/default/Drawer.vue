@@ -7,7 +7,7 @@
     :permanent="!isMobile"
     :width="272"
     :rail-width="64"
-    class="app-dock"
+    :class="['app-dock', { 'drawer-collapsed': !isMobile && !lockedOpen && !dockHover }]"
     @mouseenter="dockHover = true"
     @mouseleave="dockHover = false"
     @click="isMobile ? $emit('toggleDrawer') : null"
@@ -33,7 +33,7 @@
 
     <v-divider></v-divider>
 
-    <v-list density="compact" nav class="dock-list" :opened="visibleOpenedGroups">
+    <v-list density="compact" nav class="dock-list" v-model:opened="opened">
       <template v-for="item in menu" :key="item.title">
         <v-list-group
           v-if="item.children"
@@ -86,7 +86,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import router from '@/router'
 import { logout } from '@/plugins/httputil'
 
@@ -152,13 +152,30 @@ const routeKey = computed(() => {
   return route.path
 })
 
-const openedGroups = computed(() => {
-  return menu.filter(item => item.children && isGroupActive(item)).map(item => item.title)
+const opened = ref<string[]>([])
+
+const isExpanded = computed(() => {
+  return props.isMobile || lockedOpen.value || dockHover.value
 })
 
-const visibleOpenedGroups = computed(() => {
-  if (props.isMobile || lockedOpen.value || dockHover.value) return openedGroups.value
-  return []
+watch(routeKey, () => {
+  if (isExpanded.value) {
+    const activeGroup = menu.find(item => item.children && isGroupActive(item))
+    if (activeGroup && !opened.value.includes(activeGroup.title)) {
+      opened.value = [activeGroup.title]
+    }
+  }
+}, { immediate: true })
+
+watch(isExpanded, (expanded) => {
+  if (!expanded) {
+    opened.value = []
+  } else {
+    const activeGroup = menu.find(item => item.children && isGroupActive(item))
+    if (activeGroup && !opened.value.includes(activeGroup.title)) {
+      opened.value = [activeGroup.title]
+    }
+  }
 })
 
 const isItemActive = (item: MenuItem) => {
@@ -225,5 +242,11 @@ const Logout = async () => {
 .dock-logout {
   margin: 8px;
   border-radius: 8px;
+}
+
+/* 当导航栏处于折叠状态时，隐藏所有子菜单项以防止排版错乱 */
+.app-dock.drawer-collapsed :deep(.v-list-group__items),
+.app-dock.drawer-collapsed :deep(.drawer-child) {
+  display: none !important;
 }
 </style>

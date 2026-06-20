@@ -46,7 +46,11 @@ func TestPublishNodeConfigVersion(t *testing.T) {
 	if err := db.Create(&inbound).Error; err != nil {
 		t.Fatalf("create inbound: %v", err)
 	}
-	user := model.InboundUser{InboundId: inbound.Id, Name: "alice", Password: "secret"}
+	client := model.Client{Enable: true, Name: "alice"}
+	if err := db.Create(&client).Error; err != nil {
+		t.Fatalf("create client: %v", err)
+	}
+	user := model.InboundUser{InboundId: inbound.Id, ClientId: client.Id, Name: "alice", Password: "secret"}
 	if err := db.Create(&user).Error; err != nil {
 		t.Fatalf("create inbound user: %v", err)
 	}
@@ -86,16 +90,16 @@ func TestPublishNodeConfigVersion(t *testing.T) {
 	if len(config.Outbounds) != 1 {
 		t.Fatalf("expected one outbound, got %d", len(config.Outbounds))
 	}
-	if config.DNS["final"] != "google-dns-v6" {
-		t.Fatalf("expected ipv6 dns final, got %+v", config.DNS)
+	if config.DNS["final"] != "google-dns-v4" {
+		t.Fatalf("expected ipv4 dns final, got %+v", config.DNS)
 	}
 	resolver, ok := config.Outbounds[0]["domain_resolver"].(map[string]interface{})
-	if !ok || resolver["strategy"] != "prefer_ipv6" {
-		t.Fatalf("expected direct outbound prefer_ipv6 resolver, got %+v", config.Outbounds[0])
+	if !ok || resolver["strategy"] != "prefer_ipv4" {
+		t.Fatalf("expected direct outbound prefer_ipv4 resolver, got %+v", config.Outbounds[0])
 	}
 	defaultResolver, ok := config.Route["default_domain_resolver"].(map[string]interface{})
-	if !ok || defaultResolver["strategy"] != "prefer_ipv6" {
-		t.Fatalf("expected route prefer_ipv6 resolver, got %+v", config.Route)
+	if !ok || defaultResolver["strategy"] != "prefer_ipv4" {
+		t.Fatalf("expected route prefer_ipv4 resolver, got %+v", config.Route)
 	}
 	cacheFile, ok := config.Experimental["cache_file"].(map[string]interface{})
 	if !ok || cacheFile["enabled"] != true {
@@ -137,7 +141,11 @@ func TestPublishNodeConfigVersionAppliesInboundPolicyOverrides(t *testing.T) {
 	if err := db.Create(&inbound).Error; err != nil {
 		t.Fatalf("create inbound: %v", err)
 	}
-	if err := db.Create(&model.InboundUser{InboundId: inbound.Id, Name: "alice", Password: "secret"}).Error; err != nil {
+	client := model.Client{Enable: true, Name: "alice"}
+	if err := db.Create(&client).Error; err != nil {
+		t.Fatalf("create client: %v", err)
+	}
+	if err := db.Create(&model.InboundUser{InboundId: inbound.Id, ClientId: client.Id, Name: "alice", Password: "secret"}).Error; err != nil {
 		t.Fatalf("create inbound user: %v", err)
 	}
 

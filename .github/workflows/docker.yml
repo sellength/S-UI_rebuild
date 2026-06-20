@@ -19,58 +19,10 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-
-    - name: Build Frontend
-      run: |
-        cd frontend
-        npm install --legacy-peer-deps
-        npm run build
-        cd ..
-        rm -rf backend/web/html/*
-        mkdir -p backend/web/html
-        cp -r frontend/dist/* backend/web/html/
-
-    - name: Setup Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.25.5'
-        cache: true
-
-    - name: Build Backend Binary
-      run: |
-        cd backend
-        go mod tidy
-        # CGO_ENABLED=0 ensuring pure Go execution on Alpine Linux container
-        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags postgres -o sui main.go
-
-    - name: Build Sing-box Binary
-      run: |
-        # Clone official sing-box source codes at version v1.13.13
-        git clone -b v1.13.13 https://github.com/SagerNet/sing-box sing-box-src
-        cd sing-box-src
-        # Build sing-box from source with all essential feature tags
-        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags with_quic,with_grpc,with_wireguard,with_utls,with_acme,with_v2ray_api,with_clash_api,with_gvisor \
-          -v -trimpath -ldflags "-s -w -buildid=" \
-          -o ../core/sing-box ./cmd/sing-box
-        cd ..
-        chmod +x core/sing-box
-
-    - name: Docker meta
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: |
-          sellength/s-ui_dev
-        tags: |
-          type=ref,event=branch
-          type=ref,event=tag
-          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' }}
-
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
@@ -80,11 +32,46 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-    - name: Build and push
+    # 1. Panel Core Image Metadata and Build/Push
+    - name: Docker meta for s-ui
+      id: meta-sui
+      uses: docker/metadata-action@v5
+      with:
+        images: |
+          sellength/s-ui_dev
+        tags: |
+          type=ref,event=branch
+          type=ref,event=tag
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' }}
+
+    - name: Build and push s-ui Panel
       uses: docker/build-push-action@v6
       with:
         context: .
+        file: Dockerfile
         push: true
-        platforms: linux/amd64
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+        platforms: linux/amd64,linux/arm64
+        tags: ${{ steps.meta-sui.outputs.tags }}
+        labels: ${{ steps.meta-sui.outputs.labels }}
+
+    # 2. Sing-box Runner Image Metadata and Build/Push
+    - name: Docker meta for sing-box
+      id: meta-singbox
+      uses: docker/metadata-action@v5
+      with:
+        images: |
+          sellength/s-ui_rebuild-singbox
+        tags: |
+          type=ref,event=branch
+          type=ref,event=tag
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' }}
+
+    - name: Build and push sing-box
+      uses: docker/build-push-action@v6
+      with:
+        context: core/
+        file: core/Dockerfile
+        push: true
+        platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386
+        tags: ${{ steps.meta-singbox.outputs.tags }}
+        labels: ${{ steps.meta-singbox.outputs.labels }}

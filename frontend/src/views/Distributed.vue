@@ -108,8 +108,28 @@
                   </div>
 
                   <div class="cluster-node-cell">
-                    <div class="cluster-node-config-wrap">
+                    <div v-if="nodeSyncProgress[node.id] !== undefined" class="d-flex flex-column align-center" style="width: 120px;">
+                      <div class="text-caption text-primary mb-1 font-weight-bold d-flex align-center">
+                        <v-progress-circular indeterminate size="12" width="2" class="mr-1" color="primary" />
+                        同步中 {{ nodeSyncProgress[node.id] }}%
+                      </div>
+                      <v-progress-linear
+                        :model-value="nodeSyncProgress[node.id]"
+                        color="primary"
+                        height="6"
+                        rounded
+                        striped
+                        active
+                      />
+                    </div>
+                    <div v-else class="cluster-node-config-wrap">
                       <span class="config-version-pill" :class="nodeConfigClass(node)">
+                        <v-icon 
+                          v-if="nodeConfigClass(node) === 'config-version-pill--syncing'" 
+                          icon="mdi-sync" 
+                          class="mr-1 rotate-anim" 
+                          size="12" 
+                        />
                         {{ nodeConfigLabel(node) }}
                       </span>
                       <span class="cluster-node-submeta">{{ nodeInboundCount(node.id) }} 个服务入口</span>
@@ -123,15 +143,33 @@
                   <div class="cluster-node-cell cluster-node-actions">
                     <v-btn
                       size="small"
-                      variant="outlined"
-                      class="text-none"
-                      prepend-icon="mdi-information-outline"
+                      variant="tonal"
+                      color="primary"
+                      class="text-none tech-action-btn"
+                      prepend-icon="mdi-pencil-outline"
                       @click="openNodeDrawer(node)"
                     >
-                      详情
+                      编辑
                     </v-btn>
-                    <v-btn class="tech-blue-btn text-none" size="small" prepend-icon="mdi-rocket-launch-outline" @click="publishNode(node.id)">
+                    <v-btn
+                      class="tech-blue-btn text-none tech-action-btn"
+                      size="small"
+                      prepend-icon="mdi-rocket-launch-outline"
+                      :loading="publishingNodeIds.includes(node.id)"
+                      :disabled="publishingNodeIds.includes(node.id)"
+                      @click="publishNode(node.id)"
+                    >
                       下发配置
+                    </v-btn>
+                    <v-btn
+                      size="small"
+                      variant="tonal"
+                      color="error"
+                      class="text-none tech-action-btn"
+                      prepend-icon="mdi-delete-outline"
+                      @click="deleteNode(node.id)"
+                    >
+                      删除
                     </v-btn>
                   </div>
                 </div>
@@ -562,20 +600,45 @@
         <div class="guide-progress mb-4">
           <div class="guide-progress-bar" :style="{ width: `${Math.round((completedSetupSteps / setupSteps.length) * 100)}%` }"></div>
         </div>
-        <div class="setup-list">
+        <div class="setup-list mt-2">
           <button
-            v-for="step in setupSteps"
+            v-for="(step, index) in setupSteps"
             :key="step.key"
-            class="setup-step guide-step"
+            class="setup-step guide-step-item"
+            :class="{ 
+              'is-active': step.key === nextSetupStep?.key && !step.done,
+              'is-done': step.done,
+              'is-pending': step.key !== nextSetupStep?.key && !step.done 
+            }"
             type="button"
             @click="goSetupStep(step); guideDialog = false"
           >
-            <v-icon :icon="step.done ? 'mdi-check-circle' : step.icon" :color="step.done ? 'success' : 'primary'" size="24" />
-            <div>
-              <div class="text-body-2 font-weight-medium text-grey-lighten-2">{{ step.title }}</div>
+            <!-- 步骤序号与垂直流水线 -->
+            <div class="step-connector-wrapper">
+              <div class="step-badge">
+                <v-icon v-if="step.done" icon="mdi-check" color="success" size="14" />
+                <span v-else>{{ index + 1 }}</span>
+              </div>
+              <div class="step-connector-line"></div>
+            </div>
+            
+            <!-- 步骤主要内容 -->
+            <div class="step-body ml-2">
+              <div class="d-flex align-center">
+                <v-icon :icon="step.icon" class="mr-2" size="18" />
+                <span class="text-body-2 font-weight-medium text-grey-lighten-2">{{ step.title }}</span>
+                <!-- 活动步骤指示小红点/呼吸灯 -->
+                <span v-if="step.key === nextSetupStep?.key && !step.done" class="pulse-dot ml-2"></span>
+              </div>
               <div class="text-caption text-grey mt-1">{{ step.caption }}</div>
             </div>
-            <v-icon icon="mdi-chevron-right" color="grey" />
+
+            <!-- 右侧操作状态药丸 -->
+            <div class="step-action-badge">
+              <v-chip v-if="step.done" size="x-small" color="success" variant="tonal" class="text-none">已完成</v-chip>
+              <v-chip v-else-if="step.key === nextSetupStep?.key" size="x-small" color="primary" variant="flat" class="text-none animate-pulse-btn">立即开始</v-chip>
+              <v-chip v-else size="x-small" color="grey" variant="tonal" class="text-none">等待中</v-chip>
+            </div>
           </button>
         </div>
       </v-card>
@@ -1094,6 +1157,8 @@ const subscriptionClientId = ref<number | null>(null)
 const issuingCertificateId = ref(0)
 const renderingInboundId = ref(0)
 const currentUnix = ref(Math.floor(Date.now() / 1000))
+const publishingNodeIds = ref<number[]>([])
+const nodeSyncProgress = ref<Record<number, number>>({})
 const templateError = ref('')
 const templateEditorScrollTop = ref(0)
 const templateEditorScrollLeft = ref(0)
@@ -1312,7 +1377,7 @@ const visibleTabs = computed(() => {
   if (route.path === '/subscriptions') return [{ title: '订阅', value: 'subscriptions' }]
   return clusterTabs
 })
-const showInlineTabs = computed(() => route.path === '/subscriptions' && visibleTabs.value.length > 1)
+const showInlineTabs = computed(() => route.path === '/distributed' && visibleTabs.value.length > 1)
 const pageTitle = computed(() => {
   if (route.path === '/subscriptions') return '订阅'
   return '集群管理'
@@ -1489,7 +1554,8 @@ onMounted(() => {
   loadAll()
   healthTimer = setInterval(() => {
     currentUnix.value = Math.floor(Date.now() / 1000)
-  }, 30000)
+    loadNodes()
+  }, 15000)
 })
 
 onUnmounted(() => {
@@ -1683,6 +1749,14 @@ async function deleteSelectedInbounds() {
   await loadDistributedInbounds()
 }
 
+async function deleteNode(id: number) {
+  if (!window.confirm("确定删除该节点吗？此操作将彻底删除该节点及其所有的服务入口，且不可恢复！")) return
+  const msg = await HttpUtils.post('api/deleteNode', toForm({ id }))
+  if (msg.success) {
+    await loadAll()
+  }
+}
+
 async function deleteSubscription(id: number) {
   if (!window.confirm("确定删除该订阅 Token 吗？删除后此 Token 对应的所有客户端将无法再次拉取配置！")) return
   const msg = await HttpUtils.post(`api/deleteSubscription?id=${id}`, null)
@@ -1759,8 +1833,52 @@ function openNodeConfig(nodeId: number) {
 }
 
 async function publishNode(nodeId: number) {
-  await HttpUtils.post('api/publishNodeConfig', toForm({ nodeId }))
-  await loadConfigVersions()
+  if (publishingNodeIds.value.includes(nodeId)) return
+
+  publishingNodeIds.value.push(nodeId)
+  nodeSyncProgress.value[nodeId] = 10
+
+  const progressTimer = setInterval(() => {
+    if (nodeSyncProgress.value[nodeId] !== undefined && nodeSyncProgress.value[nodeId] < 90) {
+      nodeSyncProgress.value[nodeId] += Math.floor(Math.random() * 12) + 5
+      if (nodeSyncProgress.value[nodeId] > 90) {
+        nodeSyncProgress.value[nodeId] = 90
+      }
+    }
+  }, 350)
+
+  try {
+    await HttpUtils.post('api/publishNodeConfig', toForm({ nodeId }))
+    await loadConfigVersions()
+
+    let checkCount = 0
+    const checkSync = async () => {
+      await loadNodes()
+      const node = nodes.value.find(n => n.id === nodeId)
+      if (node) {
+        const published = String(node.publishedSha256 || '').trim()
+        const applied = String(node.appliedSha256 || '').trim()
+
+        if ((published === applied && published !== '') || checkCount > 15) {
+          clearInterval(progressTimer)
+          nodeSyncProgress.value[nodeId] = 100
+          setTimeout(() => {
+            publishingNodeIds.value = publishingNodeIds.value.filter(id => id !== nodeId)
+            delete nodeSyncProgress.value[nodeId]
+          }, 800)
+          return
+        }
+      }
+      checkCount++
+      setTimeout(checkSync, 1000)
+    }
+
+    setTimeout(checkSync, 1000)
+  } catch (err) {
+    clearInterval(progressTimer)
+    publishingNodeIds.value = publishingNodeIds.value.filter(id => id !== nodeId)
+    delete nodeSyncProgress.value[nodeId]
+  }
 }
 
 async function createSubscription() {
@@ -1974,22 +2092,22 @@ function defaultFullNodeTemplate() {
         { type: 'tls', server: '2001:4860:4860::8888', tag: 'google-dns-v6' },
         { type: 'tls', server: '8.8.8.8', tag: 'google-dns-v4' },
       ],
-      final: 'google-dns-v6',
+      final: 'google-dns-v4',
     },
     outbounds: [
       {
         type: 'direct',
         tag: 'direct',
         domain_resolver: {
-          server: 'google-dns-v6',
-          strategy: 'prefer_ipv6',
+          server: 'google-dns-v4',
+          strategy: 'prefer_ipv4',
         },
       },
     ],
     route: {
       default_domain_resolver: {
-        server: 'google-dns-v6',
-        strategy: 'prefer_ipv6',
+        server: 'google-dns-v4',
+        strategy: 'prefer_ipv4',
       },
       rules: [
         {
@@ -2558,7 +2676,7 @@ function nodeConfigClass(node: any) {
     return 'config-version-pill--pending'
   }
   if (published !== applied) {
-    return ''
+    return 'config-version-pill--syncing'
   }
   return 'config-version-pill--success'
 }
@@ -2974,28 +3092,128 @@ function randomPassword() {
   gap: 10px;
 }
 
-.setup-step {
+/* 时间轴 stepper 样式 */
+.guide-step-item {
+  position: relative;
   display: grid;
-  grid-template-columns: 28px 1fr;
-  gap: 10px;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 12px;
   width: 100%;
-  padding: 12px;
+  padding: 16px;
   border: 1px solid var(--panel-card-border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--panel-strong-bg);
   text-align: left;
-  transition: border-color 0.16s ease, background 0.16s ease;
+  transition: all 0.24s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.setup-step:hover {
+.guide-step-item:hover {
   border-color: rgba(0, 210, 255, 0.48);
-  background: var(--panel-soft-bg-hover);
+  background: rgba(0, 210, 255, 0.04);
+  transform: translateY(-1px);
 }
 
-.guide-step {
-  grid-template-columns: 30px 1fr 20px;
-  align-items: center;
+/* 激活的当前步骤高亮效果 */
+.guide-step-item.is-active {
+  border-color: rgb(var(--v-theme-primary));
+  background: linear-gradient(135deg, rgba(var(--v-theme-primary), 0.15), var(--panel-strong-bg));
+  box-shadow: 0 0 16px rgba(var(--v-theme-primary), 0.18);
 }
+
+.guide-step-item.is-active .text-grey-lighten-2 {
+  color: rgb(var(--v-theme-primary)) !important;
+  font-weight: 600 !important;
+}
+
+/* 时间轴线条和徽章 */
+.step-connector-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  position: relative;
+}
+
+.step-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(var(--v-border-color), 0.12);
+  border: 1px solid rgba(var(--v-border-color), 0.24);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--panel-muted-text);
+  z-index: 2;
+  transition: all 0.2s ease;
+}
+
+.is-done .step-badge {
+  background: rgba(var(--v-theme-success), 0.12);
+  border-color: rgb(var(--v-theme-success));
+  color: rgb(var(--v-theme-success));
+}
+
+.is-active .step-badge {
+  background: rgb(var(--v-theme-primary));
+  border-color: rgb(var(--v-theme-primary));
+  color: white;
+}
+
+.step-connector-line {
+  position: absolute;
+  top: 24px;
+  bottom: -28px;
+  width: 2px;
+  background: rgba(var(--v-border-color), 0.08);
+  z-index: 1;
+}
+
+.guide-step-item:last-child .step-connector-line {
+  display: none;
+}
+
+/* 呼吸小红点 */
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  background-color: rgb(var(--v-theme-primary));
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 0 0 rgba(var(--v-theme-primary), 0.7);
+  animation: pulse-animation 1.6s infinite cubic-bezier(0.66, 0, 0, 1);
+}
+
+@keyframes pulse-animation {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--v-theme-primary), 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(var(--v-theme-primary), 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--v-theme-primary), 0);
+  }
+}
+
+.animate-pulse-btn {
+  animation: pulse-button 2s infinite ease-in-out;
+}
+
+@keyframes pulse-button {
+  0%, 100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
+
 
 .cluster-node-table {
   display: grid;
@@ -3005,7 +3223,7 @@ function randomPassword() {
 .cluster-node-table-head,
 .cluster-node-row {
   display: grid;
-  grid-template-columns: minmax(220px, 1.15fr) minmax(360px, 1.8fr) minmax(150px, 0.8fr) minmax(128px, 0.7fr) minmax(150px, 0.7fr);
+  grid-template-columns: minmax(180px, 1fr) minmax(280px, 1.5fr) minmax(120px, 0.7fr) minmax(100px, 0.6fr) minmax(240px, 1.2fr);
   align-items: center;
   gap: 14px;
 }
@@ -3476,6 +3694,61 @@ function randomPassword() {
   .node-card-main {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+/* 微交互操作按钮动效 */
+.tech-action-btn {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.tech-action-btn:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.15);
+}
+
+.tech-action-btn:active {
+  transform: translateY(0px) scale(0.96);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* 同步中流光动画 */
+.config-version-pill--syncing {
+  background: rgba(37, 99, 235, 0.12) !important;
+  color: #2563eb !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.config-version-pill--syncing::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.5s infinite;
+}
+
+/* 慢速旋转 */
+.rotate-anim {
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
   }
 }
 </style>

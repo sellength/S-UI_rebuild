@@ -67,6 +67,7 @@ func (s *SubHandler) subs(c *gin.Context) {
 	var err error
 	subId := c.Param("subid")
 	format, isFormat := c.GetQuery("format")
+	originalIsFormat := isFormat
 	if !isFormat {
 		ua := strings.ToLower(c.Request.UserAgent())
 		if strings.Contains(ua, "clash") {
@@ -133,6 +134,14 @@ func (s *SubHandler) subs(c *gin.Context) {
 
 	if len(headers) > 0 {
 		s.addHeaders(c, headers)
+	}
+
+	if !originalIsFormat {
+		subEncode, _ := s.SettingService.GetSubEncode()
+		if subEncode {
+			encoded := base64.StdEncoding.EncodeToString([]byte(*result))
+			result = &encoded
+		}
 	}
 
 	c.String(200, *result)

@@ -609,6 +609,7 @@ services:
       - SUI_AGENT_REGISTER_TOKEN=same-as-SUI_AGENT_REGISTER_TOKEN # 控制端注册 Token
       - SUI_AGENT_INTERVAL=30s                                  # 同步时间间隔
       - SUI_AGENT_RELOAD_COMMAND=docker restart sing-box        # 配置更新后的重启命令
+      - SUI_AGENT_CHECK_CONFIG=false                            # 容器部署时 Agent 内部无 sing-box，需设为 false 避免校验报错
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock               # 允许控制宿主机 Docker 重启 sing-box
       - ./configs:/usr/local/s-ui-agent/configs

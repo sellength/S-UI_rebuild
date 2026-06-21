@@ -211,7 +211,7 @@ func heartbeat(client *http.Client, cfg *agentConfig) error {
 		var api singbox.V2rayAPI
 		apiAddr := os.Getenv("SUI_SINGBOX_API")
 		if apiAddr == "" {
-			apiAddr = "127.0.0.1:1080"
+			apiAddr = "127.0.0.1:10080"
 		}
 		if err := api.Init(apiAddr); err == nil {
 			if s, err := api.GetStats(true); err == nil {

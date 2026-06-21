@@ -104,7 +104,7 @@ func renderNodeConfigJson(nodeId uint) ([]byte, error) {
 				}
 			}
 			if _, ok := v2rayApiObj["listen"]; !ok {
-				v2rayApiObj["listen"] = "127.0.0.1:1080"
+				v2rayApiObj["listen"] = "127.0.0.1:10080"
 			}
 
 			statsObj := map[string]interface{}{}

@@ -52,11 +52,12 @@ if [ "$YES" != "true" ]; then
   esac
 fi
 
-systemctl stop s-ui 2>/dev/null || true
-systemctl disable s-ui 2>/dev/null || true
+systemctl stop s-ui sing-box 2>/dev/null || true
+systemctl disable s-ui sing-box 2>/dev/null || true
 rm -f "$SERVICE_FILE"
+rm -f "/etc/systemd/system/sing-box.service"
 systemctl daemon-reload
-systemctl reset-failed s-ui 2>/dev/null || true
+systemctl reset-failed s-ui sing-box 2>/dev/null || true
 
 if [ "$PURGE" = "true" ]; then
   rm -rf "$INSTALL_DIR"

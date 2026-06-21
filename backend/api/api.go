@@ -154,10 +154,6 @@ func (a *APIHandler) postHandler(c *gin.Context) {
 		err = a.PanelService.RestartPanel(3)
 		jsonMsg(c, "restartApp", err)
 	case "restore":
-		if config.GetDBType() != "sqlite" {
-			jsonMsg(c, "", fmt.Errorf("restore is only supported for sqlite database"))
-			return
-		}
 		file, err := c.FormFile("file")
 		if err != nil {
 			jsonMsg(c, "", fmt.Errorf("failed to get uploaded file: %w", err))
@@ -187,6 +183,99 @@ func (a *APIHandler) postHandler(c *gin.Context) {
 			jsonMsg(c, "", fmt.Errorf("uploaded database is invalid (missing 'users' table): %w", err))
 			return
 		}
+
+		if config.GetDBType() != "sqlite" {
+			mainDB := database.GetDB()
+			tx := mainDB.Begin()
+			if tx.Error != nil {
+				sqlDB, _ := tempDB.DB()
+				if sqlDB != nil {
+					sqlDB.Close()
+				}
+				os.Remove(tempDBPath)
+				jsonMsg(c, "", fmt.Errorf("failed to start transaction: %w", tx.Error))
+				return
+			}
+
+			if config.GetDBType() == "postgres" {
+				tx.Exec("SET session_replication_role = 'replica';")
+			}
+
+			err = func() error {
+				if err := migrateTable[model.Setting](tempDB, tx); err != nil { return fmt.Errorf("settings: %w", err) }
+				if err := migrateTable[model.Tls](tempDB, tx); err != nil { return fmt.Errorf("tls: %w", err) }
+				if err := migrateTable[model.InboundData](tempDB, tx); err != nil { return fmt.Errorf("inbound_data: %w", err) }
+				if err := migrateTable[model.User](tempDB, tx); err != nil { return fmt.Errorf("users: %w", err) }
+				if err := migrateTable[model.Client](tempDB, tx); err != nil { return fmt.Errorf("clients: %w", err) }
+				if err := migrateTable[model.Stats](tempDB, tx); err != nil { return fmt.Errorf("stats: %w", err) }
+				if err := migrateTable[model.Changes](tempDB, tx); err != nil { return fmt.Errorf("changes: %w", err) }
+				if err := migrateTable[model.Node](tempDB, tx); err != nil { return fmt.Errorf("nodes: %w", err) }
+				if err := migrateTable[model.NodeAgent](tempDB, tx); err != nil { return fmt.Errorf("node_agents: %w", err) }
+				if err := migrateTable[model.NodeGroup](tempDB, tx); err != nil { return fmt.Errorf("node_groups: %w", err) }
+				if err := migrateTable[model.NodeGroupMember](tempDB, tx); err != nil { return fmt.Errorf("node_group_members: %w", err) }
+				if err := migrateTable[model.DNSProvider](tempDB, tx); err != nil { return fmt.Errorf("dns_providers: %w", err) }
+				if err := migrateTable[model.Certificate](tempDB, tx); err != nil { return fmt.Errorf("certificates: %w", err) }
+				if err := migrateTable[model.CertificateVersion](tempDB, tx); err != nil { return fmt.Errorf("certificate_versions: %w", err) }
+				if err := migrateTable[model.ProtocolTemplate](tempDB, tx); err != nil { return fmt.Errorf("protocol_templates: %w", err) }
+				if err := migrateTable[model.DistributedInbound](tempDB, tx); err != nil { return fmt.Errorf("distributed_inbounds: %w", err) }
+				if err := migrateTable[model.InboundUser](tempDB, tx); err != nil { return fmt.Errorf("inbound_users: %w", err) }
+				if err := migrateTable[model.ConfigVersion](tempDB, tx); err != nil { return fmt.Errorf("config_versions: %w", err) }
+				if err := migrateTable[model.ConfigDeployment](tempDB, tx); err != nil { return fmt.Errorf("config_deployments: %w", err) }
+				if err := migrateTable[model.NodeHeartbeat](tempDB, tx); err != nil { return fmt.Errorf("node_heartbeats: %w", err) }
+				if err := migrateTable[model.NodeMetric](tempDB, tx); err != nil { return fmt.Errorf("node_metrics: %w", err) }
+				if err := migrateTable[model.Subscription](tempDB, tx); err != nil { return fmt.Errorf("subscriptions: %w", err) }
+				if err := migrateTable[model.SubStoreIntegration](tempDB, tx); err != nil { return fmt.Errorf("sub_store_integrations: %w", err) }
+				if err := migrateTable[model.AuditLog](tempDB, tx); err != nil { return fmt.Errorf("audit_logs: %w", err) }
+
+				if config.GetDBType() == "postgres" {
+					tables := []string{
+						"tls", "inbound_data", "users", "stats", "clients", "changes", "node_agents",
+						"node_group_members", "dns_providers", "certificates", "protocol_templates",
+						"inbound_users", "config_versions", "config_deployments", "node_heartbeats",
+						"node_metrics", "subscriptions", "audit_logs", "settings", "nodes", "node_groups",
+						"certificate_versions", "distributed_inbounds", "sub_store_integrations",
+					}
+					for _, table := range tables {
+						seq := fmt.Sprintf("%s_id_seq", table)
+						query := fmt.Sprintf("SELECT setval('%s', COALESCE(max(id), 1)) FROM \"%s\";", seq, table)
+						if err := tx.Exec(query).Error; err != nil {
+							return fmt.Errorf("reset sequence for table %s: %w", table, err)
+						}
+					}
+				}
+				return nil
+			}()
+
+			if config.GetDBType() == "postgres" {
+				tx.Exec("SET session_replication_role = 'origin';")
+			}
+
+			sqlDB, _ := tempDB.DB()
+			if sqlDB != nil {
+				sqlDB.Close()
+			}
+			os.Remove(tempDBPath)
+
+			if err != nil {
+				tx.Rollback()
+				jsonMsg(c, "", fmt.Errorf("failed to migrate data: %w", err))
+				return
+			}
+
+			if err := tx.Commit().Error; err != nil {
+				jsonMsg(c, "", fmt.Errorf("failed to commit transaction: %w", err))
+				return
+			}
+
+			jsonMsg(c, "restore", nil)
+
+			go func() {
+				time.Sleep(1 * time.Second)
+				os.Exit(0)
+			}()
+			return
+		}
+
 		sqlDB, _ := tempDB.DB()
 		if sqlDB != nil {
 			sqlDB.Close()
@@ -599,4 +688,22 @@ func formBool(c *gin.Context, key string, fallback bool) bool {
 		return fallback
 	}
 	return parsed
+}
+
+func migrateTable[T any](tempDB *gorm.DB, mainDB *gorm.DB) error {
+	var items []T
+	if err := tempDB.Find(&items).Error; err != nil {
+		return err
+	}
+	if len(items) == 0 {
+		return nil
+	}
+	var placeholder T
+	if err := mainDB.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&placeholder).Error; err != nil {
+		return err
+	}
+	if err := mainDB.Create(&items).Error; err != nil {
+		return err
+	}
+	return nil
 }

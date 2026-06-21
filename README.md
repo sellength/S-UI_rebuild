@@ -72,7 +72,7 @@ Control Plane 面板 -> 远端 Agent -> sing-box 配置文件 -> 客户端订阅
 详细状态见 [docs/PREVIEW_0_1.md](docs/PREVIEW_0_1.md)。
 
 ## 架构
-![S-UI Distributed System Architecture](docs/assets/s_ui_architecture.png)
+![S-UI Distributed System Architecture](docs/assets/s_ui_architecture_v2.png)
 
 Control Plane 负责：
 

@@ -702,7 +702,7 @@ func migrateTable[T any](tempDB *gorm.DB, mainDB *gorm.DB) error {
 	if err := mainDB.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&placeholder).Error; err != nil {
 		return err
 	}
-	if err := mainDB.Create(&items).Error; err != nil {
+	if err := mainDB.CreateInBatches(&items, 100).Error; err != nil {
 		return err
 	}
 	return nil

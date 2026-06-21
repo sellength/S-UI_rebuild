@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"s-ui/database"
 	"s-ui/database/model"
+	"s-ui/logger"
 	"strings"
 	"time"
 )
@@ -31,8 +32,9 @@ type AgentHeartbeatRequest struct {
 	SingboxStatus      string `json:"singboxStatus" form:"singboxStatus"`
 	AgentVersion       string `json:"agentVersion" form:"agentVersion"`
 	SingboxVersion     string `json:"singboxVersion" form:"singboxVersion"`
-	ResourceSummaryRaw string `json:"resourceSummary" form:"resourceSummary"`
-	AppliedSha256      string `json:"appliedSha256" form:"appliedSha256"`
+	ResourceSummaryRaw string         `json:"resourceSummary" form:"resourceSummary"`
+	AppliedSha256      string         `json:"appliedSha256" form:"appliedSha256"`
+	Stats              []*model.Stats `json:"stats" form:"stats"`
 }
 
 type AgentConfigReportRequest struct {
@@ -151,7 +153,17 @@ func (s *AgentService) Heartbeat(req *AgentHeartbeatRequest) error {
 		ResourceSummary: normalizeRawJSON(req.ResourceSummaryRaw),
 		CreatedAt:       now,
 	}
-	return db.Create(&heartbeat).Error
+	if err := db.Create(&heartbeat).Error; err != nil {
+		return err
+	}
+
+	if len(req.Stats) > 0 {
+		var statsService StatsService
+		if err := statsService.SaveStats(req.Stats); err != nil {
+			logger.Warning("Save agent stats failed: ", err)
+		}
+	}
+	return nil
 }
 
 func (s *AgentService) GetDesiredConfig(agentId string, agentToken string) (*AgentDesiredConfig, error) {

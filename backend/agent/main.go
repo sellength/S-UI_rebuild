@@ -13,6 +13,9 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"s-ui/database/model"
+	"s-ui/singbox"
 )
 
 type agentConfig struct {
@@ -203,6 +206,21 @@ func heartbeat(client *http.Client, cfg *agentConfig) error {
 	state := loadState(cfg.StatePath)
 	singboxStatus, singboxVersion := collectSingboxHealth(cfg)
 
+	var stats []*model.Stats
+	if singboxStatus == "running" {
+		var api singbox.V2rayAPI
+		apiAddr := os.Getenv("SUI_SINGBOX_API")
+		if apiAddr == "" {
+			apiAddr = "127.0.0.1:1080"
+		}
+		if err := api.Init(apiAddr); err == nil {
+			if s, err := api.GetStats(true); err == nil {
+				stats = s
+			}
+			api.Close()
+		}
+	}
+
 	body := map[string]interface{}{
 		"configVersion":  state.LastAppliedVersion,
 		"agentStatus":    "online",
@@ -210,6 +228,7 @@ func heartbeat(client *http.Client, cfg *agentConfig) error {
 		"agentVersion":   "0.1.0",
 		"singboxVersion": singboxVersion,
 		"appliedSha256":  state.AppliedSha256,
+		"stats":          stats,
 		"resourceSummary": fmt.Sprintf(
 			`{"goos":%q,"goarch":%q,"goroutines":%d,"singboxBin":%q}`,
 			runtime.GOOS,

@@ -595,8 +595,6 @@ curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/docke
 ```
 或者手动在 `/opt/s-ui-agent` 目录下创建并编写 `docker-compose.yml`：
 ```yaml
-version: '3.8'
-
 services:
   s-ui-agent:
     image: sellength/s-ui_agent:latest
@@ -663,10 +661,39 @@ docker compose logs -f sing-box
 
 ### 方式三：Podman / Podman Compose 容器部署 (双容器 Sidecar 模式)
 
-在某些默认自带 Podman 的系统（如 Rocky Linux / CentOS 8+ / RHEL）中，您无需安装 Docker，可以直接利用 Podman 及其 Compose 兼容层以容器化方式部署 Agent。
+在某些默认自带 Podman 或需要无根容器环境的系统（如 Rocky Linux / CentOS 8+ / RHEL / Ubuntu）中，您无需安装 Docker，可以直接利用 Podman 部署 Agent。
 
-#### 1. 开启 Podman Socket 服务与 Docker 兼容链接
-由于 Podman 默认无常驻守护进程，必须在节点上开启 API Socket 服务，并建立 `/var/run/docker.sock` 软链接打通兼容通道：
+#### 1. 安装 Podman 及 Compose 支持
+
+根据您的操作系统，执行以下命令安装：
+
+##### CentOS / RHEL / Rocky Linux
+```sh
+# 安装 podman 核心程序及 docker 兼容命令行
+sudo dnf install -y podman podman-docker
+
+# 方式 A：使用 podman-compose 运行（纯 Podman 生态）
+sudo dnf install -y podman-compose
+
+# 方式 B：使用官方 docker-compose（推荐，通过 API 适配器，即用户遇到的情况）
+sudo dnf install -y docker-compose-plugin
+```
+
+##### Ubuntu / Debian
+```sh
+sudo apt-get update
+# 安装 podman
+sudo apt-get install -y podman
+
+# 方式 A：安装 podman-compose
+sudo apt-get install -y podman-compose
+
+# 方式 B：安装 docker-compose
+sudo apt-get install -y docker-compose
+```
+
+#### 2. 开启 Podman Socket 服务与 Docker 兼容链接
+由于 Podman 默认无常驻守护进程，如果要使用 Docker Compose 或由 Agent 容器控制其它容器，必须在节点上开启 API Socket 服务，并建立 `/var/run/docker.sock` 软链接打通兼容通道：
 ```sh
 # 开启并开机启动 Podman Socket
 sudo systemctl enable --now podman.socket
@@ -697,6 +724,18 @@ sed -i "s/same-as-SUI_AGENT_REGISTER_TOKEN/控制端的SUI_AGENT_REGISTER_TOKEN�
 ```
 
 #### 4. 启动与查看日志
+根据您安装的 Compose 兼容插件，选择以下一种方式启动：
+
+##### 方式 A：使用 podman-compose
+```sh
+# 启动容器
+podman-compose up -d
+
+# 查看 Agent 同步与心跳日志
+podman-compose logs -f s-ui-agent
+```
+
+##### 方式 B：使用 docker-compose / docker compose
 ```sh
 # 启动容器
 docker compose up -d

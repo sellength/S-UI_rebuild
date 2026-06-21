@@ -440,9 +440,9 @@ docker compose up -d
 
 ## Agent 部署
 
-Agent 安装在每台远端节点上。它主动连接 Control Plane，不需要在节点上额外开放 Agent 入站端口。
+Agent 安装在每台远端节点上。它主动连接 Control Plane，不需要在节点上额外开放 Agent 入站端口。目前支持 Systemd 实体机一键部署 和 Docker 容器化部署 两种模式。
 
-### 1. 一键安装 Agent
+### 方式一：Systemd 实体机一键脚本
 
 节点上执行：
 
@@ -570,6 +570,76 @@ sudo systemctl restart s-ui-agent
 ```
 
 更多细节见 [docs/AGENT_RUNTIME.md](docs/AGENT_RUNTIME.md) 和 [docs/AGENT_API.md](docs/AGENT_API.md)。
+
+### 方式二：Docker Compose 容器部署 (双容器 Sidecar 模式)
+
+当您的节点（Data Plane）环境完全基于 Docker 时，推荐使用双容器 Sidecar 模式进行部署。
+
+在该模式下：
+1. `s-ui-agent` 容器负责主动与控制端（Control Plane）进行心跳和配置同步，将最新配置和证书拉取到本地共享卷中。
+2. `sing-box` 容器负责挂载并读取该共享配置运行。
+3. `s-ui-agent` 容器通过挂载主机的 `/var/run/docker.sock`，可以在配置更新后通过 `docker restart sing-box` 命令来重启旁边的 `sing-box` 容器。
+
+#### 1. 创建部署目录
+在节点服务器上执行：
+```sh
+mkdir -p /opt/s-ui-agent
+cd /opt/s-ui-agent
+mkdir -p configs certs
+```
+
+#### 2. 编写 `docker-compose.yml`
+在 `/opt/s-ui-agent` 目录下创建 `docker-compose.yml`：
+```yaml
+version: '3.8'
+
+services:
+  s-ui-agent:
+    image: sellength/s-ui_agent:latest
+    container_name: s-ui-agent
+    restart: always
+    network_mode: host
+    environment:
+      - SUI_AGENT_BASE_URL=https://panel.example.com/app/agent  # 控制端 Agent API 地址
+      - SUI_NODE_CODE=us-01                                     # 节点代号
+      - SUI_AGENT_ID=agent-us-01                               # 节点 Agent 唯一 ID
+      - SUI_AGENT_TOKEN=replace-with-node-agent-token           # 节点专属 Token
+      - SUI_AGENT_REGISTER_TOKEN=same-as-SUI_AGENT_REGISTER_TOKEN # 控制端注册 Token
+      - SUI_AGENT_INTERVAL=30s                                  # 同步时间间隔
+      - SUI_AGENT_RELOAD_COMMAND=docker restart sing-box        # 配置更新后的重启命令
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock               # 允许控制宿主机 Docker 重启 sing-box
+      - ./configs:/usr/local/s-ui-agent/configs
+      - ./certs:/usr/local/s-ui-agent/certs
+      - ./state.json:/usr/local/s-ui-agent/state.json
+
+  sing-box:
+    image: sellength/s-ui_rebuild-singbox:latest
+    container_name: sing-box
+    restart: always
+    network_mode: host
+    volumes:
+      - ./configs/config.json:/etc/sing-box/config.json
+      - ./certs:/usr/local/s-ui-agent/certs
+    command: run -c /etc/sing-box/config.json
+```
+
+#### 3. 启动节点服务
+```sh
+docker compose up -d
+```
+
+#### 4. 常用运维命令
+```sh
+# 升级节点镜像并应用
+docker compose pull && docker compose up -d
+
+# 查看 Agent 心跳和日志
+docker compose logs -f s-ui-agent
+
+# 查看 sing-box 运行日志
+docker compose logs -f sing-box
+```
 
 ## 使用流程
 

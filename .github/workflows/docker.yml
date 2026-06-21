@@ -75,3 +75,25 @@ jobs:
         platforms: linux/amd64,linux/arm64,linux/arm/v7,linux/386
         tags: ${{ steps.meta-singbox.outputs.tags }}
         labels: ${{ steps.meta-singbox.outputs.labels }}
+
+    # 3. Agent Image Metadata and Build/Push
+    - name: Docker meta for s-ui-agent
+      id: meta-agent
+      uses: docker/metadata-action@v5
+      with:
+        images: |
+          sellength/s-ui_agent
+        tags: |
+          type=ref,event=branch
+          type=ref,event=tag
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/review' }}
+
+    - name: Build and push s-ui Agent
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: Dockerfile.agent
+        push: true
+        platforms: linux/amd64,linux/arm64
+        tags: ${{ steps.meta-agent.outputs.tags }}
+        labels: ${{ steps.meta-agent.outputs.labels }}

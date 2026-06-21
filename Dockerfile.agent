@@ -1,0 +1,38 @@
+# ==========================================
+# Phase 1: Build Go Agent
+# ==========================================
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
+WORKDIR /app
+COPY backend/go.mod backend/go.sum ./backend/
+WORKDIR /app/backend
+RUN go mod download
+WORKDIR /app
+COPY backend ./backend
+WORKDIR /app/backend
+ARG TARGETOS
+ARG TARGETARCH
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -ldflags "-s -w" -o /out/s-ui-agent ./agent
+
+# ==========================================
+# Phase 2: Runtime Image
+# ==========================================
+FROM alpine:3.22
+LABEL org.opencontainers.image.authors="sellength" \
+      org.opencontainers.image.description="s-ui-agent: Client Agent for S-UI Control Plane"
+
+# Install runtime dependencies including docker-cli to manage sibling containers
+RUN apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    curl \
+    bash \
+    docker-cli
+
+WORKDIR /usr/local/s-ui-agent
+
+# Copy compiled agent binary
+COPY --from=builder /out/s-ui-agent /usr/local/bin/s-ui-agent
+
+RUN chmod +x /usr/local/bin/s-ui-agent
+
+CMD ["/usr/local/bin/s-ui-agent"]

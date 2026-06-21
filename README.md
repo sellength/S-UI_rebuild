@@ -586,6 +586,7 @@ sudo systemctl restart s-ui-agent
 mkdir -p /opt/s-ui-agent
 cd /opt/s-ui-agent
 mkdir -p configs certs
+touch configs/current.json state.json
 ```
 
 #### 2. 获取 `docker-compose.yml`
@@ -622,9 +623,8 @@ services:
     restart: always
     network_mode: host
     volumes:
-      - ./configs/config.json:/etc/sing-box/config.json
+      - ./configs/current.json:/app/config.json
       - ./certs:/usr/local/s-ui-agent/certs
-    command: run -c /etc/sing-box/config.json
 ```
 
 #### 3. 快速替换与配置环境变量
@@ -709,6 +709,7 @@ sudo ln -s /run/podman/podman.sock /var/run/docker.sock
 mkdir -p /opt/s-ui-agent
 cd /opt/s-ui-agent
 mkdir -p configs certs
+touch configs/current.json state.json
 curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/docker-compose.agent.yml -o docker-compose.yml
 ```
 

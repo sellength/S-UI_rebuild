@@ -163,6 +163,10 @@ func PublishNodeConfigVersion(nodeId uint, actor string) (*model.ConfigVersion, 
 
 	var version *model.ConfigVersion
 	if latestErr == nil && latest.Sha256 == sha256Hex {
+		latest.Status = "published"
+		if err := db.Save(&latest).Error; err != nil {
+			return nil, err
+		}
 		version = &latest
 	} else {
 		newVersion := model.ConfigVersion{

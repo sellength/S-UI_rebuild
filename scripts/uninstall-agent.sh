@@ -44,15 +44,16 @@ if [ "$YES" != "true" ]; then
 fi
 
 if command -v systemctl >/dev/null 2>&1; then
-  systemctl stop s-ui-agent 2>/dev/null || true
-  systemctl disable s-ui-agent 2>/dev/null || true
+  systemctl stop s-ui-agent s-ui-agent-singbox 2>/dev/null || true
+  systemctl disable s-ui-agent s-ui-agent-singbox 2>/dev/null || true
 fi
 
 rm -f "$SERVICE_FILE"
+rm -f "/etc/systemd/system/s-ui-agent-singbox.service"
 
 if command -v systemctl >/dev/null 2>&1; then
   systemctl daemon-reload || true
-  systemctl reset-failed s-ui-agent 2>/dev/null || true
+  systemctl reset-failed s-ui-agent s-ui-agent-singbox 2>/dev/null || true
 fi
 
 if [ "$KEEP_DATA" != "true" ]; then

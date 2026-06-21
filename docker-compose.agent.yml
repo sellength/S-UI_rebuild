@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   s-ui-agent:
     image: sellength/s-ui_agent:latest

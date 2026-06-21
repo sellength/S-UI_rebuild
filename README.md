@@ -72,28 +72,7 @@ Control Plane 面板 -> 远端 Agent -> sing-box 配置文件 -> 客户端订阅
 详细状态见 [docs/PREVIEW_0_1.md](docs/PREVIEW_0_1.md)。
 
 ## 架构
-
-```text
-                                  +----------------------+
-                                  |      Sub-Store        |
-                                  |   可选：订阅整合       |
-                                  +----------^-----------+
-                                             |
-+-----------------------+        +-----------+-----------+
-|  Admin Browser        |        |    S-UI Control Plane |
-|  管理员浏览器          +------->+    用户 / 节点 / 证书   |
-+-----------------------+        |    配置 / 订阅 / API    |
-                                 +-----+-------------+---+
-                                       |             |
-                       Agent heartbeat |             | subscription
-                       config pull     |             |
-                                       v             v
-                         +-------------+--+     +----+----------------+
-                         | Data Plane Node |     | Client Apps         |
-                         | s-ui-agent      |     | sing-box / Clash 等 |
-                         | sing-box        |     +---------------------+
-                         +-----------------+
-```
+![S-UI Distributed System Architecture](docs/assets/s_ui_architecture.png)
 
 Control Plane 负责：
 

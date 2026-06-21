@@ -64,6 +64,63 @@ func renderNodeConfigJson(nodeId uint) ([]byte, error) {
 		}
 	}
 
+	// Inject v2ray_api statistics configuration for the node.
+	inboundUsers := []model.InboundUser{}
+	err = db.Model(&model.InboundUser{}).
+		Joins("JOIN clients ON clients.id = inbound_users.client_id").
+		Joins("JOIN distributed_inbounds ON distributed_inbounds.id = inbound_users.inbound_id").
+		Where("distributed_inbounds.node_id = ? AND clients.enable = ?", nodeId, true).
+		Scan(&inboundUsers).Error
+	if err == nil {
+		configService := NewConfigService()
+		panelConfig, errCfg := configService.GetConfig()
+		if errCfg == nil {
+			var panelExp struct {
+				V2rayApi struct {
+					Stats struct {
+						Enabled bool     `json:"enabled"`
+						Users   []string `json:"users"`
+					} `json:"stats"`
+				} `json:"v2ray_api"`
+			}
+			_ = json.Unmarshal(panelConfig.Experimental, &panelExp)
+
+			enabledStatsUsers := make(map[string]bool)
+			for _, u := range panelExp.V2rayApi.Stats.Users {
+				enabledStatsUsers[u] = true
+			}
+
+			var nodeStatsUsers []string
+			for _, user := range inboundUsers {
+				if enabledStatsUsers[user.Name] {
+					nodeStatsUsers = append(nodeStatsUsers, user.Name)
+				}
+			}
+
+			v2rayApiObj := map[string]interface{}{}
+			if existingApi, ok := experimental["v2ray_api"]; ok {
+				if existingApiMap, ok := existingApi.(map[string]interface{}); ok {
+					v2rayApiObj = existingApiMap
+				}
+			}
+			if _, ok := v2rayApiObj["listen"]; !ok {
+				v2rayApiObj["listen"] = "127.0.0.1:1080"
+			}
+
+			statsObj := map[string]interface{}{}
+			if existingStats, ok := v2rayApiObj["stats"]; ok {
+				if existingStatsMap, ok := existingStats.(map[string]interface{}); ok {
+					statsObj = existingStatsMap
+				}
+			}
+			statsObj["enabled"] = true
+			statsObj["users"] = nodeStatsUsers
+			v2rayApiObj["stats"] = statsObj
+
+			experimental["v2ray_api"] = v2rayApiObj
+		}
+	}
+
 	config := SingboxNodeConfig{
 		Log:          log,
 		DNS:          dns,

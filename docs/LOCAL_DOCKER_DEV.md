@@ -68,5 +68,5 @@ PostgreSQL tag 路径可通过：
 
 ```sh
 cd backend
-GOCACHE=/private/tmp/s-ui-go-cache go test -tags postgres ./...
+go test -tags postgres ./...
 ```

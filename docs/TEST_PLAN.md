@@ -11,10 +11,10 @@ npm run build
 
 ```sh
 cd backend
-GOCACHE=/private/tmp/s-ui-go-cache go test -tags postgres ./...
-GOCACHE=/private/tmp/s-ui-go-cache go build -tags postgres -o /private/tmp/s-ui-backend-preview-check .
-GOCACHE=/private/tmp/s-ui-go-cache go build -o /private/tmp/s-ui-agent-preview-check ./agent
-GOCACHE=/private/tmp/s-ui-go-cache GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
+go test -tags postgres ./...
+go build -tags postgres -o /private/tmp/s-ui-backend-preview-check .
+go build -o /private/tmp/s-ui-agent-preview-check ./agent
+GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
 ```
 
 ```sh

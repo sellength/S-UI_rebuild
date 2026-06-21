@@ -1978,11 +1978,12 @@ function openInboundPolicySettings(inbound: any) {
   const version = latestVersion(inbound.nodeId)
   const config = parseJSONValue(version?.contentJson, {})
   const policy = parseJSONValue(inbound.policyOverridesJson, {})
+  const templateConfig = parseJSONValue(nodeTemplateForm.config, {})
   const policyConfig = {
-    dns: policy.dns || config.dns || defaultFullNodeTemplate().dns,
-    outbounds: policy.outbounds || config.outbounds || defaultFullNodeTemplate().outbounds,
-    route: policy.route || config.route || defaultFullNodeTemplate().route,
-    experimental: policy.experimental || config.experimental || {},
+    dns: policy.dns || config.dns || templateConfig.dns || defaultFullNodeTemplate().dns,
+    outbounds: policy.outbounds || config.outbounds || templateConfig.outbounds || defaultFullNodeTemplate().outbounds,
+    route: policy.route || config.route || templateConfig.route || defaultFullNodeTemplate().route,
+    experimental: policy.experimental || config.experimental || templateConfig.experimental || {},
   }
   const policyText = stringifyJSON(policyConfig)
   policyDialog.title = `${nodeName(inbound.nodeId)} · ${inbound.protocol} · ${inbound.publicHost || nodeHost(inbound.nodeId)}:${inbound.listenPort}`

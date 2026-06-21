@@ -1,6 +1,6 @@
 # Preview 发布检查清单
 
-目标版本：`v0.1.0-preview.1`
+目标版本：`v0.2.0-preview.1`
 
 发布口径：这是 Preview，不是稳定版、生产版或正式版。
 
@@ -30,9 +30,9 @@ npm run build
 
 ```sh
 cd backend
-GOCACHE=/private/tmp/s-ui-go-cache go test -tags postgres ./...
-GOCACHE=/private/tmp/s-ui-go-cache go build -tags postgres -o /private/tmp/s-ui-backend-preview-check .
-GOCACHE=/private/tmp/s-ui-go-cache GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
+go test -tags postgres ./...
+go build -tags postgres -o /private/tmp/s-ui-backend-preview-check .
+GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
 ```
 
 ```sh
@@ -71,8 +71,8 @@ Preview 发布前可以不完成真实节点全链路，但必须在 Release Not
 ## 6. 发布步骤
 
 - 确认 high review 输出 `Preview OK` 后再发。
-- 建议 tag：`v0.1.0-preview.1`
-- GitHub Release 标题：`S-UI Distributed v0.1.0-preview.1`
+- 建议 tag：`v0.2.0-preview.1`
+- GitHub Release 标题：`S-UI Distributed v0.2.0-preview.1`
 - Release Notes 明确写：不建议生产使用，真实服务器验证仍在进行。
 - GitHub 仓库 Secrets 需要配置 `DOCKER_HUB_USERNAME` 和 `DOCKER_HUB_TOKEN`。
 - `dev` 分支会推送 `sellength/s-ui_dev:dev` 和 `sellength/s-ui_dev:latest`。

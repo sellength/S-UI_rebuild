@@ -50,17 +50,19 @@ func (s *DistributedInboundService) SaveDistributedInbound(inbound *model.Distri
 	now := time.Now().Unix()
 	db := database.GetDB()
 	if hasMeaningfulJSON(inbound.PolicyOverridesJson) {
-		var count int64
+		var otherInbounds []model.DistributedInbound
 		query := db.Model(model.DistributedInbound{}).
-			Where("node_id = ? AND policy_overrides_json IS NOT NULL AND trim(policy_overrides_json) NOT IN ('', '{}', 'null')", inbound.NodeId)
+			Where("node_id = ?", inbound.NodeId)
 		if inbound.Id > 0 {
 			query = query.Where("id <> ?", inbound.Id)
 		}
-		if err := query.Count(&count).Error; err != nil {
+		if err := query.Find(&otherInbounds).Error; err != nil {
 			return err
 		}
-		if count > 0 {
-			return fmt.Errorf("node policy overrides already exist on another inbound; preview supports one policy override per node")
+		for _, other := range otherInbounds {
+			if hasMeaningfulJSON(other.PolicyOverridesJson) {
+				return fmt.Errorf("node policy overrides already exist on another inbound; preview supports one policy override per node")
+			}
 		}
 	}
 

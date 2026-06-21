@@ -30,14 +30,14 @@ Preview 0.1 暂未完整实现：
 
 ```sh
 cd backend
-GOCACHE=/private/tmp/s-ui-go-cache go build -o /private/tmp/s-ui-agent-preview-check ./agent
+go build -o /private/tmp/s-ui-agent-preview-check ./agent
 ```
 
 交叉构建 x86-64 Linux：
 
 ```sh
 cd backend
-GOCACHE=/private/tmp/s-ui-go-cache GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
+GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
 ```
 
 ## systemd 安装草案

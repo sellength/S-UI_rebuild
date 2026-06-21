@@ -1,6 +1,6 @@
 # High Review 指南
 
-目标：检查当前项目是否可以作为 `v0.1.0-preview.1` 发布到 GitHub。请按 Preview 标准审查，不要按稳定生产版标准要求一次性补齐所有后续能力。
+目标：检查当前项目是否可以作为 `v0.2.0-preview.1` 发布到 GitHub。请按 Preview 标准审查，不要按稳定生产版标准要求一次性补齐所有后续能力。
 
 最终请给出明确结论：
 
@@ -19,7 +19,7 @@ Preview Not OK
 ## 必查文档
 
 - `README.md`
-- `docs/PREVIEW_0_1.md`
+- `docs/PREVIEW_0_2.md`
 - `docs/PREVIEW_RELEASE_CHECKLIST.md`
 - `docs/TEST_PLAN.md`
 - `docs/AGENT_API.md`
@@ -99,9 +99,9 @@ npm run build
 
 ```sh
 cd backend
-GOCACHE=/private/tmp/s-ui-go-cache go test -tags postgres ./...
-GOCACHE=/private/tmp/s-ui-go-cache go build -tags postgres -o /private/tmp/s-ui-backend-preview-check .
-GOCACHE=/private/tmp/s-ui-go-cache GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
+go test -tags postgres ./...
+go build -tags postgres -o /private/tmp/s-ui-backend-preview-check .
+GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
 ```
 
 ```sh

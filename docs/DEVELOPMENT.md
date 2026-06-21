@@ -27,7 +27,7 @@ scripts/                 Agent 安装脚本
 
 ```sh
 cd backend
-GOCACHE=/private/tmp/s-ui-go-cache go test ./...
+go test ./...
 go build -o ../sui main.go
 ```
 
@@ -35,8 +35,8 @@ PostgreSQL 构建：
 
 ```sh
 cd backend
-GOCACHE=/private/tmp/s-ui-go-cache go test -tags postgres ./...
-GOCACHE=/private/tmp/s-ui-go-cache go build -tags postgres -o /private/tmp/s-ui-backend-preview-check .
+go test -tags postgres ./...
+go build -tags postgres -o /private/tmp/s-ui-backend-preview-check .
 ```
 
 新增后端服务时，优先放在 `backend/service/`，API 层只做参数读取、权限判断和响应包装。
@@ -230,14 +230,14 @@ backend/agent
 
 ```sh
 cd backend
-GOCACHE=/private/tmp/s-ui-go-cache go build -o /private/tmp/s-ui-agent-preview-check ./agent
+go build -o /private/tmp/s-ui-agent-preview-check ./agent
 ```
 
 构建 Linux x86_64 Agent：
 
 ```sh
 cd backend
-GOCACHE=/private/tmp/s-ui-go-cache GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
+GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
 ```
 
 Agent 当前流程：
@@ -276,9 +276,9 @@ cd frontend
 npm run build
 
 cd ../backend
-GOCACHE=/private/tmp/s-ui-go-cache go test -tags postgres ./...
-GOCACHE=/private/tmp/s-ui-go-cache go build -tags postgres -o /private/tmp/s-ui-backend-preview-check .
-GOCACHE=/private/tmp/s-ui-go-cache GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
+go test -tags postgres ./...
+go build -tags postgres -o /private/tmp/s-ui-backend-preview-check .
+GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
 
 cd ..
 sh -n scripts/install-agent.sh

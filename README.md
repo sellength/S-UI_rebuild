@@ -6,7 +6,7 @@ S-UI Distributed 是基于 [alireza0/s-ui](https://github.com/alireza0/s-ui) 重
 
 ## 当前版本
 
-目标版本：`v0.1.0-preview.1`
+目标版本：`v0.2.0-preview.1`
 
 这个版本主要验证下面这条主链路：
 
@@ -118,6 +118,7 @@ docs/                    设计、开发、测试和 Preview 文档
 - `2095`：面板 Web UI 默认端口，安装脚本可交互修改
 - `2096`：订阅服务默认端口，安装脚本可交互修改
 - `443` 或自定义端口：节点上的代理协议入口
+- `10080`：节点本地 `sing-box` 的 `v2ray_api` 统计监听端口（仅监听在 `127.0.0.1`，用于本地 Agent 收集流量数据，**请勿对外开放**）
 - Agent 默认不需要公网入站端口，它主动连接 Control Plane
 
 安全变量：
@@ -504,7 +505,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/revie
 
 ```sh
 cd backend
-GOCACHE=/private/tmp/s-ui-go-cache GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64 ./agent
+GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64 ./agent
 ```
 
 如果已经有发布产物，可以直接下载对应平台的 `s-ui-agent`。
@@ -741,16 +742,16 @@ npm run build
 
 ```sh
 cd backend
-GOCACHE=/private/tmp/s-ui-go-cache go test -tags postgres ./...
-GOCACHE=/private/tmp/s-ui-go-cache go build -tags postgres -o /private/tmp/s-ui-backend-preview-check .
+go test -tags postgres ./...
+go build -tags postgres -o /private/tmp/s-ui-backend-preview-check .
 ```
 
 Agent：
 
 ```sh
 cd backend
-GOCACHE=/private/tmp/s-ui-go-cache go build -o /private/tmp/s-ui-agent-preview-check ./agent
-GOCACHE=/private/tmp/s-ui-go-cache GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
+go build -o /private/tmp/s-ui-agent-preview-check ./agent
+GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
 ```
 
 安装脚本语法检查：
@@ -775,9 +776,9 @@ cd frontend
 npm run build
 
 cd ../backend
-GOCACHE=/private/tmp/s-ui-go-cache go test -tags postgres ./...
-GOCACHE=/private/tmp/s-ui-go-cache go build -tags postgres -o /private/tmp/s-ui-backend-preview-check .
-GOCACHE=/private/tmp/s-ui-go-cache GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
+go test -tags postgres ./...
+go build -tags postgres -o /private/tmp/s-ui-backend-preview-check .
+GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
 
 cd ..
 sh -n scripts/install-control.sh
@@ -836,7 +837,7 @@ s-ui-agent-linux-amd64
 
 ### 这是正式生产版吗？
 
-不是。当前建议命名为 `v0.1.0-preview.1`。它适合发布到 GitHub 让别人阅读、试用和 review，但不建议直接暴露在公网生产使用。
+不是。当前建议命名为 `v0.2.0-preview.1`。它适合发布到 GitHub 让别人阅读、试用和 review，但不建议直接暴露在公网生产使用。
 
 ### 服务端必须用 PostgreSQL 吗？
 
@@ -874,6 +875,20 @@ Let's Encrypt DNS-01 不需要开启 Cloudflare 代理。DNS API 只临时写 TX
 ```
 
 这些目录和 `.env` 都应该纳入备份。
+
+### 为什么没有提供选择安装 Agent 还是控制面板的综合交互安装脚本？
+
+因为在分布式架构中，Control Plane（主控端）和 Agent（节点端）是完全解耦、独立运行在不同服务器上的。为保持脚本逻辑清晰、职责单一：
+- **控制面板（主控）部署**：使用 `install-control.sh` (Docker) 或 `install-control-native.sh` (实体机)。
+- **节点 Agent 部署**：在面板中创建节点后，复制节点一键安装命令，去对应节点服务器上运行 `install-agent.sh`。
+
+如果您希望在同一台服务器上同时运行控制面板和节点 Agent，只需在此服务器上先后运行这两个对应的脚本即可。
+
+### 为什么用户的流量统计显示为 `-` 或者是 `0 B`？
+
+- **显示 `0 B`**：新版本中，如果用户已经绑定节点但暂时没有产生实际流量，会正确渲染并显示为 `0 B`。
+- **显示 `-`**：说明该用户没有在该节点下产生过任何连接，或者该用户并没有被加入全局默认配置的流量统计用户列表中（请检查“全局配置” -> `experimental` -> `v2ray_api` -> `stats` -> `users` 中是否添加了对应的用户名）。
+- 此外，请确保目标节点上的 `s-ui-agent` 能够正常访问本地 `127.0.0.1:10080` 以读取 sing-box 流量状态。
 
 ## 文档索引
 

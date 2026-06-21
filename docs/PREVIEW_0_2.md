@@ -1,10 +1,10 @@
-# S-UI Distributed v0.1.0-preview.1
+# S-UI Distributed v0.2.0-preview.1
 
-本文档说明 `v0.1.0-preview.1` 的发布范围、启动方式、验证路径和已知限制。
+本文档说明 `v0.2.0-preview.1` 的发布范围、启动方式、验证路径和已知限制。
 
 ## 定位
 
-`v0.1.0-preview.1` 是分布式 Sing-box 管理平台的早期预览版，不是稳定生产版。
+`v0.2.0-preview.1` 是分布式 Sing-box 管理平台的早期预览版，不是稳定生产版。
 
 核心目标：
 
@@ -82,16 +82,16 @@ npm run build
 
 ```sh
 cd backend
-GOCACHE=/private/tmp/s-ui-go-cache go test -tags postgres ./...
-GOCACHE=/private/tmp/s-ui-go-cache go build -tags postgres -o /private/tmp/s-ui-backend-preview-check .
+go test -tags postgres ./...
+go build -tags postgres -o /private/tmp/s-ui-backend-preview-check .
 ```
 
 Agent：
 
 ```sh
 cd backend
-GOCACHE=/private/tmp/s-ui-go-cache go build -o /private/tmp/s-ui-agent-preview-check ./agent
-GOCACHE=/private/tmp/s-ui-go-cache GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
+go build -o /private/tmp/s-ui-agent-preview-check ./agent
+GOOS=linux GOARCH=amd64 go build -o /private/tmp/s-ui-agent-linux-amd64-preview-check ./agent
 ```
 
 脚本：
@@ -222,7 +222,7 @@ AnyTLS / Hysteria2 / VLESS Reality 等远端直连协议建议使用公开信任
 
 ```sh
 cd frontend && npm run build
-cd ../backend && GOCACHE=/private/tmp/s-ui-go-cache go test -tags postgres ./...
+cd ../backend && go test -tags postgres ./...
 cd ..
 sh -n scripts/install-control.sh
 sh -n scripts/uninstall-control.sh

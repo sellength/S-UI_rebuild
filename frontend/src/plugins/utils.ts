@@ -104,7 +104,7 @@ const ONE_PB = ONE_TB * 1024
 
 export const HumanReadable = {
   sizeFormat(size:number, fix:number=2) {
-    if (!size || size<0) return "-"
+    if (size === undefined || size === null || size < 0) return "-"
     if (size < ONE_KB) {
         return size.toFixed(0) + " " + i18n.global.t('stats.B')
     } else if (size < ONE_MB) {
@@ -120,7 +120,7 @@ export const HumanReadable = {
     }
   },
   packetFormat(size:number, fix:number=2) {
-    if (!size || size<0) return "-"
+    if (size === undefined || size === null || size < 0) return "-"
     if (size < 1000) {
         return size.toFixed(0) + " " + i18n.global.t('stats.p')
     } else if (size < 1000000) {

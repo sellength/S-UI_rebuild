@@ -246,7 +246,8 @@ install_s-ui() {
     tar zxvf s-ui-linux-$(arch).tar.gz
     rm s-ui-linux-$(arch).tar.gz -f
 
-    install_latest_singbox "s-ui/bin" || echo -e "${yellow}Warning: Failed to install latest official sing-box. Will use default packed binary.${plain}"
+    # Use default packed binary which is compiled with with_v2ray_api tag from GitHub Action
+    # install_latest_singbox "s-ui/bin" || echo -e "${yellow}Warning: Failed to install latest official sing-box. Will use default packed binary.${plain}"
 
     wget --no-check-certificate -O /usr/bin/s-ui https://raw.githubusercontent.com/sellength/S-UI_rebuild/main/s-ui.sh
 

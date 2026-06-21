@@ -25,6 +25,18 @@ ARG TARGETARCH
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -tags postgres -ldflags "-s -w" -o /out/sui main.go
 
 # ==========================================
+# Phase 2.5: Build Sing-Box with tags
+# ==========================================
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS singbox-builder
+ARG TARGETOS
+ARG TARGETARCH
+ARG SINGBOX_VER=1.13.13
+RUN apk add --no-cache git
+RUN git clone --branch v${SINGBOX_VER} --depth 1 https://github.com/sagernet/sing-box.git /app
+WORKDIR /app
+RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -tags with_v2ray_api -ldflags "-s -w" -o /out/sing-box ./cmd/sing-box
+
+# ==========================================
 # Phase 3: Final Runtime Image
 # ==========================================
 FROM alpine:3.22
@@ -67,31 +79,8 @@ RUN mkdir -p \
 # Copy runSingbox.sh to templates directory
 COPY core/runSingbox.sh /usr/local/s-ui/bin_tmpl/runSingbox.sh
 
-# Download official sing-box binary matching target architecture
-ARG TARGETARCH
-ARG SINGBOX_VER=1.13.13
-RUN set -ex && \
-    ARCH="${TARGETARCH}" && \
-    if [ -z "${ARCH}" ]; then \
-        case "$(uname -m)" in \
-            x86_64) ARCH="amd64" ;; \
-            aarch64) ARCH="arm64" ;; \
-            armv7*) ARCH="arm" ;; \
-            i386|i686) ARCH="386" ;; \
-        esac \
-    fi && \
-    ARCH_NAME="" && \
-    case "${ARCH}" in \
-        amd64) ARCH_NAME="amd64" ;; \
-        arm64) ARCH_NAME="arm64" ;; \
-        arm) ARCH_NAME="armv7" ;; \
-        386) ARCH_NAME="386" ;; \
-        *) echo "Unsupported arch: ${ARCH}" && exit 1 ;; \
-    esac && \
-    curl -Lo /tmp/sing-box.tar.gz "https://github.com/SagerNet/sing-box/releases/download/v${SINGBOX_VER}/sing-box-${SINGBOX_VER}-linux-${ARCH_NAME}.tar.gz" && \
-    tar -xzf /tmp/sing-box.tar.gz -C /tmp && \
-    mv /tmp/sing-box-${SINGBOX_VER}-linux-${ARCH_NAME}/sing-box /usr/local/s-ui/bin_tmpl/sing-box && \
-    rm -rf /tmp/sing-box*
+# Copy compiled static sing-box binary matching target architecture
+COPY --from=singbox-builder /out/sing-box /usr/local/s-ui/bin_tmpl/sing-box
 
 RUN chmod +x /usr/local/s-ui/sui /usr/local/s-ui/bin_tmpl/runSingbox.sh /usr/local/s-ui/bin_tmpl/sing-box
 

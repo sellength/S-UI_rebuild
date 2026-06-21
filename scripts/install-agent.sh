@@ -132,17 +132,14 @@ install_singbox() {
     return 1
   fi
 
-  latest_tag=$(curl -Ls "https://api.github.com/repos/SagerNet/sing-box/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+  latest_tag=$(curl -Ls "https://api.github.com/repos/sellength/S-UI_rebuild/releases" | grep '"tag_name":' | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
   if [ -z "$latest_tag" ]; then
-    latest_tag="v1.11.1"
-    echo "Failed to fetch latest sing-box version via Github API, fallback to: ${latest_tag}"
+    latest_tag="review"
   fi
 
-  version="${latest_tag#v}"
-  filename="sing-box-${version}-linux-${arch}"
-  url="https://github.com/SagerNet/sing-box/releases/download/${latest_tag}/${filename}.tar.gz"
+  url="https://github.com/sellength/S-UI_rebuild/releases/download/${latest_tag}/sing-box-linux-${arch}.tar.gz"
 
-  echo "Downloading sing-box from:"
+  echo "Downloading custom sing-box from:"
   echo "  $url"
   mkdir -p /tmp/sing-box-install
   if ! download "$url" "/tmp/sing-box-install/sing-box.tar.gz"; then
@@ -152,8 +149,8 @@ install_singbox() {
   fi
 
   tar -zxf /tmp/sing-box-install/sing-box.tar.gz -C /tmp/sing-box-install/
-  if [ -f "/tmp/sing-box-install/${filename}/sing-box" ]; then
-    mv "/tmp/sing-box-install/${filename}/sing-box" "/usr/local/bin/sing-box"
+  if [ -f "/tmp/sing-box-install/sing-box" ]; then
+    mv "/tmp/sing-box-install/sing-box" "/usr/local/bin/sing-box"
     chmod +x "/usr/local/bin/sing-box"
     echo "Successfully installed sing-box to /usr/local/bin/sing-box"
   else

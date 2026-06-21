@@ -28,6 +28,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    command: ["/bin/sh", "-c", "/usr/local/s-ui/sui migrate && /usr/local/s-ui/sui"]
     environment:
       - SUI_DB_TYPE=postgres
       - SUI_POSTGRES_DSN=host=127.0.0.1 user=sui password=${SUI_POSTGRES_PASSWORD:?set SUI_POSTGRES_PASSWORD in .env} dbname=sui port=${SUI_POSTGRES_PORT:-54329} sslmode=disable TimeZone=${TZ:-Asia/Shanghai}

@@ -13,6 +13,12 @@ fi
 
 TAIL_PID=""
 
+# Auto-detect sidecar mount configs/current.json and link it to config.json
+if [ ! -f "config.json" ] && [ -f "configs/current.json" ]; then
+  echo "Detected sidecar config configs/current.json, creating symlink..."
+  ln -sf configs/current.json config.json
+fi
+
 runSingbox(){
   # Clean up any stale sing-box runs to prevent port collision/multi-run
   pkill -f "./sing-box run" || true

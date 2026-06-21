@@ -586,7 +586,6 @@ sudo systemctl restart s-ui-agent
 mkdir -p /opt/s-ui-agent
 cd /opt/s-ui-agent
 mkdir -p configs certs
-touch configs/current.json state.json
 ```
 
 #### 2. 获取 `docker-compose.yml`
@@ -611,11 +610,11 @@ services:
       - SUI_AGENT_INTERVAL=30s                                  # 同步时间间隔
       - SUI_AGENT_RELOAD_COMMAND=docker restart sing-box        # 配置更新后的重启命令
       - SUI_AGENT_CHECK_CONFIG=false                            # 容器部署时 Agent 内部无 sing-box，需设为 false 避免校验报错
+      - SUI_AGENT_STATE_PATH=/usr/local/s-ui-agent/configs/state.json # 将状态文件存在共享目录下，避免单独挂载文件被误建为目录
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock               # 允许控制宿主机 Docker 重启 sing-box
       - ./configs:/usr/local/s-ui-agent/configs
       - ./certs:/usr/local/s-ui-agent/certs
-      - ./state.json:/usr/local/s-ui-agent/state.json
 
   sing-box:
     image: sellength/s-ui_rebuild-singbox:latest
@@ -623,7 +622,7 @@ services:
     restart: always
     network_mode: host
     volumes:
-      - ./configs/current.json:/app/config.json
+      - ./configs:/app/configs                                  # 挂载共享配置目录，sing-box 启动脚本会自动链接 config.json
       - ./certs:/usr/local/s-ui-agent/certs
 ```
 
@@ -709,7 +708,6 @@ sudo ln -s /run/podman/podman.sock /var/run/docker.sock
 mkdir -p /opt/s-ui-agent
 cd /opt/s-ui-agent
 mkdir -p configs certs
-touch configs/current.json state.json
 curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/docker-compose.agent.yml -o docker-compose.yml
 ```
 

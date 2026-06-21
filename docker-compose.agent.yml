@@ -13,11 +13,11 @@ services:
       - SUI_AGENT_INTERVAL=30s                                    # 同步心跳间隔时间
       - SUI_AGENT_RELOAD_COMMAND=docker restart sing-box          # 配置更新后，自动重启 sing-box 容器
       - SUI_AGENT_CHECK_CONFIG=false                              # 容器部署时 Agent 内部无 sing-box，需设为 false 避免校验报错
+      - SUI_AGENT_STATE_PATH=/usr/local/s-ui-agent/configs/state.json # 将状态文件存在共享目录下，避免单独挂载文件被误建为目录
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock                 # 挂载宿主机 Docker 守护进程以执行容器重启
       - ./configs:/usr/local/s-ui-agent/configs
       - ./certs:/usr/local/s-ui-agent/certs
-      - ./state.json:/usr/local/s-ui-agent/state.json
 
   sing-box:
     image: sellength/s-ui_rebuild-singbox:latest
@@ -25,6 +25,5 @@ services:
     restart: always
     network_mode: host
     volumes:
-      - ./configs/config.json:/etc/sing-box/config.json
+      - ./configs:/app/configs                                    # 挂载共享配置目录，sing-box 启动脚本会自动链接 config.json
       - ./certs:/usr/local/s-ui-agent/certs
-    command: run -c /etc/sing-box/config.json

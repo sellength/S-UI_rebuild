@@ -661,6 +661,50 @@ docker compose logs -f s-ui-agent
 docker compose logs -f sing-box
 ```
 
+### 方式三：Podman / Podman Compose 容器部署 (双容器 Sidecar 模式)
+
+在某些默认自带 Podman 的系统（如 Rocky Linux / CentOS 8+ / RHEL）中，您无需安装 Docker，可以直接利用 Podman 及其 Compose 兼容层以容器化方式部署 Agent。
+
+#### 1. 开启 Podman Socket 服务与 Docker 兼容链接
+由于 Podman 默认无常驻守护进程，必须在节点上开启 API Socket 服务，并建立 `/var/run/docker.sock` 软链接打通兼容通道：
+```sh
+# 开启并开机启动 Podman Socket
+sudo systemctl enable --now podman.socket
+
+# 清理宿主机残留的 docker.sock 并创建指向 Podman Socket 的软链接
+sudo rm -rf /var/run/docker.sock
+sudo ln -s /run/podman/podman.sock /var/run/docker.sock
+```
+
+#### 2. 创建部署目录并获取 `docker-compose.yml`
+```sh
+mkdir -p /opt/s-ui-agent
+cd /opt/s-ui-agent
+mkdir -p configs certs
+curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/docker-compose.agent.yml -o docker-compose.yml
+```
+
+#### 3. 快速配置环境变量
+使用 `sed` 快捷命令在终端一键配置：
+```sh
+# 一键生成专属 SUI_AGENT_TOKEN
+sed -i "s/replace-with-node-agent-token/$(openssl rand -hex 16)/g" docker-compose.yml
+
+# 替换控制端 API 地址、代号及配对注册 Token
+sed -i "s|https://panel.example.com/app/agent|http://你的控制端服务器公网IP:2095/app/agent|g" docker-compose.yml
+sed -i "s/us-01/您的节点代号/g" docker-compose.yml
+sed -i "s/same-as-SUI_AGENT_REGISTER_TOKEN/控制端的SUI_AGENT_REGISTER_TOKEN值/g" docker-compose.yml
+```
+
+#### 4. 启动与查看日志
+```sh
+# 启动容器
+docker compose up -d
+
+# 查看 Agent 同步与心跳日志
+docker compose logs -f s-ui-agent
+```
+
 ## 使用流程
 
 ### 1. 登录面板

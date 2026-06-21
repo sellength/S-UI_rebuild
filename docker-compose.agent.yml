@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  s-ui-agent:
+    image: sellength/s-ui_agent:latest
+    container_name: s-ui-agent
+    restart: always
+    network_mode: host
+    environment:
+      - SUI_AGENT_BASE_URL=https://panel.example.com/app/agent     # 替换为您的控制面板 Agent API 访问地址
+      - SUI_NODE_CODE=us-01                                       # 替换为该节点在面板里配置的“节点代号”
+      - SUI_AGENT_ID=agent-us-01                                 # 当前 Agent 的唯一标志 ID
+      - SUI_AGENT_TOKEN=replace-with-node-agent-token             # 替换为该节点在面板里配置的专属 Agent Token
+      - SUI_AGENT_REGISTER_TOKEN=same-as-SUI_AGENT_REGISTER_TOKEN # 替换为控制端的全局注册 Token
+      - SUI_AGENT_INTERVAL=30s                                    # 同步心跳间隔时间
+      - SUI_AGENT_RELOAD_COMMAND=docker restart sing-box          # 配置更新后，自动重启 sing-box 容器
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock                 # 挂载宿主机 Docker 守护进程以执行容器重启
+      - ./configs:/usr/local/s-ui-agent/configs
+      - ./certs:/usr/local/s-ui-agent/certs
+      - ./state.json:/usr/local/s-ui-agent/state.json
+
+  sing-box:
+    image: sellength/s-ui_rebuild-singbox:latest
+    container_name: sing-box
+    restart: always
+    network_mode: host
+    volumes:
+      - ./configs/config.json:/etc/sing-box/config.json
+      - ./certs:/usr/local/s-ui-agent/certs
+    command: run -c /etc/sing-box/config.json

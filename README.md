@@ -588,8 +588,12 @@ cd /opt/s-ui-agent
 mkdir -p configs certs
 ```
 
-#### 2. 编写 `docker-compose.yml`
-在 `/opt/s-ui-agent` 目录下创建 `docker-compose.yml`：
+#### 2. 获取 `docker-compose.yml`
+您可以通过 `curl` 直接从 GitHub 仓库下载预配置好的 `docker-compose.agent.yml` 模版：
+```sh
+curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/docker-compose.agent.yml -o docker-compose.yml
+```
+或者手动在 `/opt/s-ui-agent` 目录下创建并编写 `docker-compose.yml`：
 ```yaml
 version: '3.8'
 

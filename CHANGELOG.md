@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
   - 在 `README.md` 端口说明中补充了节点本地 `10080` 统计端口的用途和安全注意事项。
   - 在 `README.md` 中新增了 FAQ 章节，解答了为什么主控端与节点 Agent 安装脚本是解耦独立的，以及流量统计在各种状态下的排查步骤。
   - 在 `README.md` 中新增了 “Docker Compose 部署 Agent (双容器 Sidecar 模式)” 章节，提供完整的 Docker 容器化 Agent 部署及 reload 交互方式说明。
+  - 在项目根目录中添加了 `docker-compose.agent.yml` 作为 Agent 容器化部署的官方 Compose 模版文件，方便用户在节点上一键拉取。
 - **Agent 容器化支持**: 新增了 `Dockerfile.agent` 用以将 S-UI Agent 打包为 Docker 镜像，并在 GitHub Actions 工作流中集成了 `sellength/s-ui_agent` 双架构镜像（amd64/arm64）的编译与推送。
 
 ### Fixed

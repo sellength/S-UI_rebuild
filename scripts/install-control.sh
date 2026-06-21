@@ -2,7 +2,7 @@
 set -eu
 
 REPO="${SUI_REPO:-sellength/S-UI_rebuild}"
-BRANCH="${SUI_BRANCH:-dev}"
+BRANCH="${SUI_BRANCH:-review}"
 INSTALL_DIR="${SUI_INSTALL_DIR:-/opt/s-ui-distributed}"
 RAW_BASE="${SUI_RAW_BASE:-https://raw.githubusercontent.com/${REPO}/${BRANCH}}"
 NON_INTERACTIVE="${SUI_NON_INTERACTIVE:-false}"

@@ -158,7 +158,7 @@ Control Plane 一键脚本默认会进入交互向导，允许安装者选择面
 安装 systemd 服务并下载最新 Release 里的 Agent：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-agent.sh) \
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/install-agent.sh) \
   --panel-agent-url https://panel.example.com/app/agent \
   --node-code us-01 \
   --agent-id agent-us-01 \
@@ -169,7 +169,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/s
 如果 Release 资产还没准备好，可以先手动提供二进制下载地址：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-agent.sh) \
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/install-agent.sh) \
   --agent-download-url https://example.com/s-ui-agent-linux-amd64 \
   --panel-agent-url https://panel.example.com/app/agent \
   --node-code us-01 \

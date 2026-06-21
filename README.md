@@ -168,7 +168,7 @@ docker compose -f docker-compose.dev.yml down -v
 在服务器上执行：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-control-native.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/install-control-native.sh)
 ```
 
 脚本会进入交互向导，让你确认：
@@ -203,14 +203,14 @@ bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/s
 如果你还没有发布 GitHub Release，可以先手动上传 `s-ui-linux-amd64.tar.gz`，然后指定下载地址：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-control-native.sh) \
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/install-control-native.sh) \
   --package-url https://example.com/s-ui-linux-amd64.tar.gz
 ```
 
 如果你想无人值守安装：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-control-native.sh) \
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/install-control-native.sh) \
   --non-interactive \
   --panel-port 2095 \
   --sub-port 2096 \
@@ -220,7 +220,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/s
 如果你要使用外部 PostgreSQL，而不是默认 SQLite：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-control-native.sh) \
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/install-control-native.sh) \
   --postgres-dsn 'host=127.0.0.1 user=sui password=your-password dbname=sui port=5432 sslmode=disable'
 ```
 
@@ -234,13 +234,13 @@ journalctl -u s-ui -f
 卸载但保留数据：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/uninstall-control-native.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/uninstall-control-native.sh)
 ```
 
 卸载并删除数据：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/uninstall-control-native.sh) --purge
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/uninstall-control-native.sh) --purge
 ```
 
 需要备份：
@@ -260,7 +260,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/s
 在服务器上执行：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-control.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/install-control.sh)
 ```
 
 这个脚本是 Docker Compose 部署，不是实体机部署。它会拉取 Docker Hub 镜像：
@@ -303,7 +303,7 @@ postgres:17-alpine
 如果你要无人值守安装，可以用参数跳过交互：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-control.sh) \
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/install-control.sh) \
   --non-interactive \
   --panel-port 2095 \
   --sub-port 2096 \
@@ -318,7 +318,7 @@ SUI_PANEL_PORT=2095 \
 SUI_SUB_PORT=2096 \
 SUI_POSTGRES_PORT=54329 \
 SUI_PANEL_DOMAIN=https://panel.example.com \
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-control.sh) --non-interactive
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/install-control.sh) --non-interactive
 ```
 
 安装后查看：
@@ -332,13 +332,13 @@ docker compose --env-file .env logs -f s-ui
 卸载但保留数据：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/uninstall-control.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/uninstall-control.sh)
 ```
 
 卸载并删除数据：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/uninstall-control.sh) --purge
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/uninstall-control.sh) --purge
 ```
 
 如果你的系统默认没有 `bash`，可以先安装 `bash`，或下载脚本后用 `sh` 执行。
@@ -446,7 +446,7 @@ Agent 安装在每台远端节点上。它主动连接 Control Plane，不需要
 节点上执行：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-agent.sh) \
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/install-agent.sh) \
   --panel-agent-url https://panel.example.com/app/agent \
   --node-code us-01 \
   --agent-id agent-us-01 \
@@ -477,7 +477,7 @@ https://github.com/sellength/S-UI_rebuild/releases/latest/download/s-ui-agent-li
 如果你还没有发布 Release，可以先手动上传二进制，或指定下载地址：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-agent.sh) \
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/install-agent.sh) \
   --agent-download-url https://example.com/s-ui-agent-linux-amd64 \
   --panel-agent-url https://panel.example.com/app/agent \
   --node-code us-01 \
@@ -489,13 +489,13 @@ bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/s
 卸载 Agent：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/uninstall-agent.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/uninstall-agent.sh)
 ```
 
 卸载但保留 Agent 数据：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/uninstall-agent.sh) --keep-data
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/uninstall-agent.sh) --keep-data
 ```
 
 ### 2. 手动构建 Linux x86_64 Agent

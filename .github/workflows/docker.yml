@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - dev
+      - review
     tags:
       - "*"
   workflow_dispatch:
@@ -42,7 +42,7 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=tag
-          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' }}
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/review' }}
 
     - name: Build and push s-ui Panel
       uses: docker/build-push-action@v6
@@ -64,7 +64,7 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=tag
-          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' }}
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/review' }}
 
     - name: Build and push sing-box
       uses: docker/build-push-action@v6

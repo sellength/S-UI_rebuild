@@ -2,6 +2,7 @@
 set -eu
 
 REPO="${SUI_REPO:-sellength/S-UI_rebuild}"
+BRANCH="${SUI_BRANCH:-review}"
 INSTALL_DIR="${SUI_INSTALL_DIR:-/usr/local/s-ui}"
 SERVICE_FILE="${SUI_SERVICE_FILE:-/etc/systemd/system/s-ui.service}"
 ENV_FILE="${SUI_ENV_FILE:-${INSTALL_DIR}/s-ui.env}"

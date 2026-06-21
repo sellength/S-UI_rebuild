@@ -70,7 +70,7 @@ https://github.com/sellength/S-UI_rebuild/releases/latest/download/s-ui-agent-li
 示例：
 
 ```sh
-bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/dev/scripts/install-agent.sh) \
+bash <(curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/scripts/install-agent.sh) \
   --panel-agent-url https://panel.example.com/app/agent \
   --node-code us-01 \
   --agent-id agent-us-01 \

@@ -436,7 +436,42 @@ func collectSingboxHealth(cfg *agentConfig) (string, string) {
 	return singboxRuntimeStatus(cfg.SingboxBin), singboxVersion(cfg.SingboxBin)
 }
 
+func dockerContainerRunning(containerName string) (string, bool) {
+	if _, err := exec.LookPath("docker"); err != nil {
+		return "", false
+	}
+	cmd := exec.Command("docker", "inspect", "-f", "{{.State.Status}}", containerName)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	if cmd.Run() == nil {
+		status := strings.TrimSpace(out.String())
+		if status == "running" {
+			return "running", true
+		}
+		if status != "" {
+			return status, true
+		}
+	}
+	return "", false
+}
+
+func dockerContainerVersion(containerName string) (string, bool) {
+	if _, err := exec.LookPath("docker"); err != nil {
+		return "", false
+	}
+	cmd := exec.Command("docker", "exec", containerName, "sing-box", "version")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	if cmd.Run() == nil {
+		return parseSingboxVersion(out.String()), true
+	}
+	return "", false
+}
+
 func singboxVersion(singboxBin string) string {
+	if version, ok := dockerContainerVersion("sing-box"); ok {
+		return version
+	}
 	if !binaryAvailable(singboxBin) {
 		return "unknown"
 	}
@@ -468,6 +503,9 @@ func parseSingboxVersion(output string) string {
 }
 
 func singboxRuntimeStatus(singboxBin string) string {
+	if status, ok := dockerContainerRunning("sing-box"); ok {
+		return status
+	}
 	if !binaryAvailable(singboxBin) {
 		return "not_installed"
 	}

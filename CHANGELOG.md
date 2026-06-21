@@ -13,7 +13,7 @@ All notable changes to this project will be documented in this file.
   - 在 `README.md` 中新增了 FAQ 章节，解答了为什么主控端与节点 Agent 安装脚本是解耦独立的，以及流量统计在各种状态下的排查步骤。
   - 在 `README.md` 中新增了 “Docker Compose 部署 Agent (双容器 Sidecar 模式)” 章节，提供完整的 Docker 容器化 Agent 部署及 reload 交互方式说明。
   - 在项目根目录中添加了 `docker-compose.agent.yml` 作为 Agent 容器化部署的官方 Compose 模版文件，方便用户在节点上一键拉取，并在 `README.md` 中补充了使用 `sed` 命令行一键生成并配置环境变量的极速部署说明。
-- **Agent 容器化支持**: 新增了 `Dockerfile.agent` 用以将 S-UI Agent 打包为 Docker 镜像，并在 GitHub Actions 工作流中集成了 `sellength/s-ui_agent` 双架构镜像（amd64/arm64）的编译与推送。
+- **Agent 容器化支持**: 新增了 `Dockerfile.agent` 用以将 S-UI Agent 打包为 Docker 镜像，并在 GitHub Actions 工作流中集成了 `sellength/s-ui_agent` 双架构镜像（amd64/arm64）的编译与推送。同时在 Agent 中实现了对同宿主机上 `sing-box` 容器运行状态与版本的自动感知（通过 docker.sock 自动获取 `running` 状态和执行版本查询）并向上报给主控。
 
 ### Fixed
 - **策略覆盖 GORM/SQL 报错**: 修复了在 PostgreSQL 数据库下，由于 `policy_overrides_json` 字段类型为 `bytea`，在执行 SQL 校验时调用 `trim(policy_overrides_json)` 产生 `pg_catalog.btrim(bytea) does not exist (SQLSTATE 42883)` 的保存报错问题。我们将 SQL 过滤改为了在 Go 内存中校验 outstanding 策略覆盖，彻底解决跨数据库方言不兼容的问题。

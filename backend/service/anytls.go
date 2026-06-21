@@ -48,16 +48,16 @@ func RenderAnyTLSInbound(input AnyTLSInboundInput) (json.RawMessage, error) {
 		input.Listen = "::"
 	}
 	if input.ListenPort == 0 {
-		return nil, fmt.Errorf("listen port is required")
+		return nil, fmt.Errorf("listen port is required (监听端口不能为空)")
 	}
 	if input.ServerName == "" {
-		return nil, fmt.Errorf("server name is required")
+		return nil, fmt.Errorf("server name is required (域名/ServerName不能为空)")
 	}
 	if input.CertPath == "" || input.KeyPath == "" {
-		return nil, fmt.Errorf("certificate and key paths are required")
+		return nil, fmt.Errorf("certificate and key paths are required (证书路径与私钥路径不能为空)")
 	}
 	if len(input.Users) == 0 {
-		return nil, fmt.Errorf("at least one anytls user is required")
+		return nil, fmt.Errorf("at least one anytls user is required (生成配置失败：当前服务入口未分配用户，请先在控制台绑定用户)")
 	}
 
 	users := make([]AnyTLSUser, 0, len(input.Users))
@@ -65,7 +65,7 @@ func RenderAnyTLSInbound(input AnyTLSInboundInput) (json.RawMessage, error) {
 		user.Name = strings.TrimSpace(user.Name)
 		user.Password = strings.TrimSpace(user.Password)
 		if user.Name == "" || user.Password == "" {
-			return nil, fmt.Errorf("anytls user name and password are required")
+			return nil, fmt.Errorf("anytls user name and password are required (AnyTLS 用户的用户名与密码不能为空)")
 		}
 		users = append(users, user)
 	}
@@ -164,12 +164,15 @@ func RenderDistributedAnyTLSInbound(inboundId uint) (json.RawMessage, error) {
 		return nil, err
 	}
 
+	if inbound.CertificateId == 0 {
+		return nil, fmt.Errorf("certificate is required for anytls inbound (生成配置失败：当前 AnyTLS 服务入口未配置 TLS 证书，请先在协议编辑中绑定证书)")
+	}
 	certificate := model.Certificate{}
 	if err := db.Model(model.Certificate{}).Where("id = ?", inbound.CertificateId).First(&certificate).Error; err != nil {
-		return nil, err
+		return nil, fmt.Errorf("certificate not found (生成配置失败：未找到关联的 TLS 证书，请重新在协议编辑中选择证书): %w", err)
 	}
 	if certificate.ActiveVersionId == 0 {
-		return nil, fmt.Errorf("certificate has no active version")
+		return nil, fmt.Errorf("certificate has no active version (生成配置失败：关联的 TLS 证书尚未成功申请，没有可用的证书版本)")
 	}
 
 	certificateVersion := model.CertificateVersion{}

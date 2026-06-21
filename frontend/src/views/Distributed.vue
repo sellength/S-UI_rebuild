@@ -386,12 +386,16 @@
                       <v-btn
                         variant="text"
                         size="small"
-                        color="primary"
+                        :color="inboundUsers.filter(u => u.inboundId === inbound.id).length === 0 ? 'error' : 'primary'"
                         class="text-none font-weight-bold px-1"
                         style="min-width: unset; text-decoration: underline;"
                         @click="openInboundUsersDialog(inbound)"
                       >
+                        <v-icon v-if="inboundUsers.filter(u => u.inboundId === inbound.id).length === 0" icon="mdi-alert-circle-outline" size="14" class="mr-1" />
                         {{ inboundUsers.filter(u => u.inboundId === inbound.id).length }}
+                        <v-tooltip activator="parent" location="top">
+                          {{ inboundUsers.filter(u => u.inboundId === inbound.id).length === 0 ? '警告：未绑定任何用户，将无法生成最终配置！请点击此处绑定。' : '点击管理该服务入口授权的用户' }}
+                        </v-tooltip>
                       </v-btn>
                     </td>
                     <td>
@@ -1804,6 +1808,19 @@ function copyText(text: string) {
 }
 
 async function renderInbound(id: number) {
+  const inbound = distributedInbounds.value.find((i: any) => i.id === id)
+  if (inbound && inbound.protocol === 'anytls') {
+    const userCount = inboundUsers.value.filter((u: any) => u.inboundId === id).length
+    if (userCount === 0) {
+      push.error({ message: "生成配置失败：当前服务入口未绑定任何用户，请先点击「用户」列分配用户！" })
+      return
+    }
+    if (!inbound.certificateId) {
+      push.error({ message: "生成配置失败：当前服务入口未配置 TLS 证书，请先在协议编辑中选择证书！" })
+      return
+    }
+  }
+
   renderingInboundId.value = id
   try {
     const msg = await HttpUtils.post('api/renderDistributedAnyTLSInbound', toForm({ id }))

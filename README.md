@@ -628,7 +628,23 @@ services:
     command: run -c /etc/sing-box/config.json
 ```
 
-#### 3. 启动节点服务
+#### 3. 快速替换与配置环境变量
+为了提高部署效率，您可以使用以下 `sed` 快捷命令在终端一键修改 `docker-compose.yml` 中的环境变量，而无需使用文本编辑器：
+
+##### A. 一键生成并替换专属的 `SUI_AGENT_TOKEN`
+```sh
+sed -i "s/replace-with-node-agent-token/$(openssl rand -hex 16)/g" docker-compose.yml
+```
+
+##### B. 一键修改控制端地址、节点代号和控制端注册 Token
+```sh
+# 请根据实际情况，将下面命令里的 URL、节点代号、配对 Token 替换后直接运行：
+sed -i "s|https://panel.example.com/app/agent|http://你的控制端服务器公网IP:2095/app/agent|g" docker-compose.yml
+sed -i "s/us-01/您的节点代号/g" docker-compose.yml
+sed -i "s/same-as-SUI_AGENT_REGISTER_TOKEN/控制端的SUI_AGENT_REGISTER_TOKEN值/g" docker-compose.yml
+```
+
+#### 4. 启动节点服务
 ```sh
 docker compose up -d
 ```

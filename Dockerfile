@@ -18,7 +18,7 @@ WORKDIR /app/backend
 RUN go mod download
 WORKDIR /app
 COPY backend ./backend
-COPY --from=frontend-builder /app/frontend/dist ./backend/web/html
+COPY --from=frontend-builder /app/dist ./backend/web/html
 WORKDIR /app/backend
 ARG TARGETOS
 ARG TARGETARCH

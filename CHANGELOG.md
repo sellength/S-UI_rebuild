@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.1] - 2026-09-17
+
+### Fixed
+- **证书续期自动级联下发 (Auto Cert Renewal Cascade)**: 修复了证书在后台自动续签（Let's Encrypt）后未自动重新渲染服务入口配置并为关联节点下发新配置版本的断层问题。新增 `CascadeUpdateCertificate` 级联触发方法，在证书续期或版本激活时，自动遍历并重新渲染入站指纹路径，并自动发布新版配置至关联节点，确保 Agent 及 sing-box 自动无感平滑切换新证书。
+- **证书自动续签窗口调整 (Cert Renewal Window)**: 将后台自动续签检测窗口由到期前 3 天延长至 **30 天**，充分对齐 Let's Encrypt 官方规范与前端“30天内到期”提示，预留安全容错期，避免因 DNS API 偶发超时导致临期断网。
+- **节点失联探测灵敏度提升 (Node Offline Detection)**:
+  - 前端状态轮询由 15s 提频至 5s，超时预警阈值缩短至 45s，离线判定阈值缩短至 75s。
+  - 后端 `NodeService.GetAll()` 增加动态时效性判定：超过 45s 无心跳直接返回 `timeout`，超过 75s 无心跳返回 `offline` 和 singbox `unknown`，彻底解决节点主机重启或网络中断时控制面板因阈值过宽而显示“假在线”的监控延迟问题。
+- **用户禁用/过期级联下发 (Client Depletion Cascade)**: 在用户到期流量耗尽（`DepleteClients`）或管理员修改/禁用用户时，新增 `CascadeUpdateClients` 级联触发逻辑，自动清除关联服务入口配置缓存并重新生成发布，确保远端 sing-box 实时生效并阻断已禁用用户。
+- **全局配置模板感知 (Global Template Drift Detection)**: 修改全局 DNS/Outbound/Route 模板后，自动重新计算各存量节点的草稿配置哈希（`CalculateNodeDraftSha256`），及时在面板提示配置漂移与待发布状态。
+
+### Added
+- **架构速查表与开发规范**: 新增 `docs/RELATIONSHIP_CASCADE_CHEAT_SHEET.md` 实体关系与级联变更速查表，集成 CodeGraph 调用链与 Mermaid ER 图拓扑，并在 `AGENT_PLAYBOOK.md` 中规范了后续开发必须遵守的级联依赖标准。
+
+---
+
 ## [v0.2.0-preview.1] - 2026-06-21
 
 ### Added

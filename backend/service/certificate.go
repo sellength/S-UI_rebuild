@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"s-ui/database"
 	"s-ui/database/model"
+	"s-ui/logger"
 	"strings"
 	"time"
 )
@@ -253,7 +254,48 @@ func (s *CertificateService) SaveCertificateVersion(version *model.CertificateVe
 	}
 	certificate.ActiveVersionId = version.Id
 	certificate.UpdatedAt = time.Now().Unix()
-	return db.Save(&certificate).Error
+	if err := db.Save(&certificate).Error; err != nil {
+		return err
+	}
+	_ = s.CascadeUpdateCertificate(certificate.Id, "cert-version-update")
+	return nil
+}
+
+func (s *CertificateService) CascadeUpdateCertificate(certificateId uint, actor string) error {
+	if certificateId == 0 {
+		return nil
+	}
+	db := database.GetDB()
+	var inbounds []model.DistributedInbound
+	if err := db.Model(&model.DistributedInbound{}).
+		Where("certificate_id = ? AND enable = ?", certificateId, true).
+		Scan(&inbounds).Error; err != nil {
+		return err
+	}
+	if len(inbounds) == 0 {
+		return nil
+	}
+
+	affectedNodes := make(map[uint]bool)
+	for _, inbound := range inbounds {
+		if _, err := RenderDistributedInbound(inbound.Id); err != nil {
+			logger.Warningf("CascadeUpdateCertificate: re-render inbound %d failed: %v", inbound.Id, err)
+		}
+		affectedNodes[inbound.NodeId] = true
+	}
+
+	if strings.TrimSpace(actor) == "" {
+		actor = "cert-renew"
+	}
+
+	for nodeId := range affectedNodes {
+		if _, err := PublishNodeConfigVersion(nodeId, actor); err != nil {
+			logger.Warningf("CascadeUpdateCertificate: publish node %d failed: %v", nodeId, err)
+		} else {
+			logger.Infof("CascadeUpdateCertificate: successfully published new config version for node %d", nodeId)
+		}
+	}
+	return nil
 }
 
 func (s *CertificateService) prepareCertificateVersionSecrets(version *model.CertificateVersion, existing *model.CertificateVersion) error {

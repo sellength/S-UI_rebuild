@@ -81,10 +81,16 @@ func (s *ConfigTemplateService) SaveNodeConfigTemplates(templates *NodeConfigTem
 	if err := s.saveNodeTemplate(NodeOutboundsTemplateProtocol, templates.Outbounds); err != nil {
 		return err
 	}
-	if err := s.saveNodeTemplate(NodeRouteTemplateProtocol, templates.Route); err != nil {
+	if err := s.saveNodeTemplate(NodeExperimentalProtocol, templates.Experimental); err != nil {
 		return err
 	}
-	return s.saveNodeTemplate(NodeExperimentalProtocol, templates.Experimental)
+	var nodes []model.Node
+	if errDb := database.GetDB().Model(model.Node{}).Where("enable = ?", true).Scan(&nodes).Error; errDb == nil {
+		for _, node := range nodes {
+			_, _ = CalculateNodeDraftSha256(node.Id)
+		}
+	}
+	return nil
 }
 
 func (s *ConfigTemplateService) getNodeTemplate(protocol string, fallback json.RawMessage) (json.RawMessage, error) {

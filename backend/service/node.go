@@ -18,6 +18,25 @@ func (s *NodeService) GetAll() ([]model.Node, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	now := time.Now().Unix()
+	for i := range nodes {
+		if !nodes[i].Enable {
+			continue
+		}
+		if nodes[i].LastSeenAt <= 0 {
+			nodes[i].AgentStatus = "unregistered"
+			continue
+		}
+		diff := now - nodes[i].LastSeenAt
+		if diff > 75 {
+			nodes[i].AgentStatus = "offline"
+			nodes[i].SingboxStatus = "unknown"
+		} else if diff > 45 {
+			nodes[i].AgentStatus = "timeout"
+		}
+	}
+
 	return nodes, nil
 }
 

@@ -125,10 +125,65 @@ erDiagram
 
 ---
 
-## 3. 核心接口与函数速查
+## 3. CodeGraph 函数调用拓扑图 (Call Graph & Impact Topology)
+
+通过 CodeGraph 静态分析提取的核心链路调用关系与波及影响面：
+
+### 链路 A：证书续签到节点下发调用链
+```text
+[Cron: CertRenewJob.Run]  or  [Web API: issueCertificate]
+         │
+         ├──> CertificateService.IssueCertificate (backend/service/certificate_issue.go)
+         │       └──> runner(acme.sh --issue & --install-cert)
+         │       └──> SaveCertificateVersion(version) (backend/service/certificate.go)
+         │               └──> db.Save(version)
+         │               └──> certificate.ActiveVersionId = version.Id
+         │
+         └──> 【必须触发的级联下发】: CascadeUpdateCertificate(certId)
+                 │
+                 ├──> 遍历相关 DistributedInbound:
+                 │       └──> RenderDistributedInbound(inboundId)
+                 │               └──> AnyTLSCertificatePaths (生成新指纹路径)
+                 │               └──> RenderDistributedAnyTLSInbound
+                 │               └──> db.Save(inbound.RenderedConfigJson)
+                 │
+                 └──> 遍历受影响的 Nodes:
+                         └──> PublishNodeConfigVersion(nodeId, "auto-renew")
+                                 └──> renderNodeConfigJson(nodeId)
+                                 └──> 创建全新 ConfigVersion (status: "published")
+                                 └──> node.PublishedSha256 = sha256Hex
+```
+
+### 链路 B：Agent 心跳拉取与内核热重载调用链
+```text
+[Agent: main.go Ticker] (3s ~ 30s)
+         │
+         ├──> heartbeat (上报 singboxStatus, 版本, 流量统计 stats)
+         │       └──> POST /app/agent/heartbeat -> AgentService.Heartbeat -> StatsService.SaveStats
+         │
+         └──> getDesiredConfig (GET /app/agent/config/desired)
+                 └──> AgentService.GetDesiredConfig
+                         ├──> 查出最新 published 的 ConfigVersion
+                         └──> getDesiredCertificates (读取 ActiveVersionId 的 fullchain/privkey)
+                 │
+                 [Agent 判定]: desired.ConfigVersion.ID != state.LastReportedConfigID
+                 │
+                 ├──> reportConfig("pulled")
+                 ├──> stageDesiredBundle
+                 │       ├──> writeCertificates (写入 /usr/local/s-ui-agent/certs/<domain>-<fingerprint>/)
+                 │       └──> stageDesiredConfig (写入 configs/current.json)
+                 ├──> runReloadCommand ("systemctl reload sing-box" or "docker restart sing-box")
+                 ├──> reportConfig("applied")
+                 └──> saveState (更新 state.LastReportedConfigID = desired.ConfigVersion.ID)
+```
+
+---
+
+## 4. 核心接口与函数速查
 
 | 操作意图 | 调用函数 / API | 文件位置 | 备注 |
 | :--- | :--- | :--- | :--- |
+| **证书级联自动下发** | `CascadeUpdateCertificate(certId)` | `backend/service/certificate.go` | **核心必接**：连通证书与节点发布的纽带 |
 | **渲染单入口配置** | `RenderDistributedInbound(inboundId)` | `backend/service/distributed_inbound.go` | 更新 `inbound.RenderedConfigJson` |
 | **重新发布节点配置** | `PublishNodeConfigVersion(nodeId, actor)` | `backend/service/config_bundle.go` | 生成新 `ConfigVersion`，更新 `publishedSha256` |
 | **更新草稿哈希** | `CalculateNodeDraftSha256(nodeId)` | `backend/service/config_bundle.go` | 比较 draft 与 published 判断是否需要下发 |

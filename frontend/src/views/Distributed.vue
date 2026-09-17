@@ -1559,7 +1559,7 @@ onMounted(() => {
   healthTimer = setInterval(() => {
     currentUnix.value = Math.floor(Date.now() / 1000)
     loadNodes()
-  }, 15000)
+  }, 5000)
 })
 
 onUnmounted(() => {
@@ -2560,15 +2560,15 @@ function nodeHealth(node: any) {
   const singboxStatus = String(node.singboxStatus || '').toLowerCase()
   const lastSeenAt = Number(node.lastSeenAt || 0)
   const age = lastSeenAt > 0 ? currentUnix.value - lastSeenAt : Number.POSITIVE_INFINITY
-  const agentOnline = Boolean(agentStatus) && agentStatus !== 'offline' && lastSeenAt > 0 && age <= 120
+  const agentOnline = Boolean(agentStatus) && agentStatus !== 'offline' && agentStatus !== 'timeout' && lastSeenAt > 0 && age <= 45
 
   if (!agentStatus || lastSeenAt <= 0) {
     return { state: 'unknown', label: '未接入', color: 'grey', detail: 'Agent 尚未注册或没有心跳记录', agentOnline: false }
   }
-  if (agentStatus === 'offline' || age > 300) {
+  if (agentStatus === 'offline' || age > 75) {
     return { state: 'offline', label: '离线', color: 'error', detail: `最后心跳 ${lastSeenText(lastSeenAt)}`, agentOnline: false }
   }
-  if (age > 120) {
+  if (agentStatus === 'timeout' || age > 45) {
     return { state: 'timeout', label: '心跳超时', color: 'warning', detail: `最后心跳 ${lastSeenText(lastSeenAt)}`, agentOnline: false }
   }
   if (singboxStatus && !['running', 'online', 'ok', 'healthy'].includes(singboxStatus)) {

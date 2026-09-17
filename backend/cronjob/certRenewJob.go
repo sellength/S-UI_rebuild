@@ -39,9 +39,9 @@ func (j *CertRenewJob) Run() {
 			continue
 		}
 
-		// 检查是否到期前 3 天 (3 * 24 * 3600 秒)
+		// 检查是否到期前 30 天 (30 * 24 * 3600 秒) 启动自动续签
 		remainingSec := version.NotAfter - now
-		if remainingSec <= 3*24*3600 {
+		if remainingSec <= 30*24*3600 {
 			logger.Infof("Certificate %q (ID: %d) is expiring in %.2f days, triggering auto renewal...", cert.Name, cert.Id, float64(remainingSec)/86400.0)
 			
 			_, issueErr := j.CertificateService.IssueCertificate(cert.Id)

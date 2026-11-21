@@ -5,10 +5,10 @@ services:
     restart: always
     network_mode: host
     environment:
-      - SUI_AGENT_BASE_URL=https://panel.example.com/app/agent     # 替换为您的控制面板 Agent API 访问地址
-      - SUI_NODE_CODE=us-01                                       # 替换为该节点在面板里配置的“节点代号”
+      - SUI_AGENT_BASE_URL=https://panel.example.com/app/agent     # 控制端 Agent API 地址（HTTPS反代用 https://面板域名/app/agent 勿带:2095；IP直连用 http://主控端IP:2095/app/agent）
+      - SUI_NODE_CODE=us-01                                       # 替换为面板「集群管理」中的“节点代号(Code)”（严格区分大小写，勿填节点名称）
       - SUI_AGENT_ID=agent-us-01                                 # 当前 Agent 的唯一标志 ID
-      - SUI_AGENT_TOKEN=replace-with-node-agent-token             # 替换为该节点在面板里配置的专属 Agent Token
+      - SUI_AGENT_TOKEN=replace-with-node-agent-token             # 节点本机随机生成的专属通信密钥，无需在面板手动填写；首次注册后自动绑定
       - SUI_AGENT_REGISTER_TOKEN=same-as-SUI_AGENT_REGISTER_TOKEN # 替换为控制端的全局注册 Token
       - SUI_AGENT_INTERVAL=30s                                    # 同步心跳间隔时间
       - SUI_AGENT_RELOAD_COMMAND=docker restart sing-box          # 配置更新后，自动重启 sing-box 容器

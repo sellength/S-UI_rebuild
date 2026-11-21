@@ -20,6 +20,7 @@ S-UI Distributed 是基于 [alireza0/s-ui](https://github.com/alireza0/s-ui) 重
   - [方式一：Systemd 实体机一键脚本](#方式一systemd-实体机一键脚本)
   - [方式二：Docker Compose 容器部署 (双容器 Sidecar 模式)](#方式二docker-compose-容器部署-双容器-sidecar-模式)
   - [方式三：Podman / Podman Compose 容器部署 (双容器 Sidecar 模式)](#方式三podman--podman-compose-容器部署-双容器-sidecar-模式)
+  - [容器部署常见报错速查](#容器部署常见报错速查)
 - [系统使用流程](#使用流程)
   - [1. 登录面板](#1-登录面板)
   - [2. 创建节点](#2-创建节点)
@@ -614,10 +615,10 @@ services:
     restart: always
     network_mode: host
     environment:
-      - SUI_AGENT_BASE_URL=https://panel.example.com/app/agent  # 控制端 Agent API 地址
-      - SUI_NODE_CODE=us-01                                     # 节点代号
+      - SUI_AGENT_BASE_URL=https://panel.example.com/app/agent  # 控制端 Agent API 地址（HTTPS反代用 https://面板域名/app/agent 勿带:2095；IP直连用 http://主控端IP:2095/app/agent）
+      - SUI_NODE_CODE=us-01                                     # 节点代号(Code)，必须与面板「集群管理」一致（区分大小写）
       - SUI_AGENT_ID=agent-us-01                               # 节点 Agent 唯一 ID
-      - SUI_AGENT_TOKEN=replace-with-node-agent-token           # 节点专属 Token
+      - SUI_AGENT_TOKEN=replace-with-node-agent-token           # 节点本机随机生成的专属通信密钥，无需在面板填写；首次注册后自动绑定
       - SUI_AGENT_REGISTER_TOKEN=same-as-SUI_AGENT_REGISTER_TOKEN # 控制端注册 Token
       - SUI_AGENT_INTERVAL=30s                                  # 同步时间间隔
       - SUI_AGENT_RELOAD_COMMAND=docker restart sing-box        # 配置更新后的重启命令
@@ -641,17 +642,35 @@ services:
 #### 3. 快速替换与配置环境变量
 为了提高部署效率，您可以使用以下 `sed` 快捷命令在终端一键修改 `docker-compose.yml` 中的环境变量，而无需使用文本编辑器：
 
-##### A. 一键生成并替换专属的 `SUI_AGENT_TOKEN`
+##### A. 一键生成并替换节点专属 `SUI_AGENT_TOKEN`
+`SUI_AGENT_TOKEN` 是当前节点**本机随机生成**的通信密码（**无需在控制面板提前填写**）。Agent 首次启动注册时会拿着它和控制端校验并自动绑定，之后的心跳和配置拉取都用这把密钥鉴权：
 ```sh
 sed -i "s/replace-with-node-agent-token/$(openssl rand -hex 16)/g" docker-compose.yml
 ```
 
 ##### B. 一键修改控制端地址、节点代号和控制端注册 Token
+
+> [!TIP]
+> **参数说明与取值方式：**
+> * **控制端地址 (`SUI_AGENT_BASE_URL`)**：
+>   * 若控制端配了 **Nginx/Caddy HTTPS 反代或 Cloudflare**：填 `https://你的面板域名/app/agent`（**不要带 `:2095`**）。
+>   * 若控制端直接暴露 `2095` 端口（**IP 直连**）：填 `http://你的控制端服务器公网IP:2095/app/agent`（需确保主控端防火墙放行 `2095`）。
+> * **节点代号 (`us-01`)**：`us-01` 是模板里的默认占位代号，下面第二条 `sed` 会同时把 `SUI_NODE_CODE=us-01` 和 `SUI_AGENT_ID=agent-us-01` 里的 `us-01` 替换掉。请确保与面板「集群管理」中创建的 **节点代号 (Code)** 严格一致（区分大小写，勿填节点名称）。
+> * **获取控制端 `SUI_AGENT_REGISTER_TOKEN`**：登录**主控端服务器**执行以下命令查看：
+>   * Docker 部署：`grep SUI_AGENT_REGISTER_TOKEN /opt/s-ui-distributed/.env`
+>   * 实体机部署：`grep SUI_AGENT_REGISTER_TOKEN /usr/local/s-ui/s-ui.env`
+
 ```sh
-# 请根据实际情况，将下面命令里的 URL、节点代号、配对 Token 替换后直接运行：
-sed -i "s|https://panel.example.com/app/agent|http://你的控制端服务器公网IP:2095/app/agent|g" docker-compose.yml
+# 1) 替换控制端 API 地址（二选一：已配 HTTPS 反代 / IP 直连）
+sed -i 's|https://panel.example.com/app/agent|https://你的面板域名/app/agent|g' docker-compose.yml
+# 或 IP 直连时使用：
+# sed -i 's|https://panel.example.com/app/agent|http://你的控制端服务器公网IP:2095/app/agent|g' docker-compose.yml
+
+# 2) 将模板默认代号 us-01 替换为面板中创建的节点代号 (Code)
 sed -i "s/us-01/您的节点代号/g" docker-compose.yml
-sed -i "s/same-as-SUI_AGENT_REGISTER_TOKEN/控制端的SUI_AGENT_REGISTER_TOKEN值/g" docker-compose.yml
+
+# 3) 替换控制端注册 Token（使用单引号和 | 分隔符，避免 Token 中的 / 或 $ 报错；若含 & 等特殊字符建议直接 nano docker-compose.yml 手动修改）
+sed -i 's|same-as-SUI_AGENT_REGISTER_TOKEN|控制端的SUI_AGENT_REGISTER_TOKEN值|g' docker-compose.yml
 ```
 
 #### 4. 启动节点服务
@@ -659,7 +678,7 @@ sed -i "s/same-as-SUI_AGENT_REGISTER_TOKEN/控制端的SUI_AGENT_REGISTER_TOKEN�
 docker compose up -d
 ```
 
-#### 4. 常用运维命令
+#### 5. 常用运维命令
 ```sh
 # 升级节点镜像并应用
 docker compose pull && docker compose up -d
@@ -715,7 +734,7 @@ sudo rm -rf /var/run/docker.sock
 sudo ln -s /run/podman/podman.sock /var/run/docker.sock
 ```
 
-#### 2. 创建部署目录并获取 `docker-compose.yml`
+#### 3. 创建部署目录并获取 `docker-compose.yml`
 ```sh
 mkdir -p /opt/s-ui-agent
 cd /opt/s-ui-agent
@@ -723,19 +742,33 @@ mkdir -p configs certs
 curl -fsSL https://raw.githubusercontent.com/sellength/S-UI_rebuild/review/docker-compose.agent.yml -o docker-compose.yml
 ```
 
-#### 3. 快速配置环境变量
+#### 4. 快速配置环境变量
+
+> [!TIP]
+> **参数与 Token 说明：**
+> * **`SUI_AGENT_TOKEN`**：节点本机随机生成的通信密钥，**无需在面板填写**，首次注册时自动上报并绑定。
+> * **`SUI_AGENT_BASE_URL`**：若控制端已配 HTTPS 反代/Cloudflare，填 `https://你的面板域名/app/agent`（**不要带 `:2095`**）；若为 IP 直连且已放行 `2095` 端口，填 `http://你的控制端服务器公网IP:2095/app/agent`。
+> * **`us-01` 替换**：`us-01` 是模板占位代号，下面第 3 条 `sed` 会同时替换 `SUI_NODE_CODE=us-01` 和 `SUI_AGENT_ID=agent-us-01`，必须与面板「集群管理」里的 **节点代号 (Code)** 完全一致（区分大小写）。
+> * **查询 `SUI_AGENT_REGISTER_TOKEN`**：在**主控端服务器**执行 `grep SUI_AGENT_REGISTER_TOKEN /opt/s-ui-distributed/.env`（Docker 部署）或 `grep SUI_AGENT_REGISTER_TOKEN /usr/local/s-ui/s-ui.env`（实体机部署）。
+
 使用 `sed` 快捷命令在终端一键配置：
 ```sh
-# 一键生成专属 SUI_AGENT_TOKEN
+# 1) 一键生成节点专属 SUI_AGENT_TOKEN（无需去面板填写）
 sed -i "s/replace-with-node-agent-token/$(openssl rand -hex 16)/g" docker-compose.yml
 
-# 替换控制端 API 地址、代号及配对注册 Token
-sed -i "s|https://panel.example.com/app/agent|http://你的控制端服务器公网IP:2095/app/agent|g" docker-compose.yml
+# 2) 替换控制端 API 地址（二选一：已配 HTTPS 反代 / IP 直连）
+sed -i 's|https://panel.example.com/app/agent|https://你的面板域名/app/agent|g' docker-compose.yml
+# 或 IP 直连时使用：
+# sed -i 's|https://panel.example.com/app/agent|http://你的控制端服务器公网IP:2095/app/agent|g' docker-compose.yml
+
+# 3) 将模板默认代号 us-01 替换为面板中创建的节点代号 (Code)
 sed -i "s/us-01/您的节点代号/g" docker-compose.yml
-sed -i "s/same-as-SUI_AGENT_REGISTER_TOKEN/控制端的SUI_AGENT_REGISTER_TOKEN值/g" docker-compose.yml
+
+# 4) 替换控制端注册 Token（用单引号和 | 避免 / 或 $ 冲突；若 Token 含 & 等特殊字符，建议直接 nano docker-compose.yml 手动修改）
+sed -i 's|same-as-SUI_AGENT_REGISTER_TOKEN|控制端的SUI_AGENT_REGISTER_TOKEN值|g' docker-compose.yml
 ```
 
-#### 4. 启动与查看日志
+#### 5. 启动与查看日志
 根据您安装的 Compose 兼容插件，选择以下一种方式启动：
 
 ##### 方式 A：使用 podman-compose
@@ -755,6 +788,20 @@ docker compose up -d
 # 查看 Agent 同步与心跳日志
 docker compose logs -f s-ui-agent
 ```
+
+### 容器部署常见报错速查
+
+> [!NOTE]
+> 修改 `docker-compose.yml` 后，必须重建容器才能让新环境变量生效：
+> `podman-compose up -d --force-recreate s-ui-agent`（或 `docker compose up -d --force-recreate s-ui-agent`）。
+> 另外，即使尚未下发任何配置，只要 Agent 注册和心跳正常，几十秒内面板上节点状态就会变成 **`online`**。
+
+| 日志报错信息 | 常见原因 | 排查与解决方法 |
+| --- | --- | --- |
+| `invalid character '<' looking for beginning of value` | `SUI_AGENT_BASE_URL` 返回了 HTML 页面而非 JSON（常见于 `http://域名:2095` 被 Cloudflare 强制 301 跳转 HTTPS，或漏写了 `/app/agent`） | 执行 `curl -i -X POST "<你的SUI_AGENT_BASE_URL>/register"` 检查响应；已配反代请改用 `https://你的面板域名/app/agent`（勿带 `:2095`） |
+| `context deadline exceeded` | 无法连接到控制端地址或端口 | 检查控制端防火墙/安全组是否放行对应端口（若已封 `2095` 仅开放 443 反代，请使用 `https://你的面板域名/app/agent`） |
+| `register: record not found` | `SUI_NODE_CODE` 与控制面板中的节点代号不匹配 | 检查面板「集群管理」中的 **节点代号 (Code)**（区分大小写、勿与节点名称混淆），修改后重建容器 |
+| `invalid register token` | `SUI_AGENT_REGISTER_TOKEN` 与主控端不一致 | 到主控端 `.env` 或 `s-ui.env` 核对 `SUI_AGENT_REGISTER_TOKEN`，注意是否被 `sed` 特殊字符破坏 |
 
 ## 使用流程
 
